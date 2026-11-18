@@ -1,7 +1,7 @@
 import type { Config, Context } from "@netlify/functions"
 import Stripe from "stripe"
 
-// Stripe payment -> Shopify order, straight away, no manual draft step. (redeploy trigger: env vars refreshed)
+// Stripe payment -> Shopify order, straight away, no manual draft step.
 // Listens for checkout.session.completed, pulls the real customer/shipping/line-item
 // data from Stripe, and creates a PAID, unfulfilled order directly on 3Doz.pet via
 // the Admin GraphQL API, tagged "TrendyCatch" + "stripe-auto-sync".
@@ -55,6 +55,7 @@ export default async (req: Request, context: Context) => {
   })
 
   const tagSessionId = `stripe-${session.id}`.replace(/[^a-zA-Z0-9_-]/g, "")
+  const orderTags = ["TrendyCatch", "stripe-auto-sync", tagSessionId]
 
   try {
     const already = await shopifyGraphql(
@@ -116,6 +117,11 @@ export default async (req: Request, context: Context) => {
     }
   })
 
+  // Note: tags are deliberately NOT set on orderCreate itself. Shopify's
+  // orderCreate mutation intermittently rejects a perfectly valid tags array
+  // with a generic "Order tags is invalid" userError (a known platform quirk).
+  // The reliable fix is to create the order untagged, then tag it right after
+  // with a separate tagsAdd mutation.
   const orderInput = {
     email: orderEmail,
     phone: mailingAddress?.phone,
@@ -123,7 +129,6 @@ export default async (req: Request, context: Context) => {
     shippingAddress: mailingAddress,
     billingAddress: mailingAddress,
     lineItems,
-    tags: ["TrendyCatch", "stripe-auto-sync", tagSessionId],
     note: `Auto-synced from Stripe checkout ${session.id}. Customer email: ${
       customerDetails?.email ?? "unknown"
     }`,
@@ -153,6 +158,27 @@ export default async (req: Request, context: Context) => {
 
   const createdOrder = result?.data?.orderCreate?.order
   console.log(`Created Shopify order ${createdOrder?.name} for Stripe session ${session.id}`)
+
+  if (createdOrder?.id) {
+    try {
+      const tagResult = await shopifyGraphql(
+        shopDomain,
+        shopifyToken,
+        `mutation AddOrderTags($id: ID!, $tags: [String!]!) {
+          tagsAdd(id: $id, tags: $tags) {
+            userErrors { field message }
+          }
+        }`,
+        { id: createdOrder.id, tags: orderTags },
+      )
+      const tagErrors = tagResult?.data?.tagsAdd?.userErrors ?? []
+      if (tagErrors.length > 0) {
+        console.error("tagsAdd userErrors:", JSON.stringify(tagErrors))
+      }
+    } catch (err) {
+      console.error("tagsAdd failed (order was still created):", (err as Error).message)
+    }
+  }
 
   return new Response(JSON.stringify({ ok: true, order: createdOrder }), {
     status: 200,
