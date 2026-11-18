@@ -1,5 +1,6 @@
 import type { Config, Context } from "@netlify/functions"
 import Stripe from "stripe"
+import { createHash } from "node:crypto"
 
 // Stripe payment -> Shopify order, straight away, no manual draft step.
 // Listens for checkout.session.completed, pulls the real customer/shipping/line-item
@@ -54,7 +55,14 @@ export default async (req: Request, context: Context) => {
     expand: ["line_items.data.price.product", "customer_details"],
   })
 
-  const tagSessionId = `stripe-${session.id}`.replace(/[^a-zA-Z0-9_-]/g, "")
+  // Shopify order tags have a hard 40-character limit per tag. The raw Stripe
+  // session id (e.g. "cs_live_a0bvlPP39DTd77AjcZnYFPPDPzUupX0jsMRuZTWwWkGOS1c6mMAKPNpwLG")
+  // is 60-70+ characters, so a tag built directly from it is always silently
+  // rejected by Shopify with a generic "Order tags is invalid" error. Use a
+  // short, deterministic hash of the session id instead so the tag stays
+  // well under the limit while remaining unique per session (for dedupe).
+  const sessionIdHash = createHash("sha256").update(session.id).digest("hex").slice(0, 16)
+  const tagSessionId = `stripe-${sessionIdHash}`
   const orderTags = ["TrendyCatch", "stripe-auto-sync", tagSessionId]
 
   try {
@@ -118,10 +126,12 @@ export default async (req: Request, context: Context) => {
   })
 
   // Note: tags are deliberately NOT set on orderCreate itself. Shopify's
-  // orderCreate mutation intermittently rejects a perfectly valid tags array
-  // with a generic "Order tags is invalid" userError (a known platform quirk).
-  // The reliable fix is to create the order untagged, then tag it right after
-  // with a separate tagsAdd mutation.
+  // orderCreate mutation intermittently rejects a tags array with a generic
+  // "Order tags is invalid" userError whenever any tag exceeds Shopify's
+  // 40-character-per-tag limit (see tagSessionId above for why that mattered
+  // here). Creating the order untagged, then tagging it right after with a
+  // separate tagsAdd mutation, keeps order creation itself from ever failing
+  // because of a tag problem.
   const orderInput = {
     email: orderEmail,
     phone: mailingAddress?.phone,
