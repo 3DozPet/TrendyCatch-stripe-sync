@@ -1,7 +1,7 @@
 import type { Config, Context } from "@netlify/functions"
 import Stripe from "stripe"
 
-// Stripe payment -> Shopify order, straight away, no manual draft step.
+// Stripe payment -> Shopify order, straight away, no manual draft step. (redeploy trigger: env vars refreshed)
 // Listens for checkout.session.completed, pulls the real customer/shipping/line-item
 // data from Stripe, and creates a PAID, unfulfilled order directly on 3Doz.pet via
 // the Admin GraphQL API, tagged "TrendyCatch" + "stripe-auto-sync".
