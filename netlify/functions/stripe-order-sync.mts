@@ -9,6 +9,18 @@ import { createHash } from "node:crypto"
 
 const SHOPIFY_API_VERSION = "2025-01"
 
+// OrderCreateCustomerAddressInput.country wants the country's NAME, not its
+// ISO code (unlike MailingAddressInput.countryCode used for shippingAddress/
+// billingAddress, which does want the code). Map the markets 3Doz.pet/
+// TrendyCatch actually sell to; fall back to the raw code for anything else.
+const COUNTRY_NAMES: Record<string, string> = {
+  AU: "Australia",
+  NZ: "New Zealand",
+  US: "United States",
+  CA: "Canada",
+  GB: "United Kingdom",
+}
+
 export default async (req: Request, context: Context) => {
   if (req.method !== "POST") {
     return new Response("Method not allowed", { status: 405 })
@@ -104,6 +116,38 @@ export default async (req: Request, context: Context) => {
       }
     : undefined
 
+  // Attach (or create/update) a real Shopify Customer on the order, instead of
+  // leaving it unset. Without this, Shopify either leaves the order with no
+  // linked customer or auto-creates a blank one, so the admin's "Customer"
+  // column and the customer profile don't show who actually placed the order.
+  // toUpsert matches an existing customer by email when one exists, otherwise
+  // creates a new one with this name/address.
+  const customerInput = customerDetails?.email
+    ? {
+        toUpsert: {
+          email: customerDetails.email,
+          firstName,
+          lastName,
+          phone: customerDetails?.phone ?? undefined,
+          addresses: addr
+            ? [
+                {
+                  firstName,
+                  lastName,
+                  address1: addr.line1 ?? "",
+                  address2: addr.line2 ?? undefined,
+                  city: addr.city ?? "",
+                  province: addr.state ?? undefined,
+                  zip: addr.postal_code ?? "",
+                  country: addr.country ? COUNTRY_NAMES[addr.country] ?? addr.country : "Australia",
+                  phone: customerDetails?.phone ?? undefined,
+                },
+              ]
+            : undefined,
+        },
+      }
+    : undefined
+
   const lineItems = (session.line_items?.data ?? []).map((li) => {
     const unitAmount = (li.price?.unit_amount ?? 0) / 100
     const product = li.price?.product
@@ -125,6 +169,16 @@ export default async (req: Request, context: Context) => {
     }
   })
 
+  // The Stripe checkout session's currency (session.currency) is whatever the
+  // customer actually paid in - AUD, USD, NZD, CAD, etc, since TrendyCatch/
+  // 3Doz.pet sells to multiple countries. Shopify requires the order's own
+  // "currency"/"presentmentCurrency" to be declared explicitly whenever that
+  // differs from the shop's base currency; without it, orderCreate rejects
+  // the whole order with "Line items currency must be provided when either
+  // order currency or order presentment currency is different from the shop
+  // currency" - which is why some non-AUD orders weren't syncing at all.
+  const orderCurrency = (session.currency ?? "aud").toUpperCase()
+
   // Note: tags are deliberately NOT set on orderCreate itself. Shopify's
   // orderCreate mutation intermittently rejects a tags array with a generic
   // "Order tags is invalid" userError whenever any tag exceeds Shopify's
@@ -136,6 +190,9 @@ export default async (req: Request, context: Context) => {
     email: orderEmail,
     phone: mailingAddress?.phone,
     financialStatus: "PAID",
+    currency: orderCurrency,
+    presentmentCurrency: orderCurrency,
+    customer: customerInput,
     shippingAddress: mailingAddress,
     billingAddress: mailingAddress,
     lineItems,
