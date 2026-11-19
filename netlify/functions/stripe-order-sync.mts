@@ -6,6 +6,15 @@ import { createHash } from "node:crypto"
 // Listens for checkout.session.completed, pulls the real customer/shipping/line-item
 // data from Stripe, and creates a PAID, unfulfilled order directly on 3Doz.pet via
 // the Admin GraphQL API, tagged "TrendyCatch" + "stripe-auto-sync".
+//
+// Also fires server-side purchase events to TikTok, Meta (Facebook + Instagram share
+// the same Pixel/CAPI) and Google (GA4 Measurement Protocol, which covers both Google
+// Ads and YouTube conversion import) right after the Shopify order is created, so every
+// ad platform can optimize for actual purchases instead of just landing-page views.
+// None of this depends on the customer ever returning to the Netlify page after paying
+// on Stripe's domain. Each platform call is independently optional (skipped with a
+// log line if its env vars aren't set) and independently try/caught, so a failure or
+// absence on one platform can never affect the Shopify order flow or any other platform.
 
 const SHOPIFY_API_VERSION = "2025-01"
 
@@ -72,7 +81,8 @@ export default async (req: Request, context: Context) => {
   // is 60-70+ characters, so a tag built directly from it is always silently
   // rejected by Shopify with a generic "Order tags is invalid" error. Use a
   // short, deterministic hash of the session id instead so the tag stays
-  // well under the limit while remaining unique per session (for dedupe).
+  // well under the limit while remaining unique per session (for dedupe); this
+  // same hash doubles as the event_id for dedup on every ad platform below.
   const sessionIdHash = createHash("sha256").update(session.id).digest("hex").slice(0, 16)
   const tagSessionId = `stripe-${sessionIdHash}`
   const orderTags = ["TrendyCatch", "stripe-auto-sync", tagSessionId]
@@ -247,6 +257,83 @@ export default async (req: Request, context: Context) => {
     }
   }
 
+  // ---------------------------------------------------------------------
+  // Ad-platform purchase tracking. Everything below is additive and
+  // non-blocking: each platform is independently optional (skipped with a
+  // log line if its env vars aren't set) and independently try/caught, so a
+  // failure or absence on one platform can never affect the Shopify order
+  // above, the HTTP response below, or any other platform's event.
+  // ---------------------------------------------------------------------
+
+  const purchaseValue = (session.amount_total ?? 0) / 100
+  const landingUrl = "https://pureglow-clearance.netlify.app"
+  const clientIp = req.headers.get("x-forwarded-for") ?? undefined
+  const clientUserAgent = req.headers.get("user-agent") ?? undefined
+
+  // TikTok Events API - CompletePayment
+  const tiktokAccessToken = Netlify.env.get("TIKTOK_ACCESS_TOKEN")
+  const tiktokPixelCode = Netlify.env.get("TIKTOK_PIXEL_CODE") // DBVO0VRC77UC811KMEI0 for Pureglow Clearance
+  if (tiktokAccessToken && tiktokPixelCode) {
+    await fireTikTokPurchaseEvent({
+      pixelCode: tiktokPixelCode,
+      accessToken: tiktokAccessToken,
+      eventId: tagSessionId,
+      email: customerDetails?.email,
+      phone: customerDetails?.phone ?? undefined,
+      value: purchaseValue,
+      currency: orderCurrency,
+      url: landingUrl,
+      ip: clientIp,
+      userAgent: clientUserAgent,
+    })
+  } else {
+    console.log("TikTok Events API not configured (missing TIKTOK_ACCESS_TOKEN/TIKTOK_PIXEL_CODE) - skipped")
+  }
+
+  // Meta Conversions API - Purchase. Covers Facebook AND Instagram ads, since
+  // both run on the same Meta Pixel. META_CAPI_ACCESS_TOKEN already exists in
+  // this site's env vars; META_PIXEL_ID needs to be added alongside it (the
+  // Pixel ID shown in Meta Events Manager) for this to activate.
+  const metaAccessToken = Netlify.env.get("META_CAPI_ACCESS_TOKEN")
+  const metaPixelId = Netlify.env.get("META_PIXEL_ID")
+  if (metaAccessToken && metaPixelId) {
+    await fireMetaPurchaseEvent({
+      pixelId: metaPixelId,
+      accessToken: metaAccessToken,
+      eventId: tagSessionId,
+      email: customerDetails?.email,
+      phone: customerDetails?.phone ?? undefined,
+      value: purchaseValue,
+      currency: orderCurrency,
+      url: landingUrl,
+      ip: clientIp,
+      userAgent: clientUserAgent,
+    })
+  } else {
+    console.log("Meta Conversions API not configured (missing META_CAPI_ACCESS_TOKEN/META_PIXEL_ID) - skipped")
+  }
+
+  // Google - GA4 Measurement Protocol "purchase" event. Covers Google Ads
+  // (via a linked GA4 conversion) AND YouTube (YouTube ads roll up through
+  // the same Google Ads/GA4 conversion tracking), so one integration covers
+  // both. Needs a GA4 Measurement ID (G-XXXXXXX) + API secret from
+  // GA4 Admin -> Data Streams -> Measurement Protocol API secrets.
+  const ga4MeasurementId = Netlify.env.get("GA4_MEASUREMENT_ID")
+  const ga4ApiSecret = Netlify.env.get("GA4_API_SECRET")
+  if (ga4MeasurementId && ga4ApiSecret) {
+    await fireGa4PurchaseEvent({
+      measurementId: ga4MeasurementId,
+      apiSecret: ga4ApiSecret,
+      clientId: tagSessionId,
+      transactionId: tagSessionId,
+      value: purchaseValue,
+      currency: orderCurrency,
+      itemName: lineItems[0]?.title ?? "Pureglow Clearance",
+    })
+  } else {
+    console.log("GA4 Measurement Protocol not configured (missing GA4_MEASUREMENT_ID/GA4_API_SECRET) - skipped")
+  }
+
   return new Response(JSON.stringify({ ok: true, order: createdOrder }), {
     status: 200,
     headers: { "content-type": "application/json" },
@@ -272,6 +359,167 @@ async function shopifyGraphql(
     throw new Error(`Shopify API error ${res.status}: ${text}`)
   }
   return res.json()
+}
+
+async function fireTikTokPurchaseEvent(opts: {
+  pixelCode: string
+  accessToken: string
+  eventId: string
+  email?: string
+  phone?: string
+  value: number
+  currency: string
+  url: string
+  ip?: string
+  userAgent?: string
+}) {
+  const hash = (v?: string) =>
+    v ? createHash("sha256").update(v.trim().toLowerCase()).digest("hex") : undefined
+
+  const body = {
+    event_source: "web",
+    event_source_id: opts.pixelCode,
+    data: [
+      {
+        event: "CompletePayment",
+        event_time: Math.floor(Date.now() / 1000),
+        event_id: opts.eventId,
+        user: {
+          email: hash(opts.email),
+          phone: hash(opts.phone),
+          ip: opts.ip,
+          user_agent: opts.userAgent,
+        },
+        properties: {
+          currency: opts.currency,
+          value: opts.value,
+        },
+        page: { url: opts.url },
+      },
+    ],
+  }
+
+  try {
+    const res = await fetch("https://business-api.tiktok.com/open_api/v1.3/event/track/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Access-Token": opts.accessToken,
+      },
+      body: JSON.stringify(body),
+    })
+    const json = await res.json()
+    if (json.code !== 0) {
+      console.error("TikTok Events API error:", JSON.stringify(json))
+    } else {
+      console.log("TikTok CompletePayment event sent:", opts.eventId)
+    }
+  } catch (err) {
+    console.error("TikTok Events API call failed:", (err as Error).message)
+  }
+}
+
+async function fireMetaPurchaseEvent(opts: {
+  pixelId: string
+  accessToken: string
+  eventId: string
+  email?: string
+  phone?: string
+  value: number
+  currency: string
+  url: string
+  ip?: string
+  userAgent?: string
+}) {
+  const hash = (v?: string) =>
+    v ? createHash("sha256").update(v.trim().toLowerCase()).digest("hex") : undefined
+
+  const body = {
+    data: [
+      {
+        event_name: "Purchase",
+        event_time: Math.floor(Date.now() / 1000),
+        event_id: opts.eventId,
+        action_source: "website",
+        event_source_url: opts.url,
+        user_data: {
+          em: opts.email ? [hash(opts.email)] : undefined,
+          ph: opts.phone ? [hash(opts.phone)] : undefined,
+          client_ip_address: opts.ip,
+          client_user_agent: opts.userAgent,
+        },
+        custom_data: {
+          currency: opts.currency,
+          value: opts.value,
+        },
+      },
+    ],
+  }
+
+  try {
+    const res = await fetch(
+      `https://graph.facebook.com/v21.0/${opts.pixelId}/events?access_token=${opts.accessToken}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      },
+    )
+    const json = await res.json()
+    if (json.error) {
+      console.error("Meta Conversions API error:", JSON.stringify(json.error))
+    } else {
+      console.log("Meta Purchase event sent:", opts.eventId, JSON.stringify(json))
+    }
+  } catch (err) {
+    console.error("Meta Conversions API call failed:", (err as Error).message)
+  }
+}
+
+async function fireGa4PurchaseEvent(opts: {
+  measurementId: string
+  apiSecret: string
+  clientId: string
+  transactionId: string
+  value: number
+  currency: string
+  itemName: string
+}) {
+  const body = {
+    client_id: opts.clientId,
+    events: [
+      {
+        name: "purchase",
+        params: {
+          transaction_id: opts.transactionId,
+          currency: opts.currency,
+          value: opts.value,
+          items: [{ item_name: opts.itemName, quantity: 1, price: opts.value }],
+        },
+      },
+    ],
+  }
+
+  try {
+    const res = await fetch(
+      `https://www.google-analytics.com/mp/collect?measurement_id=${opts.measurementId}&api_secret=${opts.apiSecret}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      },
+    )
+    // GA4's Measurement Protocol collect endpoint returns 204 No Content on
+    // success and doesn't echo back the event, so there's nothing to parse -
+    // only the HTTP status tells us whether it was accepted.
+    if (!res.ok) {
+      console.error("GA4 Measurement Protocol error:", res.status, await res.text())
+    } else {
+      console.log("GA4 purchase event sent:", opts.transactionId)
+    }
+  } catch (err) {
+    console.error("GA4 Measurement Protocol call failed:", (err as Error).message)
+  }
 }
 
 export const config: Config = {
