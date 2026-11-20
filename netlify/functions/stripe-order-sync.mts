@@ -272,8 +272,12 @@ export default async (req: Request, context: Context) => {
 
   // content_id/content_type per line item, built from the same Stripe line
   // items used for the Shopify order above. TikTok's "Content ID is missing"
-  // diagnostic flags Purchase/ViewContent events that omit this - a Stripe
-  // Price id is a stable per-product identifier, so it's used as content_id.
+  // diagnostic flags Purchase/ViewContent events that omit this. content_id
+  // is hardcoded to the TikTok Catalog Manager SKU ID (PUREGLOW-PATCH-50) -
+  // the catalog ("Pureglow Clearance Catalog") only has this one product, and
+  // the event content_id must match the catalog's SKU ID exactly for the
+  // pixel/catalog match rate to work (a Stripe Price id does not match it,
+  // which caused "No catalog connected to pixel" / 0% match rate).
   const tiktokContents = (session.line_items?.data ?? []).map((li) => {
     const product = li.price?.product
     const productName =
@@ -281,7 +285,7 @@ export default async (req: Request, context: Context) => {
         ? (product as Stripe.Product).name
         : li.description ?? "Item"
     return {
-      content_id: li.price?.id ?? li.id,
+      content_id: "PUREGLOW-PATCH-50",
       content_type: "product",
       content_name: productName,
       quantity: li.quantity ?? 1,
