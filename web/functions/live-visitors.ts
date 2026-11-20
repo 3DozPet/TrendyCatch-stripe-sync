@@ -3,13 +3,19 @@
 // page right now" count, broken down by country. Counts the still-valid
 // (not yet expired) visitor:* heartbeat entries written by visitor-ping.ts.
 
+import { hasValidSession } from "./_lib/auth"
+
 interface Env {
   ORDERS_KV?: KVNamespace
 }
 
-export const onRequestGet: PagesFunction<Env> = async ({ env }) => {
+export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
   if (!env.ORDERS_KV) {
     return json({ count: 0, byCountry: {}, error: "ORDERS_KV not bound" })
+  }
+
+  if (!(await hasValidSession(request, env.ORDERS_KV))) {
+    return json({ error: "unauthorized" }, 401)
   }
 
   const list = await env.ORDERS_KV.list({ prefix: "visitor:", limit: 500 })

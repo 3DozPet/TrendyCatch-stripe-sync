@@ -5,13 +5,19 @@
 // Separate endpoint from /admin-orders (the rolling 48h new-order feed) so
 // the two can be polled at different rates and shown as different sections.
 
+import { hasValidSession } from "./_lib/auth"
+
 interface Env {
   ORDERS_KV?: KVNamespace
 }
 
-export const onRequestGet: PagesFunction<Env> = async ({ env }) => {
+export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
   if (!env.ORDERS_KV) {
     return json({ totalRevenue: 0, totalOrders: 0, byCountry: {}, bySource: {}, error: "ORDERS_KV not bound" })
+  }
+
+  if (!(await hasValidSession(request, env.ORDERS_KV))) {
+    return json({ error: "unauthorized" }, 401)
   }
 
   const raw = await env.ORDERS_KV.get("stats:summary")

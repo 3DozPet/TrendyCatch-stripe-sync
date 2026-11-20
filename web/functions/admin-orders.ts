@@ -4,6 +4,8 @@
 // Polled every few seconds by admin.html, which plays a chime for anything
 // newer than the last order it already showed.
 
+import { hasValidSession } from "./_lib/auth"
+
 interface Env {
   ORDERS_KV?: KVNamespace
 }
@@ -11,6 +13,10 @@ interface Env {
 export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
   if (!env.ORDERS_KV) {
     return json({ orders: [], error: "ORDERS_KV not bound" }, 200)
+  }
+
+  if (!(await hasValidSession(request, env.ORDERS_KV))) {
+    return json({ error: "unauthorized" }, 401)
   }
 
   const url = new URL(request.url)

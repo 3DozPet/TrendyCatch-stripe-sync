@@ -54,13 +54,22 @@
   .breakdown-item { display:flex; justify-content:space-between; font-size:13px; padding:4px 0; }
   .breakdown-item .tag { color:#cbd5e1; }
   .breakdown-item .num { font-weight:700; }
+  .header-btn {
+    margin-left:10px; background:transparent; border:1px solid var(--border); color:#cbd5e1;
+    font-size:11px; padding:5px 10px; border-radius:7px; cursor:pointer;
+  }
+  .header-btn:hover { border-color:var(--accent); color:var(--accent); }
 </style>
 </head>
 <body>
 
 <header>
   <h1>TrendyCatch — Live Orders</h1>
-  <div class="status"><span class="dot"></span><span id="statusText">Listening…</span></div>
+  <div class="status">
+    <span class="dot"></span><span id="statusText">Listening…</span>
+    <button id="changePwBtn" class="header-btn">Change password</button>
+    <button id="logoutBtn" class="header-btn">Log out</button>
+  </div>
 </header>
 
 <section class="summary">
@@ -205,9 +214,15 @@ function renderOrder(order, isNew) {
   return el;
 }
 
+function reloadIfUnauthorized(status) {
+  if (status === 401) { location.reload(); return true; }
+  return false;
+}
+
 async function poll() {
   try {
     const res = await fetch(`/admin-orders?since=${since}`);
+    if (reloadIfUnauthorized(res.status)) return;
     const data = await res.json();
     document.getElementById("statusText").textContent = "Listening…";
 
@@ -247,7 +262,9 @@ function renderBreakdown(containerId, entries, formatValue) {
 
 async function pollStats() {
   try {
-    const stats = await fetch("/stats").then((r) => r.json());
+    const res = await fetch("/stats");
+    if (reloadIfUnauthorized(res.status)) return;
+    const stats = await res.json();
     document.getElementById("statRevenue").textContent = `$${Number(stats.totalRevenue || 0).toFixed(2)}`;
     document.getElementById("statOrders").textContent = stats.totalOrders || 0;
 
@@ -267,7 +284,9 @@ async function pollStats() {
 
 async function pollLiveVisitors() {
   try {
-    const live = await fetch("/live-visitors").then((r) => r.json());
+    const res = await fetch("/live-visitors");
+    if (reloadIfUnauthorized(res.status)) return;
+    const live = await res.json();
     document.getElementById("statLive").textContent = live.count ?? 0;
     const byCountry = Object.entries(live.byCountry || {}).sort((a, b) => b[1] - a[1]);
     renderBreakdown("liveByCountry", byCountry, (v) => v);
@@ -275,6 +294,29 @@ async function pollLiveVisitors() {
     // transient — leave the last known count showing
   }
 }
+
+document.getElementById("logoutBtn").addEventListener("click", async () => {
+  await fetch("/admin-logout", { method: "POST" });
+  location.reload();
+});
+
+document.getElementById("changePwBtn").addEventListener("click", async () => {
+  const current = prompt("Current password:");
+  if (current === null) return;
+  const next = prompt("New password (min 8 characters):");
+  if (next === null) return;
+  try {
+    const res = await fetch("/admin-change-password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ currentPassword: current, newPassword: next }),
+    });
+    const data = await res.json();
+    alert(res.ok ? "Password changed." : (data.error || "Failed to change password."));
+  } catch (e) {
+    alert("Network error — try again.");
+  }
+});
 
 poll();
 pollStats();
