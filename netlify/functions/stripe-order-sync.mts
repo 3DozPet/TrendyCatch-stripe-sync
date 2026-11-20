@@ -270,7 +270,30 @@ export default async (req: Request, context: Context) => {
   const clientIp = req.headers.get("x-forwarded-for") ?? undefined
   const clientUserAgent = req.headers.get("user-agent") ?? undefined
 
-  // TikTok Events API - CompletePayment
+  // content_id/content_type per line item, built from the same Stripe line
+  // items used for the Shopify order above. TikTok's "Content ID is missing"
+  // diagnostic flags Purchase/ViewContent events that omit this - a Stripe
+  // Price id is a stable per-product identifier, so it's used as content_id.
+  const tiktokContents = (session.line_items?.data ?? []).map((li) => {
+    const product = li.price?.product
+    const productName =
+      typeof product === "object" && product && "name" in product
+        ? (product as Stripe.Product).name
+        : li.description ?? "Item"
+    return {
+      content_id: li.price?.id ?? li.id,
+      content_type: "product",
+      content_name: productName,
+      quantity: li.quantity ?? 1,
+      price: (li.price?.unit_amount ?? 0) / 100,
+    }
+  })
+
+  // TikTok Events API - Purchase. TikTok renamed the legacy "CompletePayment"
+  // standard event to "Purchase" (May 2025); the old name still records data,
+  // but TikTok's own funnel-completeness diagnostics only recognize "Purchase"
+  // as satisfying the required Purchase event for the account's business
+  // vertical, so the new name is used here to actually clear that diagnostic.
   const tiktokAccessToken = Netlify.env.get("TIKTOK_ACCESS_TOKEN")
   const tiktokPixelCode = Netlify.env.get("TIKTOK_PIXEL_CODE") // DBVO0VRC77UC811KMEI0 for Pureglow Clearance
   if (tiktokAccessToken && tiktokPixelCode) {
@@ -285,6 +308,7 @@ export default async (req: Request, context: Context) => {
       url: landingUrl,
       ip: clientIp,
       userAgent: clientUserAgent,
+      contents: tiktokContents,
     })
   } else {
     console.log("TikTok Events API not configured (missing TIKTOK_ACCESS_TOKEN/TIKTOK_PIXEL_CODE) - skipped")
@@ -372,6 +396,13 @@ async function fireTikTokPurchaseEvent(opts: {
   url: string
   ip?: string
   userAgent?: string
+  contents?: Array<{
+    content_id: string
+    content_type: string
+    content_name?: string
+    quantity?: number
+    price?: number
+  }>
 }) {
   const hash = (v?: string) =>
     v ? createHash("sha256").update(v.trim().toLowerCase()).digest("hex") : undefined
@@ -381,7 +412,7 @@ async function fireTikTokPurchaseEvent(opts: {
     event_source_id: opts.pixelCode,
     data: [
       {
-        event: "CompletePayment",
+        event: "Purchase",
         event_time: Math.floor(Date.now() / 1000),
         event_id: opts.eventId,
         user: {
@@ -393,6 +424,9 @@ async function fireTikTokPurchaseEvent(opts: {
         properties: {
           currency: opts.currency,
           value: opts.value,
+          content_type: "product",
+          content_id: opts.contents?.[0]?.content_id,
+          contents: opts.contents,
         },
         page: { url: opts.url },
       },
@@ -412,7 +446,7 @@ async function fireTikTokPurchaseEvent(opts: {
     if (json.code !== 0) {
       console.error("TikTok Events API error:", JSON.stringify(json))
     } else {
-      console.log("TikTok CompletePayment event sent:", opts.eventId)
+      console.log("TikTok Purchase event sent:", opts.eventId)
     }
   } catch (err) {
     console.error("TikTok Events API call failed:", (err as Error).message)
