@@ -176,7 +176,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   })
 
   const orderCurrency = (session.currency ?? "aud").toUpperCase()
-  const orderEmail = env.ORDER_EMAIL ?? "support@3doz.pet"
+  const orderEmail = env.ORDER_EMAIL ?? "orders@trendycatch.us"
 
   const orderInput = {
     email: orderEmail,

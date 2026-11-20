@@ -58,7 +58,8 @@
   }
   .buy-btn:hover { background: var(--accent-dark); }
   .buy-btn:disabled { opacity: 0.6; cursor: wait; }
-  footer.site { text-align: center; color: var(--muted); font-size: 12px; padding: 24px 20px 48px; }
+  footer.site { text-align: center; color: var(--muted); font-size: 12px; padding: 24px 20px 48px; line-height: 1.8; }
+  footer.site a { color: var(--muted); text-decoration: underline; }
   .toast {
     position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%) translateY(20px);
     background: var(--ink); color: #fff; padding: 12px 18px; border-radius: 10px; font-size: 13px;
@@ -84,7 +85,9 @@
 </main>
 
 <footer class="site">
-  © <span id="year"></span> TrendyCatch. Part of 3Doz.pet. Questions? support@3doz.pet
+  <a href="/privacy-policy.html">Privacy Policy</a> · <a href="/terms-of-service.html">Terms of Service</a> ·
+  <a href="/refund-policy.html">Refund Policy</a> · <a href="/shipping-policy.html">Shipping Policy</a><br/><br/>
+  © <span id="year"></span> TrendyCatch. Part of 3Doz.pet. Questions? <a href="mailto:orders@trendycatch.us">orders@trendycatch.us</a>
 </footer>
 
 <div class="toast" id="toast"></div>

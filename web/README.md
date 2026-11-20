@@ -12,6 +12,10 @@ Pureglow Clearance — untouched).
 | `index.html` | Main landing page — 15 products, geo-based AU/NZ/US/CA pricing, Buy Now buttons, Meta/TikTok/Google pixels |
 | `admin.html` | Live order feed — polls for new orders every 5s and plays a synthesized chime; shows each order's ad-platform source |
 | `thank-you.html` | Stripe `success_url` destination |
+| `privacy-policy.html` | Privacy policy — data collected, pixel/cookie disclosure (AU/NZ/US/CA) |
+| `terms-of-service.html` | Terms of service |
+| `refund-policy.html` | Refund &amp; return policy |
+| `shipping-policy.html` | Shipping policy — zones, timelines, free-shipping note |
 | `products.json` | The 15 products: title, "hook" description, variant, per-country prices |
 | `functions/geo.ts` | `GET /geo` — Cloudflare edge country detection |
 | `functions/config.ts` | `GET /config` — public pixel/tag IDs, read from env |
@@ -40,6 +44,29 @@ Pureglow Clearance — untouched).
    **which platform it came from** — Facebook, Instagram, TikTok, Google,
    YouTube, etc. — right in the order card.
 
+## Policy pages
+
+Meta, TikTok and Google Ads all require a Privacy Policy, Terms of Service
+and a clear Refund/Return policy to be reachable from the site before
+they'll approve ad accounts/campaigns — these are linked in the footer of
+every page:
+
+- `privacy-policy.html` — discloses what's collected (name/email/phone/
+  address via Stripe), and the Meta/TikTok/Google pixels and hashed-email
+  conversion tracking used for ads, with rights sections for Australia
+  (Privacy Act 1988), New Zealand (Privacy Act 2020), the US (state laws
+  like CCPA) and Canada (PIPEDA).
+- `terms-of-service.html` — order/payment terms, consumer-guarantee
+  carve-out for AU/NZ/US/CA consumer protection law.
+- `refund-policy.html` — 30-day change-of-mind returns, free replacement/
+  refund for damaged or faulty items, cancellation terms.
+- `shipping-policy.html` — per-country delivery estimates, free-shipping
+  note (shipping cost is already built into the displayed price).
+
+These are a solid starting draft, not legal advice — have them reviewed by
+someone qualified in your jurisdiction before relying on them, especially
+the consumer-guarantee and privacy-rights sections.
+
 ## Required environment variables (set in Cloudflare Pages → Settings → Environment variables)
 
 | Variable | Used by | Required? |
@@ -48,7 +75,7 @@ Pureglow Clearance — untouched).
 | `STRIPE_WEBHOOK_SECRET` | stripe-order-sync | Yes |
 | `SHOPIFY_STORE_DOMAIN` | stripe-order-sync | Yes (e.g. `3doz.myshopify.com`) |
 | `SHOPIFY_ADMIN_TOKEN` | stripe-order-sync | Yes |
-| `ORDER_EMAIL` | stripe-order-sync | No (defaults to `support@3doz.pet`) |
+| `ORDER_EMAIL` | stripe-order-sync | No (defaults to `orders@trendycatch.us`) |
 | `SITE_URL` | create-checkout, stripe-order-sync | No (defaults to the deployment's own origin) |
 | `META_PIXEL_ID` | config, stripe-order-sync | No — Meta tracking skipped if unset |
 | `META_CAPI_ACCESS_TOKEN` | stripe-order-sync | No |
@@ -91,6 +118,35 @@ so it can't be deployed directly from here. To connect it:
    `https://trendycatch.us/stripe-order-sync` listening for
    `checkout.session.completed`, and copy its signing secret into
    `STRIPE_WEBHOOK_SECRET`.
+
+## Setting up orders@trendycatch.us
+
+`orders@trendycatch.us` is now the contact address shown on every policy
+page, the site footer, the thank-you page, and the order record created in
+Shopify (`ORDER_EMAIL`). Since trendycatch.us is already on Cloudflare, the
+easiest way to make it a real, working inbox — forwarding to wherever you
+actually want to read mail (e.g. `support@3doz.pet` or your Gmail) — is
+Cloudflare's free Email Routing, no mail server required:
+
+1. Cloudflare dashboard → the `trendycatch.us` zone → **Email** → **Email Routing**.
+2. Enable Email Routing (it adds the necessary MX/SPF/DKIM DNS records for
+   you automatically).
+3. Under **Routing rules → Custom address**, add `orders@trendycatch.us` →
+   **Destination**: the real inbox you want it forwarded to (verify that
+   destination address when prompted).
+4. Optionally also add a **Catch-all** rule forwarding any other
+   `@trendycatch.us` address to the same inbox, so a stray typo'd address
+   still reaches you.
+
+This only makes the address receive mail — it doesn't change what emails
+the Shopify order itself triggers (we deliberately keep `sendReceipt` /
+`sendFulfillmentReceipt` off in `stripe-order-sync.ts` to avoid duplicate
+customer emails, since Stripe's own receipt — if you turn it on in your
+Stripe Dashboard's Checkout settings — and the admin dashboard already cover
+order confirmation and visibility). If you'd rather customers get an actual
+automated "order confirmed" email from Shopify itself, flip
+`sendReceipt: true` in `stripe-order-sync.ts`'s `orderCreate` call and
+Shopify will send it from your store's own configured sender address.
 
 ## Images
 
