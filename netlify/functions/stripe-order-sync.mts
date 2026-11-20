@@ -41,11 +41,22 @@ const COUNTRY_NAMES: Record<string, string> = {
 // content_id (the same behaviour this whole function had before Pureglow's
 // catalog SKU was added), so a new product is never silently mislabeled as
 // an existing one.
-const PRODUCT_CONFIG: Array<{ match: string; landingUrl: string; tiktokContentId: string }> = [
+const PRODUCT_CONFIG: Array<{
+  match: string
+  landingUrl: string
+  tiktokContentId: string
+  // Name of an env var holding this product's own Meta Pixel ID, for a
+  // product that advertises through a different Meta Pixel/ad account than
+  // the default META_PIXEL_ID. Omitted (or unset in Netlify) falls back to
+  // META_PIXEL_ID, same as before this existed.
+  metaPixelIdEnvVar?: string
+}> = [
   {
     match: "pore", // Pureglow Clearance - Deep Cleansing Nose Pore Patches
     landingUrl: "https://pureglow-clearance.netlify.app",
     tiktokContentId: "PUREGLOW-PATCH-50", // TikTok Catalog Manager SKU ID
+    // Uses the default META_PIXEL_ID env var - this is the pixel that env
+    // var was originally set up for.
   },
   {
     match: "heated period", // LunaHug - Heated Period Relief Massage Belt
@@ -54,6 +65,11 @@ const PRODUCT_CONFIG: Array<{ match: string; landingUrl: string; tiktokContentId
     // catalog exists for it; until then this falls back to the Stripe price
     // id below (via fallbackContentId), same as any other unmapped product.
     tiktokContentId: "",
+    // LunaHug's own Meta Pixel (confirmed live on lunahug.netlify.app via its
+    // browser-side fbq() calls: 2373575236730449) - set META_PIXEL_ID_LUNAHUG
+    // to that value in this site's Netlify env vars. Until it's set, this
+    // falls back to META_PIXEL_ID (Pureglow's pixel) same as before.
+    metaPixelIdEnvVar: "META_PIXEL_ID_LUNAHUG",
   },
 ]
 
@@ -63,6 +79,7 @@ function resolveProductConfig(productName: string | undefined, fallbackContentId
   return {
     landingUrl: found?.landingUrl ?? "https://3doz.pet",
     tiktokContentId: found?.tiktokContentId || fallbackContentId,
+    metaPixelIdEnvVar: found?.metaPixelIdEnvVar,
   }
 }
 
@@ -315,7 +332,7 @@ export default async (req: Request, context: Context) => {
     typeof firstProduct === "object" && firstProduct && "name" in firstProduct
       ? (firstProduct as Stripe.Product).name
       : firstLineItem?.description
-  const { landingUrl } = resolveProductConfig(
+  const { landingUrl, metaPixelIdEnvVar } = resolveProductConfig(
     firstProductName,
     typeof firstLineItem?.price === "object" ? firstLineItem.price?.id ?? "unknown-sku" : "unknown-sku",
   )
@@ -374,8 +391,12 @@ export default async (req: Request, context: Context) => {
   // both run on the same Meta Pixel. META_CAPI_ACCESS_TOKEN already exists in
   // this site's env vars; META_PIXEL_ID needs to be added alongside it (the
   // Pixel ID shown in Meta Events Manager) for this to activate.
+  // A product with its own metaPixelIdEnvVar (see PRODUCT_CONFIG above, e.g.
+  // LunaHug's META_PIXEL_ID_LUNAHUG) uses that pixel instead, so its events
+  // go to its own ad account rather than Pureglow's. Falls back to the
+  // default META_PIXEL_ID when that product-specific var isn't set yet.
   const metaAccessToken = Netlify.env.get("META_CAPI_ACCESS_TOKEN")
-  const metaPixelId = Netlify.env.get("META_PIXEL_ID")
+  const metaPixelId = (metaPixelIdEnvVar && Netlify.env.get(metaPixelIdEnvVar)) || Netlify.env.get("META_PIXEL_ID")
   if (metaAccessToken && metaPixelId) {
     await fireMetaPurchaseEvent({
       pixelId: metaPixelId,
