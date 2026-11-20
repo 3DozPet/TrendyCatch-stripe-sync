@@ -221,6 +221,33 @@ async function loadPixels() {
 }
 loadPixels();
 
+// ---------------------------------------------------------------------------
+// "Live on page" heartbeat for the admin dashboard (/admin.html) — a tiny,
+// anonymous ping every ~20s while this tab is open, so the dashboard can show
+// how many people are on the site right now, the way Shopify's Live View
+// does. No personal data: just a random per-tab id and the current path.
+// Country is added server-side from Cloudflare's own geolocation, not from
+// anything sent here, so it can't be spoofed. Fails silently if it can't
+// reach the endpoint — this is a nice-to-have, never something a visitor
+// should notice.
+(function startLiveVisitorHeartbeat() {
+  let visitorId = sessionStorage.getItem("tc_visitor_id");
+  if (!visitorId) {
+    visitorId = (crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`);
+    sessionStorage.setItem("tc_visitor_id", visitorId);
+  }
+  const ping = () => {
+    fetch("/visitor-ping", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ visitorId, page: location.pathname }),
+      keepalive: true,
+    }).catch(() => {});
+  };
+  ping();
+  setInterval(ping, 20000);
+})();
+
 function fireViewContent(product) {
   if (window.__tcFbq) window.__tcFbq("track", "ViewContent", { content_ids: [product.id], content_name: product.title, currency: currentCountry === "US" ? "USD" : currentCountry === "NZ" ? "NZD" : currentCountry === "CA" ? "CAD" : "AUD", value: product.prices[currentCountry] });
   if (window.__tcTtq) window.__tcTtq.track("ViewContent", { content_id: product.id, content_name: product.title, value: product.prices[currentCountry] });

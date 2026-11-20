@@ -232,6 +232,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   }
 
   // ---- Admin dashboard "new order" sound notification (best-effort, KV) ----
+  const orderTotal = (session.amount_total ?? 0) / 100
   if (env.ORDERS_KV) {
     try {
       const notification = {
@@ -241,7 +242,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
         email: customerDetails?.email ?? null,
         phone: customerDetails?.phone ?? null,
         country: addr?.country ?? null,
-        total: (session.amount_total ?? 0) / 100,
+        total: orderTotal,
         currency: orderCurrency,
         items: lineItems.map((li: any) => ({ title: li.title, quantity: li.quantity })),
         source: rawSource,
@@ -255,6 +256,19 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
       })
     } catch (err) {
       console.error("Order notification KV write failed (order was still created):", (err as Error).message)
+    }
+
+    // ---- Running revenue/orders totals (never expire) for the dashboard's
+    // "home screen" summary — total revenue, revenue by country, orders by
+    // ad platform — the same kind of numbers Shopify's own Home shows.
+    try {
+      await updateStatsSummary(env.ORDERS_KV, {
+        country: addr?.country ?? "UNKNOWN",
+        source: rawSource.toLowerCase(),
+        total: orderTotal,
+      })
+    } catch (err) {
+      console.error("Stats summary update failed (order was still created):", (err as Error).message)
     }
   }
 
@@ -356,6 +370,41 @@ function labelForSource(code: string): string {
     referral: "Referral link",
   }
   return labels[code.toLowerCase()] ?? `Other (${code})`
+}
+
+// Keeps one small, permanent JSON summary in KV — total revenue/orders, plus
+// broken down by country and by ad-platform source — so the admin dashboard
+// can show a Shopify-Home-style "how's business doing" snapshot instead of
+// only the rolling 48h new-order feed. Read-modify-write against a single
+// key; fine at this order volume (a lost increment under a rare simultaneous
+// webhook pair just means the next poll is one order behind, never wrong for
+// long).
+async function updateStatsSummary(
+  kv: KVNamespace,
+  order: { country: string; source: string; total: number },
+): Promise<void> {
+  const key = "stats:summary"
+  const raw = await kv.get(key)
+  const stats = raw
+    ? JSON.parse(raw)
+    : { totalRevenue: 0, totalOrders: 0, byCountry: {} as Record<string, { revenue: number; orders: number }>, bySource: {} as Record<string, { revenue: number; orders: number }> }
+
+  stats.totalRevenue = (stats.totalRevenue ?? 0) + order.total
+  stats.totalOrders = (stats.totalOrders ?? 0) + 1
+
+  const country = order.country || "UNKNOWN"
+  stats.byCountry[country] = stats.byCountry[country] ?? { revenue: 0, orders: 0 }
+  stats.byCountry[country].revenue += order.total
+  stats.byCountry[country].orders += 1
+
+  const source = order.source || "direct"
+  stats.bySource[source] = stats.bySource[source] ?? { revenue: 0, orders: 0 }
+  stats.bySource[source].revenue += order.total
+  stats.bySource[source].orders += 1
+
+  stats.updatedAt = new Date().toISOString()
+
+  await kv.put(key, JSON.stringify(stats))
 }
 
 async function sha256Hex(input: string): Promise<string> {

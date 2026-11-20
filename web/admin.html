@@ -39,6 +39,21 @@
     position:fixed; bottom:20px; right:20px; background:var(--accent); color:#06281f; border:none;
     padding:12px 18px; border-radius:10px; font-weight:700; font-size:13px; cursor:pointer;
   }
+  /* ---- Home-screen summary: revenue / orders / live visitors, by country & platform ---- */
+  .summary { max-width:900px; margin:0 auto; padding:20px 24px 0; display:flex; flex-direction:column; gap:14px; }
+  .stat-row { display:grid; grid-template-columns:repeat(auto-fit, minmax(140px, 1fr)); gap:12px; }
+  .stat-card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:14px 16px; }
+  .stat-card .label { font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:0.04em; }
+  .stat-card .value { font-size:22px; font-weight:800; margin-top:4px; }
+  .stat-card.live .value { color:var(--accent); }
+  .live-dot { display:inline-block; width:7px; height:7px; border-radius:50%; background:var(--accent); margin-right:6px; animation:pulse 1.6s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.35;} }
+  .breakdown-row { display:flex; gap:12px; flex-wrap:wrap; }
+  .breakdown { flex:1; min-width:220px; background:var(--card); border:1px solid var(--border); border-radius:12px; padding:14px 16px; }
+  .breakdown h3 { font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:0.04em; margin:0 0 10px; }
+  .breakdown-item { display:flex; justify-content:space-between; font-size:13px; padding:4px 0; }
+  .breakdown-item .tag { color:#cbd5e1; }
+  .breakdown-item .num { font-weight:700; }
 </style>
 </head>
 <body>
@@ -47,6 +62,37 @@
   <h1>TrendyCatch — Live Orders</h1>
   <div class="status"><span class="dot"></span><span id="statusText">Listening…</span></div>
 </header>
+
+<section class="summary">
+  <div class="stat-row">
+    <div class="stat-card">
+      <div class="label">Total revenue</div>
+      <div class="value" id="statRevenue">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Orders</div>
+      <div class="value" id="statOrders">—</div>
+    </div>
+    <div class="stat-card live">
+      <div class="label"><span class="live-dot"></span>Live on site</div>
+      <div class="value" id="statLive">—</div>
+    </div>
+  </div>
+  <div class="breakdown-row">
+    <div class="breakdown">
+      <h3>Revenue by country</h3>
+      <div id="byCountry"></div>
+    </div>
+    <div class="breakdown">
+      <h3>Orders by ad platform</h3>
+      <div id="bySource"></div>
+    </div>
+    <div class="breakdown">
+      <h3>Live visitors by country</h3>
+      <div id="liveByCountry"></div>
+    </div>
+  </div>
+</section>
 
 <main id="orderList">
   <div class="empty" id="emptyState">Waiting for the first order to come in…</div>
@@ -185,8 +231,57 @@ async function poll() {
   }
 }
 
+const COUNTRY_NAMES = { AU: "Australia", NZ: "New Zealand", US: "United States", CA: "Canada", GB: "United Kingdom", UNKNOWN: "Unknown" };
+function countryName(code) { return COUNTRY_NAMES[code] || code; }
+
+function renderBreakdown(containerId, entries, formatValue) {
+  const el = document.getElementById(containerId);
+  if (!entries.length) {
+    el.innerHTML = `<div class="breakdown-item"><span class="tag">—</span></div>`;
+    return;
+  }
+  el.innerHTML = entries
+    .map(([key, val]) => `<div class="breakdown-item"><span class="tag">${countryName(key)}</span><span class="num">${formatValue(val)}</span></div>`)
+    .join("");
+}
+
+async function pollStats() {
+  try {
+    const stats = await fetch("/stats").then((r) => r.json());
+    document.getElementById("statRevenue").textContent = `$${Number(stats.totalRevenue || 0).toFixed(2)}`;
+    document.getElementById("statOrders").textContent = stats.totalOrders || 0;
+
+    const byCountry = Object.entries(stats.byCountry || {}).sort((a, b) => b[1].revenue - a[1].revenue);
+    renderBreakdown("byCountry", byCountry, (v) => `$${v.revenue.toFixed(2)} (${v.orders})`);
+
+    const bySource = Object.entries(stats.bySource || {}).sort((a, b) => b[1].orders - a[1].orders);
+    renderBreakdown(
+      "bySource",
+      bySource.map(([key, val]) => [key.charAt(0).toUpperCase() + key.slice(1), val]),
+      (v) => `${v.orders} · $${v.revenue.toFixed(2)}`,
+    );
+  } catch (e) {
+    // keep showing the last known numbers rather than blanking the dashboard
+  }
+}
+
+async function pollLiveVisitors() {
+  try {
+    const live = await fetch("/live-visitors").then((r) => r.json());
+    document.getElementById("statLive").textContent = live.count ?? 0;
+    const byCountry = Object.entries(live.byCountry || {}).sort((a, b) => b[1] - a[1]);
+    renderBreakdown("liveByCountry", byCountry, (v) => v);
+  } catch (e) {
+    // transient — leave the last known count showing
+  }
+}
+
 poll();
+pollStats();
+pollLiveVisitors();
 setInterval(poll, 5000);
+setInterval(pollStats, 10000);
+setInterval(pollLiveVisitors, 5000);
 </script>
 
 </body>
