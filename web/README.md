@@ -134,8 +134,19 @@ Cloudflare's free Email Routing, no mail server required:
 3. Under **Routing rules → Custom address**, add `orders@trendycatch.us` →
    **Destination**: the real inbox you want it forwarded to (verify that
    destination address when prompted).
-4. Optionally also add a **Catch-all** rule forwarding any other
+4. Add a second custom address the same way for **`robbie@trendycatch.us`**
+   — a named-person inbox, forwarded to the same real inbox. Ad platforms
+   (Meta Business Manager, TikTok for Business, Google Ads) and payment/
+   domain verification flows (Stripe, Shopify, domain-ownership checks)
+   sometimes send their confirmation link or code to a specific named
+   contact rather than a generic `orders@`/`support@` alias, or ask you to
+   nominate one during business verification — `robbie@trendycatch.us`
+   covers that, and since it forwards to the same inbox as `orders@`, any
+   verification email landing there just needs opening and clicking
+   "verify"/"confirm" like any normal inbox mail.
+5. Optionally also add a **Catch-all** rule forwarding any other
    `@trendycatch.us` address to the same inbox, so a stray typo'd address
+   (or a verification email sent to some other alias you didn't anticipate)
    still reaches you.
 
 This only makes the address receive mail — it doesn't change what emails
