@@ -3,13 +3,9 @@ pages_build_output_dir = "."
 compatibility_date = "2025-01-01"
 
 # KV namespace used only for the /admin.html live-order-sound feed.
-# Create it once with:
-#   wrangler kv namespace create trendycatch-orders
-# then paste the returned id below (and set the same binding + id in the
-# Cloudflare Pages dashboard under Settings -> Functions -> KV namespace bindings,
-# since the dashboard's Git-connected build doesn't read this file's [[kv_namespaces]]
-# block automatically for Pages — it's included here for `wrangler pages dev` /
-# local testing and as a record of the binding name to use).
+# Created via the Cloudflare dashboard (Storage & databases -> Workers KV ->
+# trendycatch-orders) and bound here as ORDERS_KV so the Git-connected Pages
+# build picks it up automatically.
 [[kv_namespaces]]
 binding = "ORDERS_KV"
-id = "REPLACE_WITH_KV_NAMESPACE_ID"
+id = "e6123766f08c4294b43572031ae7ba82"
