@@ -30,6 +30,42 @@ const COUNTRY_NAMES: Record<string, string> = {
   GB: "United Kingdom",
 }
 
+// This single sync function is shared by every landing page that checks out
+// through this Stripe account (Pureglow Clearance, LunaHug, and any future
+// one) - it used to hardcode the landing URL and TikTok catalog content_id
+// to Pureglow Clearance specifically, which would have mislabeled every
+// other product's ad-platform Purchase events as a Pureglow Clearance sale
+// at the Pureglow URL. Matched by product name (case-insensitive substring)
+// so each product's own events carry its own URL/catalog SKU; an unmapped
+// product falls back to a generic URL and its own Stripe price id as the
+// content_id (the same behaviour this whole function had before Pureglow's
+// catalog SKU was added), so a new product is never silently mislabeled as
+// an existing one.
+const PRODUCT_CONFIG: Array<{ match: string; landingUrl: string; tiktokContentId: string }> = [
+  {
+    match: "pore", // Pureglow Clearance - Deep Cleansing Nose Pore Patches
+    landingUrl: "https://pureglow-clearance.netlify.app",
+    tiktokContentId: "PUREGLOW-PATCH-50", // TikTok Catalog Manager SKU ID
+  },
+  {
+    match: "heated period", // LunaHug - Heated Period Relief Massage Belt
+    landingUrl: "https://lunahug.netlify.app",
+    // TODO: replace with LunaHug's real TikTok Catalog Manager SKU ID once a
+    // catalog exists for it; until then this falls back to the Stripe price
+    // id below (via fallbackContentId), same as any other unmapped product.
+    tiktokContentId: "",
+  },
+]
+
+function resolveProductConfig(productName: string | undefined, fallbackContentId: string) {
+  const name = (productName ?? "").toLowerCase()
+  const found = PRODUCT_CONFIG.find((p) => name.includes(p.match))
+  return {
+    landingUrl: found?.landingUrl ?? "https://3doz.pet",
+    tiktokContentId: found?.tiktokContentId || fallbackContentId,
+  }
+}
+
 export default async (req: Request, context: Context) => {
   if (req.method !== "POST") {
     return new Response("Method not allowed", { status: 405 })
@@ -266,26 +302,42 @@ export default async (req: Request, context: Context) => {
   // ---------------------------------------------------------------------
 
   const purchaseValue = (session.amount_total ?? 0) / 100
-  const landingUrl = "https://pureglow-clearance.netlify.app"
   const clientIp = req.headers.get("x-forwarded-for") ?? undefined
   const clientUserAgent = req.headers.get("user-agent") ?? undefined
+
+  // Resolve the landing URL and TikTok catalog content_id from the product
+  // that actually sold (see PRODUCT_CONFIG above), instead of a single
+  // hardcoded Pureglow Clearance value that every other product used to
+  // inherit regardless of what was actually bought.
+  const firstLineItem = session.line_items?.data?.[0]
+  const firstProduct = firstLineItem?.price?.product
+  const firstProductName =
+    typeof firstProduct === "object" && firstProduct && "name" in firstProduct
+      ? (firstProduct as Stripe.Product).name
+      : firstLineItem?.description
+  const { landingUrl } = resolveProductConfig(
+    firstProductName,
+    typeof firstLineItem?.price === "object" ? firstLineItem.price?.id ?? "unknown-sku" : "unknown-sku",
+  )
 
   // content_id/content_type per line item, built from the same Stripe line
   // items used for the Shopify order above. TikTok's "Content ID is missing"
   // diagnostic flags Purchase/ViewContent events that omit this. content_id
-  // is hardcoded to the TikTok Catalog Manager SKU ID (PUREGLOW-PATCH-50) -
-  // the catalog ("Pureglow Clearance Catalog") only has this one product, and
-  // the event content_id must match the catalog's SKU ID exactly for the
-  // pixel/catalog match rate to work (a Stripe Price id does not match it,
-  // which caused "No catalog connected to pixel" / 0% match rate).
+  // is resolved per product (see PRODUCT_CONFIG above) so it matches each
+  // product's own TikTok Catalog Manager SKU ID - a Stripe Price id doesn't
+  // match a catalog's SKU ID, which is what caused "No catalog connected to
+  // pixel" / 0% match rate for Pureglow before its SKU was hardcoded here;
+  // an unmapped product now falls back to its own Stripe price id instead of
+  // silently reusing Pureglow's SKU.
   const tiktokContents = (session.line_items?.data ?? []).map((li) => {
     const product = li.price?.product
     const productName =
       typeof product === "object" && product && "name" in product
         ? (product as Stripe.Product).name
         : li.description ?? "Item"
+    const { tiktokContentId } = resolveProductConfig(productName, li.price?.id ?? "unknown-sku")
     return {
-      content_id: "PUREGLOW-PATCH-50",
+      content_id: tiktokContentId,
       content_type: "product",
       content_name: productName,
       quantity: li.quantity ?? 1,
@@ -356,7 +408,7 @@ export default async (req: Request, context: Context) => {
       transactionId: tagSessionId,
       value: purchaseValue,
       currency: orderCurrency,
-      itemName: lineItems[0]?.title ?? "Pureglow Clearance",
+      itemName: lineItems[0]?.title ?? "Order",
     })
   } else {
     console.log("GA4 Measurement Protocol not configured (missing GA4_MEASUREMENT_ID/GA4_API_SECRET) - skipped")
