@@ -34,9 +34,9 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   }
 
   try {
-    // 45s TTL: a bit longer than the client's ~20s ping interval, so one
-    // missed beat doesn't make someone flicker off the live count.
-    await env.ORDERS_KV.put(`visitor:${visitorId}`, JSON.stringify(entry), { expirationTtl: 45 })
+    // 60s is Cloudflare KV's minimum TTL. The client pings every ~20s, so a
+    // visitor stays "live" for a couple of missed beats before dropping off.
+    await env.ORDERS_KV.put(`visitor:${visitorId}`, JSON.stringify(entry), { expirationTtl: 60 })
   } catch (err) {
     console.error("visitor-ping KV write failed:", (err as Error).message)
   }
