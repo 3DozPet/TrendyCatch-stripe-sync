@@ -1,0 +1,14 @@
+{
+  "name": "trendycatch-web",
+  "private": true,
+  "version": "1.0.0",
+  "description": "trendycatch.us — Cloudflare Pages site: multi-product landing page, Stripe checkout, Stripe->Shopify order sync, ad-pixel/CAPI tracking.",
+  "scripts": {
+    "dev": "wrangler pages dev . --compatibility-date=2025-01-01",
+    "deploy": "wrangler pages deploy . --project-name=trendycatch"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250101.0",
+    "wrangler": "^4.0.0"
+  }
+}

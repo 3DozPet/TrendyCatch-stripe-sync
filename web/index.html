@@ -1,0 +1,335 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>TrendyCatch — Everyday Problem-Solvers, Delivered</title>
+<meta name="description" content="Clever everyday gadgets that actually solve a problem. Fast shipping to Australia, New Zealand, the US and Canada." />
+<style>
+  :root {
+    --ink: #121417;
+    --muted: #6b7280;
+    --bg: #fafafa;
+    --card: #ffffff;
+    --accent: #ff5a3c;
+    --accent-dark: #e4472a;
+    --border: #e7e7e7;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: var(--bg); color: var(--ink); }
+  a { color: inherit; }
+  header.site {
+    position: sticky; top: 0; z-index: 10;
+    background: var(--ink); color: #fff; padding: 14px 20px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  header.site .brand { font-weight: 800; font-size: 20px; letter-spacing: -0.02em; }
+  header.site .brand span { color: var(--accent); }
+  header.site .geo-pill { font-size: 12px; background: rgba(255,255,255,0.12); padding: 6px 12px; border-radius: 999px; }
+  .hero { padding: 48px 20px 28px; text-align: center; max-width: 720px; margin: 0 auto; }
+  .hero h1 { font-size: 34px; line-height: 1.15; margin: 0 0 12px; letter-spacing: -0.02em; }
+  .hero p { color: var(--muted); font-size: 16px; margin: 0; }
+  .grid {
+    max-width: 1180px; margin: 24px auto 80px; padding: 0 20px;
+    display: grid; gap: 20px;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  }
+  .card {
+    background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+    overflow: hidden; display: flex; flex-direction: column;
+  }
+  .card .thumb {
+    aspect-ratio: 1 / 1; background: #f1f1f1; display: flex; align-items: center; justify-content: center;
+    overflow: hidden;
+  }
+  .card .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .card .thumb .fallback { font-size: 42px; opacity: 0.25; }
+  .card .body { padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
+  .card .title { font-size: 15px; font-weight: 650; line-height: 1.3; }
+  .card .hook { font-size: 13px; color: var(--muted); line-height: 1.45; flex: 1; }
+  .card .variant { font-size: 12px; color: var(--muted); }
+  .card .price-row { display: flex; align-items: baseline; gap: 8px; margin-top: 4px; }
+  .card .price { font-size: 20px; font-weight: 800; }
+  .card .price-note { font-size: 11px; color: var(--muted); }
+  .buy-btn {
+    margin-top: 6px; border: none; border-radius: 10px; padding: 12px 14px;
+    background: var(--accent); color: #fff; font-size: 14px; font-weight: 700;
+    cursor: pointer; transition: background 0.15s ease;
+  }
+  .buy-btn:hover { background: var(--accent-dark); }
+  .buy-btn:disabled { opacity: 0.6; cursor: wait; }
+  footer.site { text-align: center; color: var(--muted); font-size: 12px; padding: 24px 20px 48px; }
+  .toast {
+    position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%) translateY(20px);
+    background: var(--ink); color: #fff; padding: 12px 18px; border-radius: 10px; font-size: 13px;
+    opacity: 0; transition: all 0.25s ease; pointer-events: none; max-width: 90vw; text-align: center;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<header class="site">
+  <div class="brand">Trendy<span>Catch</span></div>
+  <div class="geo-pill" id="geoPill">Loading pricing…</div>
+</header>
+
+<section class="hero">
+  <h1>Clever fixes for annoying everyday problems</h1>
+  <p>Hand-picked gadgets that actually do what they promise. Shipped straight to your door.</p>
+</section>
+
+<main class="grid" id="productGrid">
+  <!-- product cards injected by script -->
+</main>
+
+<footer class="site">
+  © <span id="year"></span> TrendyCatch. Part of 3Doz.pet. Questions? support@3doz.pet
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<script>
+document.getElementById("year").textContent = new Date().getFullYear();
+
+const COUNTRY_SYMBOL = { AU: "A$", NZ: "NZ$", US: "$", CA: "C$" };
+const COUNTRY_LABEL = { AU: "Australia", NZ: "New Zealand", US: "United States", CA: "Canada" };
+
+let currentCountry = "AU";
+let products = [];
+
+function showToast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  setTimeout(() => t.classList.remove("show"), 3500);
+}
+
+// ---------------------------------------------------------------------------
+// Attribution: work out which ad platform this visitor came from, from the
+// URL's own query params (UTM tags + each network's click-id param) or the
+// referring page, so every order can be traced back to Facebook, Instagram,
+// TikTok, Google/YouTube, etc. First-touch: stored once per browser session
+// so a later page view without params doesn't overwrite it with "direct".
+function detectSource() {
+  const stored = sessionStorage.getItem("tc_source");
+  if (stored) return stored;
+
+  const params = new URLSearchParams(location.search);
+  let source = null;
+
+  const utmSource = (params.get("utm_source") || "").toLowerCase();
+  if (utmSource) {
+    if (utmSource.includes("facebook") || utmSource.includes("fb")) source = "facebook";
+    else if (utmSource.includes("instagram") || utmSource.includes("ig")) source = "instagram";
+    else if (utmSource.includes("tiktok")) source = "tiktok";
+    else if (utmSource.includes("google")) source = "google";
+    else if (utmSource.includes("youtube")) source = "youtube";
+    else if (utmSource.includes("bing") || utmSource.includes("microsoft")) source = "bing";
+    else if (utmSource.includes("pinterest")) source = "pinterest";
+    else if (utmSource.includes("snapchat") || utmSource.includes("snap")) source = "snapchat";
+    else source = utmSource;
+  }
+
+  // Click-id params each ad platform appends automatically — reliable even
+  // when a campaign forgets to set utm_source.
+  if (!source) {
+    if (params.has("fbclid")) source = "facebook";
+    else if (params.has("ttclid")) source = "tiktok";
+    else if (params.has("gclid") || params.has("gad_source") || params.has("gbraid") || params.has("wbraid")) source = "google";
+    else if (params.has("msclkid")) source = "bing";
+    else if (params.has("epik")) source = "pinterest";
+    else if (params.has("igshid") || params.has("ig_mid")) source = "instagram";
+    else if (params.has("ttclid")) source = "tiktok";
+    else if (params.has("sc_cid") || params.has("ScCid")) source = "snapchat";
+  }
+
+  // Fall back to the referring page's domain.
+  if (!source && document.referrer) {
+    try {
+      const refHost = new URL(document.referrer).hostname.replace(/^www\./, "");
+      if (refHost.includes("facebook.com")) source = "facebook";
+      else if (refHost.includes("instagram.com")) source = "instagram";
+      else if (refHost.includes("tiktok.com")) source = "tiktok";
+      else if (refHost.includes("youtube.com")) source = "youtube";
+      else if (refHost.includes("google.")) source = "organic_search";
+      else if (refHost.includes("bing.com")) source = "bing";
+      else if (refHost.includes("pinterest.")) source = "pinterest";
+      else if (refHost) source = "referral";
+    } catch {}
+  }
+
+  source = source || "direct";
+  sessionStorage.setItem("tc_source", source);
+  return source;
+}
+const visitorSource = detectSource();
+
+// ---------------------------------------------------------------------------
+// Pixels: Meta (Facebook + Instagram), TikTok and Google gtag.js (GA4 +
+// Google Ads/YouTube via linked conversions). IDs are served from /config so
+// they can be changed without a redeploy, and nothing fires if an ID is
+// missing for a given platform.
+async function loadPixels() {
+  let config = {};
+  try {
+    config = await fetch("/config").then((r) => r.json());
+  } catch (e) {
+    console.warn("Could not load /config for pixel IDs", e);
+    return;
+  }
+
+  if (config.metaPixelId) {
+    /* eslint-disable */
+    !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+    n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
+    n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
+    t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,
+    document,'script','https://connect.facebook.net/en_US/fbevents.js');
+    fbq('init', config.metaPixelId);
+    fbq('track', 'PageView');
+    /* eslint-enable */
+    window.__tcFbq = window.fbq;
+  }
+
+  if (config.tiktokPixelCode) {
+    /* eslint-disable */
+    !function (w, d, t) {
+      w.TiktokAnalyticsObject=t;var ttq=w[t]=w[t]||[];ttq.methods=["page","track","identify","instances","debug","on","off","once","ready","alias","group","enableCookie","disableCookie"],ttq.setAndDefer=function(t,e){t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}};for(var i=0;i<ttq.methods.length;i++)ttq.setAndDefer(ttq,ttq.methods[i]);ttq.instance=function(t){for(var e=ttq._i[t]||[],n=0;n<e.length;n++)ttq.setAndDefer(e,e[n]);return e},ttq.load=function(e,n){var r="https://analytics.tiktok.com/i18n/pixel/events.js",o=n&&n.partner;ttq._i=ttq._i||{},ttq._i[e]=[],ttq._i[e]._u=r,ttq._t=ttq._t||{},ttq._t[e]=+new Date,ttq._o=ttq._o||{},ttq._o[e]=n||{};var a=document.createElement("script");a.type="text/javascript",a.async=!0,a.src=r+"?sdkid="+e+"&lib="+t;var s=document.getElementsByTagName("script")[0];s.parentNode.insertBefore(a,s)};
+      ttq.load(config.tiktokPixelCode);
+      ttq.page();
+    }(window, document, 'ttq');
+    /* eslint-enable */
+    window.__tcTtq = window.ttq;
+  }
+
+  if (config.ga4MeasurementId) {
+    const s = document.createElement("script");
+    s.async = true;
+    s.src = `https://www.googletagmanager.com/gtag/js?id=${config.ga4MeasurementId}`;
+    document.head.appendChild(s);
+    window.dataLayer = window.dataLayer || [];
+    window.gtag = function () { window.dataLayer.push(arguments); };
+    gtag("js", new Date());
+    gtag("config", config.ga4MeasurementId);
+    if (config.googleAdsConversionId) gtag("config", config.googleAdsConversionId);
+    window.__tcGtag = window.gtag;
+  }
+}
+loadPixels();
+
+function fireViewContent(product) {
+  if (window.__tcFbq) window.__tcFbq("track", "ViewContent", { content_ids: [product.id], content_name: product.title, currency: currentCountry === "US" ? "USD" : currentCountry === "NZ" ? "NZD" : currentCountry === "CA" ? "CAD" : "AUD", value: product.prices[currentCountry] });
+  if (window.__tcTtq) window.__tcTtq.track("ViewContent", { content_id: product.id, content_name: product.title, value: product.prices[currentCountry] });
+}
+
+function fireInitiateCheckout(product) {
+  const value = product.prices[currentCountry];
+  const currency = currentCountry === "US" ? "USD" : currentCountry === "NZ" ? "NZD" : currentCountry === "CA" ? "CAD" : "AUD";
+  if (window.__tcFbq) window.__tcFbq("track", "InitiateCheckout", { content_ids: [product.id], content_name: product.title, currency, value });
+  if (window.__tcTtq) window.__tcTtq.track("InitiateCheckout", { content_id: product.id, content_name: product.title, value, currency });
+  if (window.__tcGtag) window.__tcGtag("event", "begin_checkout", { currency, value, items: [{ item_id: product.id, item_name: product.title }] });
+}
+
+// ---------------------------------------------------------------------------
+// Geolocation + pricing
+async function detectCountry() {
+  try {
+    const res = await fetch("/geo");
+    const data = await res.json();
+    return data.country || "AU";
+  } catch {
+    return "AU";
+  }
+}
+
+function renderProducts() {
+  const grid = document.getElementById("productGrid");
+  grid.innerHTML = "";
+  const symbol = COUNTRY_SYMBOL[currentCountry] || "$";
+
+  products.forEach((product) => {
+    const price = product.prices[currentCountry];
+    const card = document.createElement("div");
+    card.className = "card";
+    card.innerHTML = `
+      <div class="thumb">
+        <img src="${product.image}" alt="${product.title}" loading="lazy"
+             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+        <div class="fallback" style="display:none;">📦</div>
+      </div>
+      <div class="body">
+        <div class="title">${product.title}</div>
+        <div class="hook">${product.hook || ""}</div>
+        <div class="variant">${product.variant || ""}</div>
+        <div class="price-row">
+          <div class="price">${symbol}${price.toFixed(2)}</div>
+          <div class="price-note">free shipping</div>
+        </div>
+        <button class="buy-btn" data-id="${product.id}">Buy Now</button>
+      </div>
+    `;
+    grid.appendChild(card);
+    fireViewContent(product);
+  });
+
+  grid.querySelectorAll(".buy-btn").forEach((btn) => {
+    btn.addEventListener("click", () => handleBuy(btn));
+  });
+}
+
+async function handleBuy(btn) {
+  const productId = btn.dataset.id;
+  const product = products.find((p) => p.id === productId);
+  if (!product) return;
+
+  btn.disabled = true;
+  const originalText = btn.textContent;
+  btn.textContent = "Loading…";
+
+  fireInitiateCheckout(product);
+
+  try {
+    const res = await fetch("/create-checkout", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        productId,
+        country: currentCountry,
+        source: visitorSource,
+        landingUrl: location.href,
+      }),
+    });
+    const data = await res.json();
+    if (data.url) {
+      location.href = data.url;
+    } else {
+      showToast(data.error || "Something went wrong — please try again.");
+      btn.disabled = false;
+      btn.textContent = originalText;
+    }
+  } catch (e) {
+    console.error(e);
+    showToast("Network error — please try again.");
+    btn.disabled = false;
+    btn.textContent = originalText;
+  }
+}
+
+async function init() {
+  const [country, productsRes] = await Promise.all([detectCountry(), fetch("/products.json")]);
+  currentCountry = country;
+  products = await productsRes.json();
+
+  document.getElementById("geoPill").textContent = `Shipping to ${COUNTRY_LABEL[currentCountry] || currentCountry}`;
+  renderProducts();
+
+  if (new URLSearchParams(location.search).get("cancelled")) {
+    showToast("Checkout cancelled — no charge was made.");
+  }
+}
+init();
+</script>
+
+</body>
+</html>

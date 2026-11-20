@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>TrendyCatch — Live Orders</title>
+<style>
+  :root { --ink:#121417; --muted:#6b7280; --bg:#0f1115; --card:#1a1d24; --border:#2a2e37; --accent:#34d399; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; background:var(--bg); color:#f3f4f6; }
+  header { display:flex; align-items:center; justify-content:space-between; padding:18px 24px; border-bottom:1px solid var(--border); }
+  header h1 { font-size:18px; margin:0; font-weight:700; }
+  header .status { font-size:12px; color:var(--muted); display:flex; align-items:center; gap:8px; }
+  .dot { width:8px; height:8px; border-radius:50%; background:var(--accent); }
+  main { max-width:900px; margin:0 auto; padding:24px; display:flex; flex-direction:column; gap:12px; }
+  .empty { text-align:center; color:var(--muted); padding:60px 0; font-size:14px; }
+  .order {
+    background:var(--card); border:1px solid var(--border); border-radius:12px; padding:16px 18px;
+    display:flex; justify-content:space-between; gap:16px; align-items:flex-start;
+    animation: slidein 0.35s ease;
+  }
+  @keyframes slidein { from { opacity:0; transform: translateY(-8px); } to { opacity:1; transform:none; } }
+  .order.new { box-shadow: 0 0 0 2px var(--accent); }
+  .order .left { display:flex; flex-direction:column; gap:4px; }
+  .order .top-line { font-weight:700; font-size:15px; }
+  .order .items { font-size:13px; color:#cbd5e1; }
+  .order .meta { font-size:12px; color:var(--muted); }
+  .badge {
+    font-size:11px; font-weight:700; padding:4px 10px; border-radius:999px; white-space:nowrap;
+    background:rgba(52,211,153,0.15); color:var(--accent); border:1px solid rgba(52,211,153,0.3);
+  }
+  .badge.facebook, .badge.instagram, .badge.meta { background:rgba(59,130,246,0.15); color:#60a5fa; border-color:rgba(59,130,246,0.3); }
+  .badge.tiktok { background:rgba(244,114,182,0.15); color:#f472b6; border-color:rgba(244,114,182,0.3); }
+  .badge.google, .badge.youtube { background:rgba(251,191,36,0.15); color:#fbbf24; border-color:rgba(251,191,36,0.3); }
+  .badge.direct, .badge.organic_search, .badge.referral { background:rgba(148,163,184,0.15); color:#94a3b8; border-color:rgba(148,163,184,0.3); }
+  .right { text-align:right; display:flex; flex-direction:column; gap:6px; align-items:flex-end; }
+  .amount { font-size:18px; font-weight:800; }
+  .enable-sound {
+    position:fixed; bottom:20px; right:20px; background:var(--accent); color:#06281f; border:none;
+    padding:12px 18px; border-radius:10px; font-weight:700; font-size:13px; cursor:pointer;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>TrendyCatch — Live Orders</h1>
+  <div class="status"><span class="dot"></span><span id="statusText">Listening…</span></div>
+</header>
+
+<main id="orderList">
+  <div class="empty" id="emptyState">Waiting for the first order to come in…</div>
+</main>
+
+<button class="enable-sound" id="soundBtn">🔇 Enable order sound</button>
+
+<script>
+let soundEnabled = false;
+let since = Date.now() - 1000 * 60 * 60 * 6; // show orders from the last 6h on first load
+let audioCtx = null;
+
+document.getElementById("soundBtn").addEventListener("click", () => {
+  soundEnabled = !soundEnabled;
+  if (soundEnabled && !audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  document.getElementById("soundBtn").textContent = soundEnabled ? "🔊 Sound on" : "🔇 Enable order sound";
+  if (soundEnabled) playChime();
+});
+
+// A short synthesized "cha-ching" style chime using the Web Audio API — two
+// quick ascending tones plus a soft bell overtone — built in code, so there's
+// no copyrighted sound clip involved.
+function playChime() {
+  if (!audioCtx) return;
+  const now = audioCtx.currentTime;
+  const notes = [ { freq: 880, start: 0, dur: 0.12 }, { freq: 1318.5, start: 0.1, dur: 0.22 }, { freq: 1760, start: 0.22, dur: 0.3 } ];
+  notes.forEach((n) => {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = "triangle";
+    osc.frequency.value = n.freq;
+    gain.gain.setValueAtTime(0, now + n.start);
+    gain.gain.linearRampToValueAtTime(0.35, now + n.start + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + n.start + n.dur);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start(now + n.start);
+    osc.stop(now + n.start + n.dur + 0.05);
+  });
+}
+
+function sourceClass(code) {
+  return (code || "direct").toLowerCase().replace(/[^a-z_]/g, "");
+}
+
+function sourceLabel(order) {
+  return order.sourceLabel || order.source || "Direct";
+}
+
+function renderOrder(order, isNew) {
+  const el = document.createElement("div");
+  el.className = "order" + (isNew ? " new" : "");
+  const itemsText = (order.items || []).map((i) => `${i.quantity}× ${i.title}`).join(", ");
+  el.innerHTML = `
+    <div class="left">
+      <div class="top-line">${order.orderName} — ${order.customerName}</div>
+      <div class="items">${itemsText}</div>
+      <div class="meta">${order.email || ""} ${order.phone ? "· " + order.phone : ""} ${order.country ? "· " + order.country : ""}</div>
+    </div>
+    <div class="right">
+      <div class="amount">${order.currency || ""} ${Number(order.total || 0).toFixed(2)}</div>
+      <span class="badge ${sourceClass(order.source)}">${sourceLabel(order)}</span>
+    </div>
+  `;
+  return el;
+}
+
+async function poll() {
+  try {
+    const res = await fetch(`/admin-orders?since=${since}`);
+    const data = await res.json();
+    document.getElementById("statusText").textContent = "Listening…";
+
+    if (data.orders && data.orders.length > 0) {
+      document.getElementById("emptyState")?.remove();
+      const list = document.getElementById("orderList");
+      // orders arrive newest-first; insert each at the top, oldest of the batch first
+      [...data.orders].reverse().forEach((order) => {
+        list.prepend(renderOrder(order, true));
+        if (soundEnabled) playChime();
+      });
+      since = Math.max(since, ...data.orders.map((o) => o.ts || 0));
+
+      // drop the "new" highlight after a few seconds
+      setTimeout(() => {
+        list.querySelectorAll(".order.new").forEach((el) => el.classList.remove("new"));
+      }, 4000);
+    }
+  } catch (e) {
+    document.getElementById("statusText").textContent = "Reconnecting…";
+  }
+}
+
+poll();
+setInterval(poll, 5000);
+</script>
+
+</body>
+</html>

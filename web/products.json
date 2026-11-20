@@ -1,0 +1,122 @@
+[
+  {
+    "id": "razor-holder",
+    "title": "Stainless Steel Wall Razor Holder",
+    "hook": "No more rusty razors cluttering your sink — this punch-free steel holder keeps your shaver dry and off the counter in seconds.",
+    "image": "/images/razor-holder.jpg",
+    "variant": "Plastic hook, wall-mount",
+    "prices": { "AU": 22.95, "CA": 22.95, "NZ": 25.95, "US": 18.95 }
+  },
+  {
+    "id": "butterfly-pillow",
+    "title": "Butterfly-Shaped Memory Foam Neck Pillow",
+    "hook": "Wake up without the neck ache — contoured memory foam cradles your neck and shoulders so you actually sleep through the night.",
+    "image": "/images/butterfly-pillow.jpg",
+    "variant": "Black",
+    "prices": { "AU": 45.95, "CA": 45.95, "NZ": 50.95, "US": 34.95 }
+  },
+  {
+    "id": "usb-c-cable-stand",
+    "title": "USB-C Fast Charging Cable with Foldable Stand",
+    "hook": "Charge and watch at the same time — this braided USB-C cable folds into its own phone stand so you're never hunting for a holder again.",
+    "image": "/images/usb-c-cable-stand.jpg",
+    "variant": "Blue bracket",
+    "prices": { "AU": 25.95, "CA": 25.95, "NZ": 28.95, "US": 21.95 }
+  },
+  {
+    "id": "nose-ear-trimmer",
+    "title": "Washable Manual Nose & Ear Hair Trimmer",
+    "hook": "No batteries, no noise, no nicks — just a precise stainless trimmer that works in the shower and cleans up in seconds.",
+    "image": "/images/nose-ear-trimmer.jpg",
+    "variant": "Light Grey",
+    "prices": { "AU": 22.95, "CA": 22.95, "NZ": 25.95, "US": 19.95 }
+  },
+  {
+    "id": "period-heating-belt",
+    "title": "Electric Period & Waist Heating Massage Belt",
+    "hook": "Cramps don't stand a chance — strap on adjustable heat and vibration therapy and get back to your day.",
+    "image": "/images/period-heating-belt.jpg",
+    "variant": "White",
+    "prices": { "AU": 41.95, "CA": 41.95, "NZ": 45.95, "US": 29.95 }
+  },
+  {
+    "id": "phone-charger-stand",
+    "title": "240W Fast Charge Foldable Phone Charger Cable",
+    "hook": "Full power, zero tangles — a 240W fast-charge cable that doubles as a fold-flat stand for hands-free scrolling.",
+    "image": "/images/phone-charger-stand.jpg",
+    "variant": "240W C to C, 1.5m",
+    "prices": { "AU": 27.95, "CA": 27.95, "NZ": 30.95, "US": 22.95 }
+  },
+  {
+    "id": "magnetic-wall-holder",
+    "title": "No-Drill Magnetic Remote Control Wall Holder",
+    "hook": "Remotes gone for good — stick these magnetic mounts anywhere and never dig between couch cushions again.",
+    "image": "/images/magnetic-wall-holder.jpg",
+    "variant": "3-piece set",
+    "prices": { "AU": 24.95, "CA": 24.95, "NZ": 27.95, "US": 20.95 }
+  },
+  {
+    "id": "vacuum-sealer-pump",
+    "title": "Rechargeable Vacuum Sealer Pump + Bags",
+    "hook": "Food stays fresh 5x longer — this cordless vacuum pump sucks the air out of reusable bags in one button press.",
+    "image": "/images/vacuum-sealer-pump.jpg",
+    "variant": "10pcs 22x21cm bags",
+    "prices": { "AU": 27.95, "CA": 27.95, "NZ": 30.95, "US": 22.95 }
+  },
+  {
+    "id": "washing-machine-drip-tray",
+    "title": "Washing Machine Drain Water Collection Tray",
+    "hook": "Stop mopping up overflow — this no-spill drip tray catches every drop so your laundry room stays bone dry.",
+    "image": "/images/washing-machine-drip-tray.jpg",
+    "variant": "Standard",
+    "prices": { "AU": 25.95, "CA": 25.95, "NZ": 28.95, "US": 20.95 }
+  },
+  {
+    "id": "dishwashing-cloth-clip",
+    "title": "No-Punch Dishwashing Cloth Storage Clip (3pc)",
+    "hook": "Soggy sponges, sorted — these wall clips air-dry your cloths and gloves without a single screw.",
+    "image": "/images/dishwashing-cloth-clip.jpg",
+    "variant": "3pcs White",
+    "prices": { "AU": 24.95, "CA": 24.95, "NZ": 27.95, "US": 21.95 }
+  },
+  {
+    "id": "mini-bag-sealer",
+    "title": "Mini Rechargeable Bag Heat Sealer",
+    "hook": "Chip bags, snack bags, freezer bags — reseal any of them airtight in one swipe, no twist ties required.",
+    "image": "/images/mini-bag-sealer.jpg",
+    "variant": "White",
+    "prices": { "AU": 25.95, "CA": 25.95, "NZ": 28.95, "US": 19.95 }
+  },
+  {
+    "id": "appliance-roller-base",
+    "title": "Adjustable Heavy-Duty Appliance Roller Base (2pc)",
+    "hook": "Move your washer or fridge solo — these rolling bases let you slide heavy appliances out for cleaning without straining your back.",
+    "image": "/images/appliance-roller-base.jpg",
+    "variant": "2pcs Grey, 46.5-70cm",
+    "prices": { "AU": 29.95, "CA": 29.95, "NZ": 32.95, "US": 25.95 }
+  },
+  {
+    "id": "magnetic-cabinet-catches",
+    "title": "Ultra-Thin Magnetic Cabinet Catches (6-pack)",
+    "hook": "Silence every cupboard slam — these invisible magnetic catches hold doors shut without a single drill hole.",
+    "image": "/images/magnetic-cabinet-catches.jpg",
+    "variant": "6 Pack",
+    "prices": { "AU": 27.95, "CA": 27.95, "NZ": 30.95, "US": 22.95 }
+  },
+  {
+    "id": "nose-pore-patch",
+    "title": "Deep Cleansing Nose Pore & Blackhead Patches",
+    "hook": "Blackheads, gone in one peel — these cleansing patches pull out buildup without the breakouts a scrub leaves behind.",
+    "image": "/images/nose-pore-patch.jpg",
+    "variant": "10pc Black",
+    "prices": { "AU": 20.95, "CA": 20.95, "NZ": 22.95, "US": 19.95 }
+  },
+  {
+    "id": "ergonomic-neck-pillow",
+    "title": "Ergonomic 2-in-1 Memory Foam Travel Neck Pillow",
+    "hook": "Plane, car or couch — this orthopedic pillow supports your neck everywhere you actually need it to.",
+    "image": "/images/ergonomic-neck-pillow.jpg",
+    "variant": "Black",
+    "prices": { "AU": 56.95, "CA": 56.95, "NZ": 62.95, "US": 40.95 }
+  }
+]
