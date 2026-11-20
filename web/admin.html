@@ -68,34 +68,58 @@ document.getElementById("soundBtn").addEventListener("click", () => {
   if (soundEnabled) playChime();
 });
 
-// A short synthesized two-note "ding-ding" bell chime, in the same cheerful
-// register/feel as the new-order sound built into Shopify's own apps — but
-// built entirely from oscillators in code, not a copy of any sound file, so
-// there's nothing copyrighted involved. Each "note" is a small stack of sine
-// partials at bell-like (inharmonic) ratios, each decaying at its own rate —
-// that's what gives it a bright, metallic "bell" character rather than a
-// flat beep, the same way a real chime sounds.
-function playBellNote(startTime, freq, peakGain, duration) {
-  // Partial ratios and relative weights modeled loosely on a small handbell:
-  // a clear fundamental, a bright octave-ish partial, and a fast-decaying
-  // shimmer on top.
+// A synthesized "bicycle bell" ring — the classic small-gong "briiing" you
+// get from thumbing a handlebar bell lever — built entirely from oscillators
+// and an LFO-driven tremolo in code, no sound file or copyrighted audio
+// involved. The metallic character comes from a few inharmonic partials
+// (like a real small bell/gong); the trembling "briiing" comes from rapidly
+// wobbling the volume (tremolo), the way the spring-loaded striker keeps
+// re-hitting the bell while the lever is held.
+function playBicycleBell(startTime, freq, peakGain, duration) {
+  // Envelope + tremolo gain stage all the partials share.
+  const tremoloGain = audioCtx.createGain();
+  tremoloGain.gain.setValueAtTime(0, startTime);
+  tremoloGain.connect(audioCtx.destination);
+
+  // LFO that makes the volume "wobble" fast, like the striker re-hitting
+  // the bell — starts brisk and eases as the ring settles, the way a real
+  // bell's strike rate (and the ring itself) decays.
+  const lfo = audioCtx.createOscillator();
+  lfo.type = "sine";
+  lfo.frequency.setValueAtTime(26, startTime);
+  lfo.frequency.exponentialRampToValueAtTime(14, startTime + duration);
+  const lfoDepth = audioCtx.createGain();
+  lfoDepth.gain.value = 0.4;
+  lfo.connect(lfoDepth);
+  lfoDepth.connect(tremoloGain.gain);
+
+  const tremoloBase = audioCtx.createConstantSource();
+  tremoloBase.offset.value = 0.6;
+  tremoloBase.connect(tremoloGain.gain);
+
+  lfo.start(startTime);
+  lfo.stop(startTime + duration + 0.1);
+  tremoloBase.start(startTime);
+  tremoloBase.stop(startTime + duration + 0.1);
+
+  // Inharmonic partials of a small bell/gong, each decaying at its own rate.
   const partials = [
     { ratio: 1, gain: 1.0, decay: duration },
-    { ratio: 2.4, gain: 0.45, decay: duration * 0.6 },
-    { ratio: 3.9, gain: 0.22, decay: duration * 0.35 },
-    { ratio: 5.2, gain: 0.12, decay: duration * 0.2 },
+    { ratio: 2.76, gain: 0.5, decay: duration * 0.7 },
+    { ratio: 4.1, gain: 0.26, decay: duration * 0.45 },
+    { ratio: 5.4, gain: 0.14, decay: duration * 0.3 },
   ];
   partials.forEach((p) => {
     const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
+    const env = audioCtx.createGain();
     osc.type = "sine";
     osc.frequency.value = freq * p.ratio;
     const g = peakGain * p.gain;
-    gain.gain.setValueAtTime(0, startTime);
-    gain.gain.linearRampToValueAtTime(g, startTime + 0.008);
-    gain.gain.exponentialRampToValueAtTime(0.0008, startTime + p.decay);
-    osc.connect(gain);
-    gain.connect(audioCtx.destination);
+    env.gain.setValueAtTime(0, startTime);
+    env.gain.linearRampToValueAtTime(g, startTime + 0.006);
+    env.gain.exponentialRampToValueAtTime(0.0006, startTime + p.decay);
+    osc.connect(env);
+    env.connect(tremoloGain);
     osc.start(startTime);
     osc.stop(startTime + p.decay + 0.05);
   });
@@ -104,10 +128,9 @@ function playBellNote(startTime, freq, peakGain, duration) {
 function playChime() {
   if (!audioCtx) return;
   const now = audioCtx.currentTime;
-  // Two quick ascending notes — a bright "ding, DING" — mirroring the shape
-  // of a typical new-order notification chime.
-  playBellNote(now, 1567.98, 0.32, 0.45); // G6
-  playBellNote(now + 0.14, 2093.0, 0.4, 0.6); // C7
+  // The classic double "ring-ring!" of a handlebar bell — two quick strikes.
+  playBicycleBell(now, 2793.0, 0.4, 0.55); // F7
+  playBicycleBell(now + 0.42, 2793.0, 0.42, 0.6); // F7, second ring slightly fuller
 }
 
 function sourceClass(code) {
