@@ -68,26 +68,46 @@ document.getElementById("soundBtn").addEventListener("click", () => {
   if (soundEnabled) playChime();
 });
 
-// A short synthesized "cha-ching" style chime using the Web Audio API — two
-// quick ascending tones plus a soft bell overtone — built in code, so there's
-// no copyrighted sound clip involved.
+// A short synthesized two-note "ding-ding" bell chime, in the same cheerful
+// register/feel as the new-order sound built into Shopify's own apps — but
+// built entirely from oscillators in code, not a copy of any sound file, so
+// there's nothing copyrighted involved. Each "note" is a small stack of sine
+// partials at bell-like (inharmonic) ratios, each decaying at its own rate —
+// that's what gives it a bright, metallic "bell" character rather than a
+// flat beep, the same way a real chime sounds.
+function playBellNote(startTime, freq, peakGain, duration) {
+  // Partial ratios and relative weights modeled loosely on a small handbell:
+  // a clear fundamental, a bright octave-ish partial, and a fast-decaying
+  // shimmer on top.
+  const partials = [
+    { ratio: 1, gain: 1.0, decay: duration },
+    { ratio: 2.4, gain: 0.45, decay: duration * 0.6 },
+    { ratio: 3.9, gain: 0.22, decay: duration * 0.35 },
+    { ratio: 5.2, gain: 0.12, decay: duration * 0.2 },
+  ];
+  partials.forEach((p) => {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = "sine";
+    osc.frequency.value = freq * p.ratio;
+    const g = peakGain * p.gain;
+    gain.gain.setValueAtTime(0, startTime);
+    gain.gain.linearRampToValueAtTime(g, startTime + 0.008);
+    gain.gain.exponentialRampToValueAtTime(0.0008, startTime + p.decay);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start(startTime);
+    osc.stop(startTime + p.decay + 0.05);
+  });
+}
+
 function playChime() {
   if (!audioCtx) return;
   const now = audioCtx.currentTime;
-  const notes = [ { freq: 880, start: 0, dur: 0.12 }, { freq: 1318.5, start: 0.1, dur: 0.22 }, { freq: 1760, start: 0.22, dur: 0.3 } ];
-  notes.forEach((n) => {
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    osc.type = "triangle";
-    osc.frequency.value = n.freq;
-    gain.gain.setValueAtTime(0, now + n.start);
-    gain.gain.linearRampToValueAtTime(0.35, now + n.start + 0.02);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + n.start + n.dur);
-    osc.connect(gain);
-    gain.connect(audioCtx.destination);
-    osc.start(now + n.start);
-    osc.stop(now + n.start + n.dur + 0.05);
-  });
+  // Two quick ascending notes — a bright "ding, DING" — mirroring the shape
+  // of a typical new-order notification chime.
+  playBellNote(now, 1567.98, 0.32, 0.45); // G6
+  playBellNote(now + 0.14, 2093.0, 0.4, 0.6); // C7
 }
 
 function sourceClass(code) {
