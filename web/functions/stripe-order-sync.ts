@@ -20,8 +20,12 @@
 interface Env {
   STRIPE_SECRET_KEY: string
   STRIPE_WEBHOOK_SECRET: string
-  SHOPIFY_STORE_DOMAIN: string // e.g. 3doz.myshopify.com
-  SHOPIFY_ADMIN_TOKEN: string
+  // Shopify sync is entirely optional — TrendyCatch runs standalone (its own
+  // admin dashboard, its own KV order/revenue records) and does not require a
+  // Shopify store. Only set these two if you deliberately want TrendyCatch
+  // orders mirrored into a Shopify store as well.
+  SHOPIFY_STORE_DOMAIN?: string
+  SHOPIFY_ADMIN_TOKEN?: string
   ORDER_EMAIL?: string
   SITE_URL?: string
   TIKTOK_ACCESS_TOKEN?: string
@@ -46,10 +50,11 @@ const COUNTRY_NAMES: Record<string, string> = {
 }
 
 export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
-  if (!env.STRIPE_SECRET_KEY || !env.STRIPE_WEBHOOK_SECRET || !env.SHOPIFY_STORE_DOMAIN || !env.SHOPIFY_ADMIN_TOKEN) {
+  if (!env.STRIPE_SECRET_KEY || !env.STRIPE_WEBHOOK_SECRET) {
     console.error("Missing required environment variable(s)")
     return new Response("Server misconfigured", { status: 500 })
   }
+  const shopifyConfigured = Boolean(env.SHOPIFY_STORE_DOMAIN && env.SHOPIFY_ADMIN_TOKEN)
 
   const signature = request.headers.get("stripe-signature")
   const rawBody = await request.text()
@@ -91,22 +96,40 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   const sourceLabel = labelForSource(rawSource)
   const orderTags = ["TrendyCatch", "stripe-auto-sync", tagSessionId, `source-${rawSource.toLowerCase()}`]
 
-  try {
-    const already = await shopifyGraphql(
-      env.SHOPIFY_STORE_DOMAIN,
-      env.SHOPIFY_ADMIN_TOKEN,
-      `query DuplicateCheck($q: String!) {
-        orders(first: 1, query: $q) { edges { node { id name } } }
-      }`,
-      { q: `tag:${tagSessionId}` },
-    )
-    const existing = already?.data?.orders?.edges?.[0]
-    if (existing) {
-      console.log(`Order already synced for ${session.id}: ${existing.node.name}`)
-      return new Response("duplicate, skipped", { status: 200 })
+// Dedup key, independent of Shopify: Stripe retries the same webhook event
+  // on any non-2xx response, so without this a retry would double-count the
+  // order in KV stats/admin feed even with Shopify sync turned off.
+  const dedupeKey = `synced:${tagSessionId}`
+  if (env.ORDERS_KV) {
+    try {
+      const already = await env.ORDERS_KV.get(dedupeKey)
+      if (already) {
+        console.log(`Order already processed for ${session.id}, skipping duplicate webhook delivery`)
+        return new Response("duplicate, skipped", { status: 200 })
+      }
+    } catch (err) {
+      console.error("KV dedupe check failed, proceeding anyway:", (err as Error).message)
     }
-  } catch (err) {
-    console.error("Duplicate check failed, proceeding anyway:", (err as Error).message)
+  }
+
+  if (shopifyConfigured) {
+    try {
+      const already = await shopifyGraphql(
+        env.SHOPIFY_STORE_DOMAIN!,
+        env.SHOPIFY_ADMIN_TOKEN!,
+        `query DuplicateCheck($q: String!) {
+          orders(first: 1, query: $q) { edges { node { id name } } }
+        }`,
+        { q: `tag:${tagSessionId}` },
+      )
+      const existing = already?.data?.orders?.edges?.[0]
+      if (existing) {
+        console.log(`Order already synced for ${session.id}: ${existing.node.name}`)
+        return new Response("duplicate, skipped", { status: 200 })
+      }
+    } catch (err) {
+      console.error("Duplicate check failed, proceeding anyway:", (err as Error).message)
+    }
   }
 
   const customerDetails = session.customer_details
@@ -178,57 +201,63 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   const orderCurrency = (session.currency ?? "aud").toUpperCase()
   const orderEmail = env.ORDER_EMAIL ?? "orders@trendycatch.us"
 
-  const orderInput = {
-    email: orderEmail,
-    phone: mailingAddress?.phone,
-    financialStatus: "PAID",
-    currency: orderCurrency,
-    presentmentCurrency: orderCurrency,
-    customer: customerInput,
-    shippingAddress: mailingAddress,
-    billingAddress: mailingAddress,
-    lineItems,
-    note: `Auto-synced from Stripe checkout ${session.id}. Customer email: ${customerDetails?.email ?? "unknown"}. Source: ${sourceLabel}${session.metadata?.landing_url ? ` (${session.metadata.landing_url})` : ""}`,
-    sourceName: "stripe",
-    processedAt: new Date((session.created ?? Date.now() / 1000) * 1000).toISOString(),
-  }
+  let createdOrder: { id?: string; name?: string } | undefined
 
-  const mutation = `mutation OrderCreate($order: OrderCreateOrderInput!, $options: OrderCreateOptionsInput) {
-    orderCreate(order: $order, options: $options) {
-      order { id name }
-      userErrors { field message }
+  if (shopifyConfigured) {
+    const orderInput = {
+      email: orderEmail,
+      phone: mailingAddress?.phone,
+      financialStatus: "PAID",
+      currency: orderCurrency,
+      presentmentCurrency: orderCurrency,
+      customer: customerInput,
+      shippingAddress: mailingAddress,
+      billingAddress: mailingAddress,
+      lineItems,
+      note: `Auto-synced from Stripe checkout ${session.id}. Customer email: ${customerDetails?.email ?? "unknown"}. Source: ${sourceLabel}${session.metadata?.landing_url ? ` (${session.metadata.landing_url})` : ""}`,
+      sourceName: "stripe",
+      processedAt: new Date((session.created ?? Date.now() / 1000) * 1000).toISOString(),
     }
-  }`
 
-  const result = await shopifyGraphql(env.SHOPIFY_STORE_DOMAIN, env.SHOPIFY_ADMIN_TOKEN, mutation, {
-    order: orderInput,
-    options: { sendReceipt: false, sendFulfillmentReceipt: false },
-  })
+    const mutation = `mutation OrderCreate($order: OrderCreateOrderInput!, $options: OrderCreateOptionsInput) {
+      orderCreate(order: $order, options: $options) {
+        order { id name }
+        userErrors { field message }
+      }
+    }`
 
-  const userErrors = result?.data?.orderCreate?.userErrors ?? []
-  if (userErrors.length > 0) {
-    console.error("Shopify orderCreate userErrors:", JSON.stringify(userErrors))
-    return new Response(`Shopify rejected the order: ${JSON.stringify(userErrors)}`, { status: 502 })
-  }
+    const result = await shopifyGraphql(env.SHOPIFY_STORE_DOMAIN!, env.SHOPIFY_ADMIN_TOKEN!, mutation, {
+      order: orderInput,
+      options: { sendReceipt: false, sendFulfillmentReceipt: false },
+    })
 
-  const createdOrder = result?.data?.orderCreate?.order
-  console.log(`Created Shopify order ${createdOrder?.name} for Stripe session ${session.id}`)
-
-  if (createdOrder?.id) {
-    try {
-      const tagResult = await shopifyGraphql(
-        env.SHOPIFY_STORE_DOMAIN,
-        env.SHOPIFY_ADMIN_TOKEN,
-        `mutation AddOrderTags($id: ID!, $tags: [String!]!) {
-          tagsAdd(id: $id, tags: $tags) { userErrors { field message } }
-        }`,
-        { id: createdOrder.id, tags: orderTags },
-      )
-      const tagErrors = tagResult?.data?.tagsAdd?.userErrors ?? []
-      if (tagErrors.length > 0) console.error("tagsAdd userErrors:", JSON.stringify(tagErrors))
-    } catch (err) {
-      console.error("tagsAdd failed (order was still created):", (err as Error).message)
+    const userErrors = result?.data?.orderCreate?.userErrors ?? []
+    if (userErrors.length > 0) {
+      console.error("Shopify orderCreate userErrors:", JSON.stringify(userErrors))
+      return new Response(`Shopify rejected the order: ${JSON.stringify(userErrors)}`, { status: 502 })
     }
+
+    createdOrder = result?.data?.orderCreate?.order
+    console.log(`Created Shopify order ${createdOrder?.name} for Stripe session ${session.id}`)
+
+    if (createdOrder?.id) {
+      try {
+        const tagResult = await shopifyGraphql(
+          env.SHOPIFY_STORE_DOMAIN!,
+          env.SHOPIFY_ADMIN_TOKEN!,
+          `mutation AddOrderTags($id: ID!, $tags: [String!]!) {
+            tagsAdd(id: $id, tags: $tags) { userErrors { field message } }
+          }`,
+          { id: createdOrder.id, tags: orderTags },
+        )
+        const tagErrors = tagResult?.data?.tagsAdd?.userErrors ?? []
+        if (tagErrors.length > 0) console.error("tagsAdd userErrors:", JSON.stringify(tagErrors))
+      } catch (err) {
+        console.error("tagsAdd failed (order was still created):", (err as Error).message)
+      }
+    }
+  } else {
+    console.log("Shopify sync not configured — order recorded in TrendyCatch's own dashboard only")
   }
 
   // ---- Admin dashboard "new order" sound notification (best-effort, KV) ----
@@ -338,6 +367,15 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     })
   } else {
     console.log("GA4 Measurement Protocol not configured — skipped")
+  }
+
+  if (env.ORDERS_KV) {
+    try {
+      // 48h is plenty — Stripe stops retrying a webhook well before that.
+      await env.ORDERS_KV.put(dedupeKey, "1", { expirationTtl: 60 * 60 * 48 })
+    } catch (err) {
+      console.error("Dedupe marker write failed (order was still processed):", (err as Error).message)
+    }
   }
 
   return new Response(JSON.stringify({ ok: true, order: createdOrder }), {
