@@ -54,6 +54,14 @@
   .breakdown-item { display:flex; justify-content:space-between; font-size:13px; padding:4px 0; }
   .breakdown-item .tag { color:#cbd5e1; }
   .breakdown-item .num { font-weight:700; }
+  .subscribers-panel { max-width:none; }
+  .subscribers-panel .sub-row {
+    display:flex; justify-content:space-between; gap:12px; font-size:13px; padding:6px 0;
+    border-bottom:1px solid var(--border);
+  }
+  .subscribers-panel .sub-row:last-child { border-bottom:none; }
+  .subscribers-panel .sub-email { color:#f3f4f6; }
+  .subscribers-panel .sub-meta { color:var(--muted); font-size:12px; white-space:nowrap; }
   .header-btn {
     margin-left:10px; background:transparent; border:1px solid var(--border); color:#cbd5e1;
     font-size:11px; padding:5px 10px; border-radius:7px; cursor:pointer;
@@ -86,6 +94,10 @@
       <div class="label"><span class="live-dot"></span>Live on site</div>
       <div class="value" id="statLive">—</div>
     </div>
+    <div class="stat-card">
+      <div class="label">Email signups</div>
+      <div class="value" id="statSubscribers">—</div>
+    </div>
   </div>
   <div class="breakdown-row">
     <div class="breakdown">
@@ -100,6 +112,10 @@
       <h3>Live visitors by country</h3>
       <div id="liveByCountry"></div>
     </div>
+  </div>
+  <div class="breakdown subscribers-panel">
+    <h3>Recent email signups — admin only, never shown to customers</h3>
+    <div id="subscriberList"></div>
   </div>
 </section>
 
@@ -295,6 +311,46 @@ async function pollLiveVisitors() {
   }
 }
 
+function escapeHtml(str) {
+  return String(str).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+function timeAgo(iso) {
+  if (!iso) return "";
+  const diffMs = Date.now() - new Date(iso).getTime();
+  const mins = Math.round(diffMs / 60000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.round(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  return `${Math.round(hours / 24)}d ago`;
+}
+
+async function pollSubscribers() {
+  try {
+    const res = await fetch("/admin-subscribers");
+    if (reloadIfUnauthorized(res.status)) return;
+    const data = await res.json();
+    document.getElementById("statSubscribers").textContent = data.count ?? 0;
+
+    const el = document.getElementById("subscriberList");
+    const subs = data.subscribers || [];
+    if (!subs.length) {
+      el.innerHTML = `<div class="sub-row"><span class="sub-email">No signups yet</span></div>`;
+      return;
+    }
+    el.innerHTML = subs
+      .slice(0, 25)
+      .map(
+        (s) =>
+          `<div class="sub-row"><span class="sub-email">${escapeHtml(s.email)}</span><span class="sub-meta">${escapeHtml(countryName(s.country || "UNKNOWN"))} · ${timeAgo(s.createdAt)}</span></div>`,
+      )
+      .join("");
+  } catch (e) {
+    // transient — leave the last known list showing
+  }
+}
+
 document.getElementById("logoutBtn").addEventListener("click", async () => {
   await fetch("/admin-logout", { method: "POST" });
   location.reload();
@@ -321,9 +377,11 @@ document.getElementById("changePwBtn").addEventListener("click", async () => {
 poll();
 pollStats();
 pollLiveVisitors();
+pollSubscribers();
 setInterval(poll, 5000);
 setInterval(pollStats, 10000);
 setInterval(pollLiveVisitors, 5000);
+setInterval(pollSubscribers, 15000);
 </script>
 
 </body>
