@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+Disallow: /admin.html
+
+User-agent: *
+Disallow: /admin-login
+Disallow: /admin-logout
+Disallow: /admin-change-password
+Disallow: /admin-set-password
+Disallow: /admin-orders
+Disallow: /admin-subscribers
