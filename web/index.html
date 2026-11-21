@@ -26,38 +26,59 @@
   a { color: inherit; }
   header.site {
     position: sticky; top: 0; z-index: 10;
-    background: var(--green); color: #fff; padding: 14px 20px;
-    display: flex; align-items: center; justify-content: space-between;
+    background: var(--green); color: #fff; padding: 12px 16px;
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    flex-wrap: wrap;
   }
-  header.site .brand { font-weight: 800; font-size: 20px; letter-spacing: -0.02em; }
+  header.site .brand { font-weight: 800; font-size: 18px; letter-spacing: -0.02em; white-space: nowrap; }
   header.site .brand span { color: var(--accent); }
-  header.site .geo-pill { font-size: 12px; font-weight: 600; background: rgba(255,255,255,0.14); padding: 6px 12px; border-radius: 999px; }
+  header.site .geo-pill {
+    font-size: 11px; font-weight: 600; background: rgba(255,255,255,0.14);
+    padding: 5px 10px; border-radius: 999px; white-space: nowrap;
+  }
   .hero {
     background: var(--green); background-image: linear-gradient(180deg, var(--green) 0%, var(--green-dark) 100%);
-    padding: 56px 20px 40px; text-align: center; color: #fff;
+    padding: 16px 20px 14px; text-align: center; color: #fff;
   }
-  .hero-inner { max-width: 720px; margin: 0 auto; }
-  .hero .eyebrow { font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); margin: 0 0 10px; }
-  .hero h1 { font-size: 36px; line-height: 1.15; margin: 0 0 14px; letter-spacing: -0.02em; font-weight: 800; }
-  .hero p { color: rgba(255,255,255,0.85); font-size: 16px; margin: 0 0 24px; }
-  .hero-ctas { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+  .hero-inner { max-width: 760px; margin: 0 auto; }
+  .hero .eyebrow { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); margin: 0 0 4px; }
+  .hero h1 { font-size: 19px; line-height: 1.2; margin: 0 0 4px; letter-spacing: -0.01em; font-weight: 800; }
+  .hero p { color: rgba(255,255,255,0.85); font-size: 12px; margin: 0 0 10px; }
+  .hero-ctas { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 12px; }
   .hero-ctas a {
-    display: inline-block; border-radius: 999px; padding: 14px 28px; font-weight: 700; font-size: 15px;
+    display: inline-block; border-radius: 999px; padding: 8px 18px; font-weight: 700; font-size: 13px;
     text-decoration: none; cursor: pointer; transition: transform 0.15s ease, background 0.15s ease;
   }
   .hero-ctas a.primary { background: var(--accent); color: var(--ink); }
   .hero-ctas a.primary:hover { background: var(--accent-dark); }
   .hero-ctas a.outline { background: transparent; color: #fff; border: 1px solid rgba(255,255,255,0.6); }
   .hero-ctas a.outline:hover { background: rgba(255,255,255,0.1); }
+  .hero-photos { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+  .hero-photos .shot {
+    position: relative; width: 56px; height: 56px; border-radius: 10px; overflow: hidden;
+    background: #fff; box-shadow: 0 3px 8px rgba(0,0,0,0.2); flex-shrink: 0;
+  }
+  .hero-photos .shot img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .hero-photos .shot .tag {
+    position: absolute; bottom: 2px; left: 2px; right: 2px; text-align: center;
+    background: var(--price); color: #fff; font-size: 9px; font-weight: 800;
+    padding: 1px 3px; border-radius: 999px;
+  }
+  @media (max-width: 480px) { .hero-photos .shot { width: 44px; height: 44px; } }
   .trust-strip {
     background: #fff; border-bottom: 1px solid var(--border);
-    display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    display: grid; grid-template-columns: repeat(4, 1fr);
   }
   .trust-strip .item {
     display: flex; align-items: center; gap: 10px; padding: 16px 20px;
     border-right: 1px solid var(--border);
   }
   .trust-strip .item:last-child { border-right: none; }
+  @media (max-width: 900px) {
+    .trust-strip { grid-template-columns: repeat(2, 1fr); }
+    .trust-strip .item:nth-child(2n) { border-right: none; }
+    .trust-strip .item:nth-child(n+3) { border-top: 1px solid var(--border); }
+  }
   .trust-strip .icon { font-size: 22px; line-height: 1; }
   .trust-strip .title { font-size: 13px; font-weight: 700; }
   .trust-strip .subtitle { font-size: 11px; color: var(--muted); }
@@ -77,6 +98,12 @@
   .card .thumb { position: relative; }
   .card .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .card .thumb .fallback { font-size: 42px; opacity: 0.25; }
+  .card .badges { position: absolute; top: 8px; left: 8px; display: flex; gap: 6px; z-index: 2; }
+  .card .badge {
+    font-size: 11px; font-weight: 800; padding: 4px 9px; border-radius: 999px; line-height: 1.4;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+  }
+  .card .badge.sale { background: var(--price); color: #fff; }
   .card .thumb-strip { display: flex; gap: 6px; padding: 8px 10px 0; }
   .card .thumb-strip img {
     width: 36px; height: 36px; object-fit: cover; border-radius: 6px; cursor: pointer;
@@ -94,12 +121,13 @@
     font-size: 13px; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--border);
     background: #fff; cursor: pointer;
   }
-  .card .price-row { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
+  .card .price-row { display: flex; align-items: center; gap: 8px; margin-top: 4px; flex-wrap: wrap; }
   .card .price {
     font-size: 15px; font-weight: 800; color: #fff; background: var(--price);
     padding: 4px 10px; border-radius: 999px; line-height: 1.4;
   }
-  .card .price-note { font-size: 11px; color: var(--muted); }
+  .card .compare-price { font-size: 13px; color: var(--muted); text-decoration: line-through; }
+  .card .price-note { font-size: 11px; color: var(--muted); width: 100%; }
   .buy-btn {
     margin-top: 6px; border: none; border-radius: 999px; padding: 12px 14px;
     background: var(--accent); color: var(--ink); font-size: 14px; font-weight: 700;
@@ -135,6 +163,24 @@
     opacity: 0; transition: all 0.25s ease; pointer-events: none; max-width: 90vw; text-align: center;
   }
   .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* ---- Phones & small tablets ---- */
+  @media (max-width: 680px) {
+    .trust-strip .item { padding: 12px 14px; }
+    .grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; padding: 0 12px; margin: 16px auto 56px; }
+    .card .body { padding: 10px 12px 12px; gap: 6px; }
+    .card .title { font-size: 13px; }
+    .card .hook { font-size: 12px; -webkit-line-clamp: 3; display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden; }
+    .buy-btn { padding: 13px 14px; font-size: 13px; } /* keep a comfortable ~44px touch target */
+    .hero-ctas a { padding: 10px 18px; } /* same */
+    .signup { padding: 24px 16px; }
+  }
+  /* iPhone SE / very narrow Android widths */
+  @media (max-width: 360px) {
+    header.site .brand { font-size: 16px; }
+    .hero h1 { font-size: 17px; }
+    .grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+  }
 </style>
 </head>
 <body>
@@ -153,6 +199,7 @@
       <a href="#productGrid" class="primary">Shop Bestsellers</a>
       <a href="#signupForm" class="outline">Get 10% Off</a>
     </div>
+    <div class="hero-photos" id="heroPhotos"></div>
   </div>
 </section>
 
@@ -375,14 +422,33 @@ function escapeHtml(str) {
 }
 
 // Some variants (e.g. a bigger pack size or bag size) cost more than others.
-// A variant with its own `prices` object overrides the product's base price
-// for the selected country; products with no per-variant pricing (or a
-// variant missing a price for this country) just fall back to the product's
-// flat price, same as before.
-function getPriceForVariant(product, variantSku) {
+// A variant with its own `prices`/`compareAt` overrides the product's base
+// figures for the selected country; products with no per-variant pricing (or
+// a variant missing a price for this country) just fall back to the
+// product's flat price, same as before per-variant pricing existed.
+function getPricing(product, variantSku) {
   const variant = (product.variants || []).find((v) => v.sku === variantSku);
-  const variantPrice = variant && variant.prices ? variant.prices[currentCountry] : undefined;
-  return variantPrice !== undefined ? variantPrice : product.prices[currentCountry];
+  const price = (variant && variant.prices ? variant.prices[currentCountry] : undefined) ?? product.prices[currentCountry];
+  const was = (variant && variant.compareAt ? variant.compareAt[currentCountry] : undefined) ?? (product.compareAt ? product.compareAt[currentCountry] : undefined);
+  const pctOff = was && was > price ? Math.round((1 - price / was) * 100) : 0;
+  return { price, was, pctOff };
+}
+
+function priceRowHtml(symbol, productId, pricing) {
+  const compareHtml = pricing.was
+    ? `<div class="compare-price">${symbol}${pricing.was.toFixed(2)}</div>`
+    : "";
+  return `
+    <div class="price" data-price-id="${productId}">${symbol}${pricing.price.toFixed(2)}</div>
+    ${compareHtml}
+    <div class="price-note">free shipping</div>
+  `;
+}
+
+function badgesHtml(pricing) {
+  return pricing.pctOff > 0
+    ? `<div class="badges"><span class="badge sale">-${pricing.pctOff}%</span></div>`
+    : "";
 }
 
 function renderProducts() {
@@ -397,7 +463,7 @@ function renderProducts() {
     if (variants.length && !selectedVariant[product.id]) {
       selectedVariant[product.id] = variants[0].sku;
     }
-    const price = getPriceForVariant(product, selectedVariant[product.id]);
+    const pricing = getPricing(product, selectedVariant[product.id]);
 
     const thumbStrip = images.length > 1
       ? `<div class="thumb-strip" data-id="${product.id}">${images
@@ -421,6 +487,7 @@ function renderProducts() {
     card.className = "card";
     card.innerHTML = `
       <div class="thumb">
+        ${badgesHtml(pricing)}
         <img src="${primaryImage}" alt="${escapeHtml(product.title)}" loading="lazy"
              onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
         <div class="fallback" style="display:none;">📦</div>
@@ -430,10 +497,7 @@ function renderProducts() {
         <div class="title">${escapeHtml(product.title)}</div>
         <div class="hook">${escapeHtml(product.hook || "")}</div>
         ${variantControl}
-        <div class="price-row">
-          <div class="price" data-price-id="${product.id}">${symbol}${price.toFixed(2)}</div>
-          <div class="price-note">free shipping</div>
-        </div>
+        <div class="price-row">${priceRowHtml(symbol, product.id, pricing)}</div>
         <button class="buy-btn" data-id="${product.id}">Buy Now</button>
       </div>
     `;
@@ -450,12 +514,14 @@ function renderProducts() {
       const productId = sel.dataset.id;
       selectedVariant[productId] = sel.value;
       const product = products.find((p) => p.id === productId);
-      if (!product) return;
-      const priceEl = grid.querySelector(`[data-price-id="${productId}"]`);
-      if (priceEl) {
-        const newPrice = getPriceForVariant(product, sel.value);
-        priceEl.textContent = `${symbol}${newPrice.toFixed(2)}`;
-      }
+      const card = sel.closest(".card");
+      if (!product || !card) return;
+      const pricing = getPricing(product, sel.value);
+      card.querySelector(".price-row").innerHTML = priceRowHtml(symbol, productId, pricing);
+      const badges = card.querySelector(".badges");
+      const newBadges = badgesHtml(pricing);
+      if (badges) badges.outerHTML = newBadges;
+      else if (newBadges) card.querySelector(".thumb").insertAdjacentHTML("afterbegin", newBadges);
     });
   });
 
@@ -511,6 +577,20 @@ async function handleBuy(btn) {
   }
 }
 
+function renderHeroPhotos() {
+  const holder = document.getElementById("heroPhotos");
+  if (!holder) return;
+  const symbol = COUNTRY_SYMBOL[currentCountry] || "$";
+  const picks = products.slice(0, 4);
+  holder.innerHTML = picks
+    .map((p) => {
+      const img = (p.images && p.images[0]) || p.image || "";
+      const pricing = getPricing(p, selectedVariant[p.id]);
+      return `<div class="shot"><img src="${img}" loading="lazy" alt="${escapeHtml(p.title)}" /><div class="tag">${symbol}${pricing.price.toFixed(2)}</div></div>`;
+    })
+    .join("");
+}
+
 async function init() {
   const [country, productsRes] = await Promise.all([detectCountry(), fetch("/products.json")]);
   currentCountry = country;
@@ -518,6 +598,7 @@ async function init() {
 
   document.getElementById("geoPill").textContent = `Shipping to ${COUNTRY_LABEL[currentCountry] || currentCountry}`;
   renderProducts();
+  renderHeroPhotos();
 
   if (new URLSearchParams(location.search).get("cancelled")) {
     showToast("Checkout cancelled — no charge was made.");
