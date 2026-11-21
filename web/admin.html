@@ -433,7 +433,7 @@ async function refreshCustomers() {
 }
 document.getElementById('customersRefresh').addEventListener('click', refreshCustomers);
 refreshCustomers();
-setInterval(refreshCustomers, 30000);
+setInterval(refreshCustomers, 5000);
 
 async function refreshProducts() {
   const list = document.getElementById('productsList');
