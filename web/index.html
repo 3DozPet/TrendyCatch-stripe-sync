@@ -5,30 +5,62 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>TrendyCatch — Everyday Problem-Solvers, Delivered</title>
 <meta name="description" content="Clever everyday gadgets that actually solve a problem. Fast shipping to Australia, New Zealand, the US and Canada." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 <style>
   :root {
-    --ink: #121417;
+    --ink: #1a1a1a;
     --muted: #6b7280;
-    --bg: #fafafa;
+    --bg: #fff8e7;
     --card: #ffffff;
-    --accent: #ff5a3c;
-    --accent-dark: #e4472a;
+    --green: #1b5e20;
+    --green-dark: #0f3d14;
+    --accent: #ffb703;
+    --accent-dark: #e4a300;
+    --price: #d62828;
     --border: #e7e7e7;
   }
   * { box-sizing: border-box; }
-  body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: var(--bg); color: var(--ink); }
+  body { margin: 0; font-family: "Montserrat", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: var(--bg); color: var(--ink); }
   a { color: inherit; }
   header.site {
     position: sticky; top: 0; z-index: 10;
-    background: var(--ink); color: #fff; padding: 14px 20px;
+    background: var(--green); color: #fff; padding: 14px 20px;
     display: flex; align-items: center; justify-content: space-between;
   }
   header.site .brand { font-weight: 800; font-size: 20px; letter-spacing: -0.02em; }
   header.site .brand span { color: var(--accent); }
-  header.site .geo-pill { font-size: 12px; background: rgba(255,255,255,0.12); padding: 6px 12px; border-radius: 999px; }
-  .hero { padding: 48px 20px 28px; text-align: center; max-width: 720px; margin: 0 auto; }
-  .hero h1 { font-size: 34px; line-height: 1.15; margin: 0 0 12px; letter-spacing: -0.02em; }
-  .hero p { color: var(--muted); font-size: 16px; margin: 0; }
+  header.site .geo-pill { font-size: 12px; font-weight: 600; background: rgba(255,255,255,0.14); padding: 6px 12px; border-radius: 999px; }
+  .hero {
+    background: var(--green); background-image: linear-gradient(180deg, var(--green) 0%, var(--green-dark) 100%);
+    padding: 56px 20px 40px; text-align: center; color: #fff;
+  }
+  .hero-inner { max-width: 720px; margin: 0 auto; }
+  .hero .eyebrow { font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); margin: 0 0 10px; }
+  .hero h1 { font-size: 36px; line-height: 1.15; margin: 0 0 14px; letter-spacing: -0.02em; font-weight: 800; }
+  .hero p { color: rgba(255,255,255,0.85); font-size: 16px; margin: 0 0 24px; }
+  .hero-ctas { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+  .hero-ctas a {
+    display: inline-block; border-radius: 999px; padding: 14px 28px; font-weight: 700; font-size: 15px;
+    text-decoration: none; cursor: pointer; transition: transform 0.15s ease, background 0.15s ease;
+  }
+  .hero-ctas a.primary { background: var(--accent); color: var(--ink); }
+  .hero-ctas a.primary:hover { background: var(--accent-dark); }
+  .hero-ctas a.outline { background: transparent; color: #fff; border: 1px solid rgba(255,255,255,0.6); }
+  .hero-ctas a.outline:hover { background: rgba(255,255,255,0.1); }
+  .trust-strip {
+    background: #fff; border-bottom: 1px solid var(--border);
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  }
+  .trust-strip .item {
+    display: flex; align-items: center; gap: 10px; padding: 16px 20px;
+    border-right: 1px solid var(--border);
+  }
+  .trust-strip .item:last-child { border-right: none; }
+  .trust-strip .icon { font-size: 22px; line-height: 1; }
+  .trust-strip .title { font-size: 13px; font-weight: 700; }
+  .trust-strip .subtitle { font-size: 11px; color: var(--muted); }
   .grid {
     max-width: 1180px; margin: 24px auto 80px; padding: 0 20px;
     display: grid; gap: 20px;
@@ -62,15 +94,19 @@
     font-size: 13px; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--border);
     background: #fff; cursor: pointer;
   }
-  .card .price-row { display: flex; align-items: baseline; gap: 8px; margin-top: 4px; }
-  .card .price { font-size: 20px; font-weight: 800; }
+  .card .price-row { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
+  .card .price {
+    font-size: 15px; font-weight: 800; color: #fff; background: var(--price);
+    padding: 4px 10px; border-radius: 999px; line-height: 1.4;
+  }
   .card .price-note { font-size: 11px; color: var(--muted); }
   .buy-btn {
-    margin-top: 6px; border: none; border-radius: 10px; padding: 12px 14px;
-    background: var(--accent); color: #fff; font-size: 14px; font-weight: 700;
-    cursor: pointer; transition: background 0.15s ease;
+    margin-top: 6px; border: none; border-radius: 999px; padding: 12px 14px;
+    background: var(--accent); color: var(--ink); font-size: 14px; font-weight: 700;
+    cursor: pointer; transition: background 0.15s ease, transform 0.1s ease;
   }
   .buy-btn:hover { background: var(--accent-dark); }
+  .buy-btn:active { transform: scale(0.98); }
   .buy-btn:disabled { opacity: 0.6; cursor: wait; }
   footer.site { text-align: center; color: var(--muted); font-size: 12px; padding: 24px 20px 48px; line-height: 1.8; }
   footer.site a { color: var(--muted); text-decoration: underline; }
@@ -86,7 +122,7 @@
   }
   .signup-form input:focus { outline: 2px solid var(--accent); border-color: var(--accent); }
   .signup-form button {
-    border: none; border-radius: 10px; padding: 12px 18px; background: var(--ink); color: #fff;
+    border: none; border-radius: 999px; padding: 12px 20px; background: var(--green); color: #fff;
     font-size: 14px; font-weight: 700; cursor: pointer; white-space: nowrap;
   }
   .signup-form button:disabled { opacity: 0.6; cursor: wait; }
@@ -109,9 +145,23 @@
 </header>
 
 <section class="hero">
-  <h1>Clever fixes for annoying everyday problems</h1>
-  <p>Hand-picked gadgets that actually do what they promise. Shipped straight to your door.</p>
+  <div class="hero-inner">
+    <p class="eyebrow">Everyday problem-solvers</p>
+    <h1>Clever fixes for annoying everyday problems</h1>
+    <p>Hand-picked gadgets that actually do what they promise. Shipped straight to your door.</p>
+    <div class="hero-ctas">
+      <a href="#productGrid" class="primary">Shop Bestsellers</a>
+      <a href="#signupForm" class="outline">Get 10% Off</a>
+    </div>
+  </div>
 </section>
+
+<div class="trust-strip">
+  <div class="item"><span class="icon">🚚</span><div><div class="title">Free shipping</div><div class="subtitle">AU, NZ, US &amp; Canada</div></div></div>
+  <div class="item"><span class="icon">🆕</span><div><div class="title">New drops weekly</div><div class="subtitle">Fresh problem-solvers</div></div></div>
+  <div class="item"><span class="icon">↩️</span><div><div class="title">Easy returns</div><div class="subtitle">Shop with confidence</div></div></div>
+  <div class="item"><span class="icon">🔒</span><div><div class="title">Secure checkout</div><div class="subtitle">Safe &amp; encrypted</div></div></div>
+</div>
 
 <main class="grid" id="productGrid">
   <!-- product cards injected by script -->
