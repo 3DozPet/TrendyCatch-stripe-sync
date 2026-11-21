@@ -1,0 +1,11 @@
+import {stripTypeScriptTypes} from 'node:module'; import {readFileSync} from 'node:fs'; import assert from 'node:assert/strict';
+const code=stripTypeScriptTypes(readFileSync('functions/admin-order-history.ts','utf8').replace(/^import .*$/m,'').replaceAll('export const ','const '));
+let authorized=false; const events=[]; const db={prepare(sql){return {bind(...args){return {first:async()=>({id:args[0],fulfillment_status:'unfulfilled'}),sql,args}},all:async()=>({results:[]})}},batch:async x=>events.push(x)};
+const {onRequestGet,onRequestPost}=new Function('hasValidSession',code+'; return {onRequestGet,onRequestPost}')(async()=>authorized);
+const env={ORDERS_KV:{},ORDERS_DB:db}; const url='https://trendycatch.us/admin-order-history';
+assert.equal((await onRequestGet({request:new Request(url),env})).status,401); authorized=true;
+assert.equal((await onRequestPost({request:new Request(url,{method:'POST',headers:{Origin:'https://other.example'},body:'{}'}),env})).status,403);
+const req=(body)=>new Request(url,{method:'POST',headers:{Origin:'https://trendycatch.us','Content-Type':'application/json'},body:JSON.stringify(body)});
+assert.equal((await onRequestPost({request:req({id:'abc',status:'fulfilled',trackingUrl:'javascript:alert(1)'}),env})).status,400);
+assert.equal((await onRequestPost({request:req({id:'abc',status:'fulfilled',trackingNumber:'123'}),env})).status,200);
+assert.equal(events.length,1); assert.equal(events[0].length,2); console.log('Authentication, origin, tracking URL and fulfillment update checks passed.');
