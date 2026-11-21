@@ -68,11 +68,16 @@
   }
   .header-btn:hover { border-color:var(--accent); color:var(--accent); }
 </style>
+<style>
+:root{--bg:#f1f1f1;--card:#fff;--border:#e3e3e3;--ink:#303030;--muted:#616161;--accent:#18845b} html{scroll-behavior:smooth} body{background:var(--bg);color:var(--ink)}
+.topbar{height:56px;background:#1a1a1a;color:white;display:flex;align-items:center;padding:0 22px;gap:20px;position:sticky;top:0;z-index:3}.brandmark{background:#8cd7ac;color:#122b1a;border-radius:8px;padding:7px 9px;font-weight:800}.topbar strong{font-size:16px}.topbar .spacer{flex:1}.topbar a{color:#fff;text-decoration:none;font-size:14px}.shell{display:grid;grid-template-columns:230px minmax(0,1fr);min-height:calc(100vh - 56px)}.side{padding:22px 12px;background:#ebebeb}.side a{display:flex;align-items:center;gap:12px;padding:11px 14px;text-decoration:none;color:#303030;border-radius:8px;font-size:14px;font-weight:600}.side a:hover,.side a.active{background:#fff}.side .side-title{font-size:12px;color:#666;padding:22px 14px 8px}.side a span{width:22px;text-align:center}.content{min-width:0;padding:28px 32px 90px}header{border:0;padding:0;max-width:1160px;margin:0 auto 20px;align-items:flex-start;gap:12px}header h1{font-size:24px;letter-spacing:-.02em}header .status{font-size:13px;flex-wrap:wrap;justify-content:flex-end}.header-btn{color:#303030;background:white;border-color:#c6c6c6;padding:8px 12px;font-size:13px;font-weight:600}.heading-sub{font-size:14px;color:var(--muted);margin:6px 0 0}.summary,main{max-width:1160px;padding:0;margin:0 auto}.summary{gap:16px}.stat-row{gap:0;background:#fff;border:1px solid #dedede;border-radius:14px;box-shadow:0 1px 2px #00000012;overflow:hidden}.stat-card{border:0;border-right:1px solid #eee;border-radius:0;box-shadow:none;padding:20px}.stat-card:last-child{border:0}.stat-card .label,.breakdown h3{font-size:14px;letter-spacing:0;text-transform:none;color:#4a4a4a;font-weight:600}.stat-card .value{font-size:25px;color:#1a1a1a;margin-top:8px}.breakdown{border-color:#dedede;box-shadow:0 1px 2px #00000012;padding:20px;border-radius:14px}.breakdown h3{margin-bottom:12px}.breakdown-item{font-size:14px;padding:7px 0}.breakdown-item .tag,.subscribers-panel .sub-email{color:#303030}.subscribers-panel .sub-row{font-size:14px}.subscribers-panel .sub-meta{font-size:13px}.section-heading{max-width:1160px;margin:28px auto 12px;display:flex;align-items:end;justify-content:space-between}.section-heading h2{font-size:18px;margin:0}.section-heading p{margin:5px 0 0;color:#666;font-size:13px}.order{background:#fff;color:#303030;border-color:#dedede;box-shadow:0 1px 2px #00000012}.order .items{color:#4a4a4a;font-size:14px}.order .meta{font-size:13px}.badge.direct,.badge.organic_search,.badge.referral{background:#eee;color:#404040;border-color:#ddd}.empty{background:#fff;border:1px solid #dedede;border-radius:14px}.enable-sound{background:#303030;color:#fff;box-shadow:0 4px 16px #0002}.anchor{scroll-margin-top:76px}.live-dot{background:#18845b}@media(max-width:760px){.shell{display:block}.side{display:flex;gap:4px;overflow:auto;padding:8px;position:sticky;top:56px;z-index:2}.side a{white-space:nowrap;padding:9px}.side .side-title{display:none}.content{padding:22px 16px 90px}header{display:block}header .status{justify-content:flex-start;margin-top:12px}.stat-row{grid-template-columns:repeat(2,minmax(0,1fr))}.stat-card:nth-child(2){border-right:0}.stat-card{border-bottom:1px solid #eee}.order{flex-direction:column}.right{align-items:flex-start;text-align:left}.topbar{padding:0 16px}}
+</style>
+
 </head>
 <body>
-
-<header>
-  <h1>TrendyCatch — Live Orders</h1>
+<div class="topbar"><span class="brandmark">T</span><strong>TrendyCatch</strong><span class="spacer"></span><a href="/" target="_blank" rel="noopener">View store ↗</a></div>
+<div class="shell"><nav class="side" aria-label="Dashboard navigation"><div><a class="active" href="#home"><span>⌂</span>Home</a><a href="#orders"><span>▤</span>Recent orders</a><a href="#analytics"><span>◫</span>Analytics</a><a href="#customers"><span>♙</span>Email signups</a><div class="side-title">STORE</div><a href="/" target="_blank" rel="noopener"><span>↗</span>Online store</a></div></nav><div class="content"><header id="home" class="anchor">
+  <div><h1>Home</h1><p class="heading-sub">Your TrendyCatch business at a glance</p></div>
   <div class="status">
     <span class="dot"></span><span id="statusText">Listening…</span>
     <button id="changePwBtn" class="header-btn">Change password</button>
@@ -80,7 +85,7 @@
   </div>
 </header>
 
-<section class="summary">
+<section class="summary anchor" id="analytics" aria-label="Business overview">
   <div class="stat-row">
     <div class="stat-card">
       <div class="label">Total revenue</div>
@@ -113,16 +118,18 @@
       <div id="liveByCountry"></div>
     </div>
   </div>
-  <div class="breakdown subscribers-panel">
+  <div class="breakdown subscribers-panel anchor" id="customers">
     <h3>Recent email signups — admin only, never shown to customers</h3>
     <div id="subscriberList"></div>
   </div>
 </section>
 
+<div class="section-heading anchor" id="orders"><div><h2>Recent orders</h2><p>Live order notifications from the past 6 hours</p></div></div>
 <main id="orderList">
   <div class="empty" id="emptyState">Waiting for the first order to come in…</div>
 </main>
 
+</div></div>
 <button class="enable-sound" id="soundBtn">🔇 Enable order sound</button>
 
 <script>
@@ -203,13 +210,13 @@ function renderOrder(order, isNew) {
   const itemsText = (order.items || []).map((i) => `${i.quantity}× ${i.title}`).join(", ");
   el.innerHTML = `
     <div class="left">
-      <div class="top-line">${order.orderName} — ${order.customerName}</div>
-      <div class="items">${itemsText}</div>
-      <div class="meta">${order.email || ""} ${order.phone ? "· " + order.phone : ""} ${order.country ? "· " + order.country : ""}</div>
+      <div class="top-line">${escapeHtml(order.orderName || "New order")} — ${escapeHtml(order.customerName || "Unknown customer")}</div>
+      <div class="items">${escapeHtml(itemsText)}</div>
+      <div class="meta">${escapeHtml(order.email || "")} ${order.phone ? "· " + escapeHtml(order.phone) : ""} ${order.country ? "· " + escapeHtml(order.country) : ""}</div>
     </div>
     <div class="right">
-      <div class="amount">${order.currency || ""} ${Number(order.total || 0).toFixed(2)}</div>
-      <span class="badge ${sourceClass(order.source)}">${sourceLabel(order)}</span>
+      <div class="amount">${escapeHtml(order.currency || "")} ${Number(order.total || 0).toFixed(2)}</div>
+      <span class="badge ${sourceClass(order.source)}">${escapeHtml(sourceLabel(order))}</span>
     </div>
   `;
   return el;
@@ -257,7 +264,7 @@ function renderBreakdown(containerId, entries, formatValue) {
     return;
   }
   el.innerHTML = entries
-    .map(([key, val]) => `<div class="breakdown-item"><span class="tag">${countryName(key)}</span><span class="num">${formatValue(val)}</span></div>`)
+    .map(([key, val]) => `<div class="breakdown-item"><span class="tag">${escapeHtml(countryName(key))}</span><span class="num">${formatValue(val)}</span></div>`)
     .join("");
 }
 
