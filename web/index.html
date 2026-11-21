@@ -38,33 +38,42 @@
   }
   .hero {
     background: var(--green); background-image: linear-gradient(180deg, var(--green) 0%, var(--green-dark) 100%);
-    padding: 16px 20px 14px; text-align: center; color: #fff;
+    padding: 26px 20px;
   }
-  .hero-inner { max-width: 760px; margin: 0 auto; }
-  .hero .eyebrow { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); margin: 0 0 4px; }
-  .hero h1 { font-size: 19px; line-height: 1.2; margin: 0 0 4px; letter-spacing: -0.01em; font-weight: 800; }
-  .hero p { color: rgba(255,255,255,0.85); font-size: 12px; margin: 0 0 10px; }
-  .hero-ctas { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 12px; }
+  .hero-layout {
+    max-width: 1080px; margin: 0 auto; display: flex; align-items: center; justify-content: center;
+    gap: 24px;
+  }
+  .hero-side { display: flex; flex-direction: row; gap: 10px; flex-shrink: 0; }
+  .hero-inner { max-width: 440px; text-align: center; color: #fff; flex: 1; min-width: 0; }
+  .hero .eyebrow { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); margin: 0 0 6px; }
+  .hero h1 { font-size: 24px; line-height: 1.2; margin: 0 0 8px; letter-spacing: -0.01em; font-weight: 800; }
+  .hero p { color: rgba(255,255,255,0.85); font-size: 13px; margin: 0 0 14px; }
+  .hero-ctas { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
   .hero-ctas a {
-    display: inline-block; border-radius: 999px; padding: 8px 18px; font-weight: 700; font-size: 13px;
+    display: inline-block; border-radius: 999px; padding: 10px 20px; font-weight: 700; font-size: 13px;
     text-decoration: none; cursor: pointer; transition: transform 0.15s ease, background 0.15s ease;
   }
   .hero-ctas a.primary { background: var(--accent); color: var(--ink); }
   .hero-ctas a.primary:hover { background: var(--accent-dark); }
   .hero-ctas a.outline { background: transparent; color: #fff; border: 1px solid rgba(255,255,255,0.6); }
   .hero-ctas a.outline:hover { background: rgba(255,255,255,0.1); }
-  .hero-photos { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
-  .hero-photos .shot {
-    position: relative; width: 56px; height: 56px; border-radius: 10px; overflow: hidden;
-    background: #fff; box-shadow: 0 3px 8px rgba(0,0,0,0.2); flex-shrink: 0;
+  .hero-side .shot {
+    position: relative; width: 78px; height: 78px; border-radius: 12px; overflow: hidden;
+    background: #fff; box-shadow: 0 3px 10px rgba(0,0,0,0.25); flex-shrink: 0;
   }
-  .hero-photos .shot img { width: 100%; height: 100%; object-fit: cover; display: block; }
-  .hero-photos .shot .tag {
-    position: absolute; bottom: 2px; left: 2px; right: 2px; text-align: center;
-    background: var(--price); color: #fff; font-size: 9px; font-weight: 800;
-    padding: 1px 3px; border-radius: 999px;
+  .hero-side .shot img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .hero-side .shot .tag {
+    position: absolute; bottom: 3px; left: 3px; right: 3px; text-align: center;
+    background: var(--price); color: #fff; font-size: 10px; font-weight: 800;
+    padding: 2px 3px; border-radius: 999px;
   }
-  @media (max-width: 480px) { .hero-photos .shot { width: 44px; height: 44px; } }
+  @media (max-width: 900px) {
+    .hero-layout { gap: 12px; }
+    .hero-side { gap: 6px; }
+    .hero-side .shot { width: 50px; height: 50px; }
+    .hero-side .shot .tag { font-size: 9px; }
+  }
   .trust-strip {
     background: #fff; border-bottom: 1px solid var(--border);
     display: grid; grid-template-columns: repeat(4, 1fr);
@@ -166,6 +175,8 @@
 
   /* ---- Phones & small tablets ---- */
   @media (max-width: 680px) {
+    .hero-side { display: none; }
+    .hero-inner { max-width: 100%; }
     .trust-strip .item { padding: 12px 14px; }
     .grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; padding: 0 12px; margin: 16px auto 56px; }
     .card .body { padding: 10px 12px 12px; gap: 6px; }
@@ -191,15 +202,18 @@
 </header>
 
 <section class="hero">
-  <div class="hero-inner">
-    <p class="eyebrow">Everyday problem-solvers</p>
-    <h1>Clever fixes for annoying everyday problems</h1>
-    <p>Hand-picked gadgets that actually do what they promise. Shipped straight to your door.</p>
-    <div class="hero-ctas">
-      <a href="#productGrid" class="primary">Shop Bestsellers</a>
-      <a href="#signupForm" class="outline">Get 10% Off</a>
+  <div class="hero-layout">
+    <div class="hero-side" id="heroPhotosLeft"></div>
+    <div class="hero-inner">
+      <p class="eyebrow">Everyday problem-solvers</p>
+      <h1>Clever fixes for annoying everyday problems</h1>
+      <p>Hand-picked gadgets that actually do what they promise. Shipped straight to your door.</p>
+      <div class="hero-ctas">
+        <a href="#productGrid" class="primary">Shop Bestsellers</a>
+        <a href="#signupForm" class="outline">Get 10% Off</a>
+      </div>
     </div>
-    <div class="hero-photos" id="heroPhotos"></div>
+    <div class="hero-side" id="heroPhotosRight"></div>
   </div>
 </section>
 
@@ -578,17 +592,18 @@ async function handleBuy(btn) {
 }
 
 function renderHeroPhotos() {
-  const holder = document.getElementById("heroPhotos");
-  if (!holder) return;
+  const left = document.getElementById("heroPhotosLeft");
+  const right = document.getElementById("heroPhotosRight");
+  if (!left || !right) return;
   const symbol = COUNTRY_SYMBOL[currentCountry] || "$";
-  const picks = products.slice(0, 4);
-  holder.innerHTML = picks
-    .map((p) => {
-      const img = (p.images && p.images[0]) || p.image || "";
-      const pricing = getPricing(p, selectedVariant[p.id]);
-      return `<div class="shot"><img src="${img}" loading="lazy" alt="${escapeHtml(p.title)}" /><div class="tag">${symbol}${pricing.price.toFixed(2)}</div></div>`;
-    })
-    .join("");
+  const shotHtml = (p) => {
+    const img = (p.images && p.images[0]) || p.image || "";
+    const pricing = getPricing(p, selectedVariant[p.id]);
+    return `<div class="shot"><img src="${img}" loading="lazy" alt="${escapeHtml(p.title)}" /><div class="tag">${symbol}${pricing.price.toFixed(2)}</div></div>`;
+  };
+  const picks = products.slice(0, 6);
+  left.innerHTML = picks.slice(0, 3).map(shotHtml).join("");
+  right.innerHTML = picks.slice(3, 6).map(shotHtml).join("");
 }
 
 async function init() {
