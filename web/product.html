@@ -50,7 +50,10 @@
   .pdp-top { display: grid; grid-template-columns: 1fr 1fr; gap: 36px; align-items: start; }
   @media (max-width: 800px) { .pdp-top { grid-template-columns: 1fr; } }
 
-  .gallery .main-img { aspect-ratio: 1/1; background: #f1f1f1; border-radius: 16px; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+  .gallery .main-img { position: relative; aspect-ratio: 1/1; background: #f1f1f1; border-radius: 16px; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+  .gallery .badges { position: absolute; top: 10px; left: 10px; display: flex; gap: 6px; z-index: 2; }
+  .gallery .badge.sale { background: var(--price); color: #fff; font-size: 12px; font-weight: 800; padding: 5px 11px; border-radius: 999px; box-shadow: 0 1px 3px rgba(0,0,0,0.15); }
+  .buybox .compare-price { font-size: 15px; color: var(--muted); text-decoration: line-through; }
   .gallery .main-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .gallery .thumbs { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
   .gallery .thumbs img { width: 60px; height: 60px; object-fit: cover; border-radius: 8px; cursor: pointer; border: 2px solid transparent; opacity: 0.7; }
@@ -157,7 +160,7 @@
   <div class="pdp">
     <div class="pdp-top">
       <div class="gallery">
-        <div class="main-img"><img id="mainImg" src="" alt="" /></div>
+        <div class="main-img"><div class="badges" id="badges"></div><img id="mainImg" src="" alt="" /></div>
         <div class="thumbs" id="thumbs"></div>
       </div>
       <div class="buybox">
@@ -171,6 +174,7 @@
         </div>
         <div class="price-row">
           <div class="price" id="price"></div>
+          <div class="compare-price" id="comparePrice" style="display:none;"></div>
           <div class="price-note">free shipping</div>
         </div>
         <button class="buy-btn" id="buyBtnMain">Buy Now</button>
@@ -316,6 +320,17 @@ function getPriceForVariant(prod, variantSku) {
   return variantPrice !== undefined ? variantPrice : prod.prices[currentCountry];
 }
 
+// Mirrors index.html's getPricing(): a variant's own compareAt overrides the
+// product's, falling back the same way price does, so the sale badge and
+// strikethrough stay consistent between the catalog and this page.
+function getPricing(prod, variantSku) {
+  const variant = (prod.variants || []).find((v) => v.sku === variantSku);
+  const price = getPriceForVariant(prod, variantSku);
+  const was = (variant && variant.compareAt ? variant.compareAt[currentCountry] : undefined) ?? (prod.compareAt ? prod.compareAt[currentCountry] : undefined);
+  const pctOff = was && was > price ? Math.round((1 - price / was) * 100) : 0;
+  return { price, was, pctOff };
+}
+
 function fireViewContent(prod) {
   const currency = currentCountry === "US" ? "USD" : currentCountry === "NZ" ? "NZD" : currentCountry === "CA" ? "CAD" : "AUD";
   const value = getPriceForVariant(prod, selectedVariantSku);
@@ -333,11 +348,22 @@ function fireInitiateCheckout(prod) {
 
 function updatePriceDisplay() {
   const symbol = COUNTRY_SYMBOL[currentCountry] || "$";
-  const price = getPriceForVariant(product, selectedVariantSku);
-  const text = `${symbol}${price.toFixed(2)}`;
+  const pricing = getPricing(product, selectedVariantSku);
+  const text = `${symbol}${pricing.price.toFixed(2)}`;
   document.getElementById("price").textContent = text;
   document.getElementById("priceClosing").textContent = text;
   document.getElementById("stickyPrice").textContent = text;
+
+  const compareEl = document.getElementById("comparePrice");
+  if (pricing.was) {
+    compareEl.textContent = `${symbol}${pricing.was.toFixed(2)}`;
+    compareEl.style.display = "";
+  } else {
+    compareEl.style.display = "none";
+  }
+
+  const badgesEl = document.getElementById("badges");
+  badgesEl.innerHTML = pricing.pctOff > 0 ? `<span class="badge sale">-${pricing.pctOff}%</span>` : "";
 }
 
 function renderProduct() {
