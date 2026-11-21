@@ -150,29 +150,41 @@ document.getElementById("soundBtn").addEventListener("click", async () => {
   }
 });
 
-// An original, short double bicycle-bell ring, synthesized with Web Audio.
+// A continuous metallic bicycle-bell ring, lasting about one second.
 function playChime() {
   if (!audioCtx || audioCtx.state !== "running") return;
   const now = audioCtx.currentTime;
-  function strike(time, volume) {
-    // Inharmonic partials make each strike sound metallic rather than musical.
-    [[1760, 1], [2640, 0.42], [4310, 0.19], [5710, 0.08]].forEach(([frequency, level]) => {
+  const duration = 0.95;
+  const tremolo = audioCtx.createGain();
+  tremolo.gain.setValueAtTime(0.65, now);
+  tremolo.connect(audioCtx.destination);
+
+  const lfo = audioCtx.createOscillator();
+  const depth = audioCtx.createGain();
+  lfo.type = "sine";
+  lfo.frequency.setValueAtTime(25, now);
+  lfo.frequency.exponentialRampToValueAtTime(15, now + duration);
+  depth.gain.value = 0.35;
+  lfo.connect(depth);
+  depth.connect(tremolo.gain);
+  lfo.start(now);
+  lfo.stop(now + duration);
+
+  // The bell's inharmonic partials give the ring a bright, coin-like sound.
+  [[2793, 0.15, 0.95], [7708, 0.06, 0.72], [11451, 0.03, 0.5], [15082, 0.012, 0.34]]
+    .forEach(([frequency, level, decay]) => {
       const osc = audioCtx.createOscillator();
       const gain = audioCtx.createGain();
       osc.type = "sine";
-      osc.frequency.setValueAtTime(frequency, time);
-      gain.gain.setValueAtTime(0.0001, time);
-      gain.gain.exponentialRampToValueAtTime(volume * level, time + 0.004);
-      gain.gain.exponentialRampToValueAtTime(0.0001, time + 0.22);
+      osc.frequency.setValueAtTime(frequency, now);
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.exponentialRampToValueAtTime(level, now + 0.005);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + decay);
       osc.connect(gain);
-      gain.connect(audioCtx.destination);
-      osc.start(time);
-      osc.stop(time + 0.23);
+      gain.connect(tremolo);
+      osc.start(now);
+      osc.stop(now + decay + 0.02);
     });
-  }
-  // Two quick bursts of repeated strikes, with a natural fading tail.
-  [0, 0.055, 0.11, 0.165, 0.42, 0.475, 0.53, 0.585, 0.64, 0.70]
-    .forEach((offset, i) => strike(now + offset, 0.10 * (1 - i * 0.045)));
 }
 
 function sourceClass(code) {
