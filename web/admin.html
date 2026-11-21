@@ -150,30 +150,29 @@ document.getElementById("soundBtn").addEventListener("click", async () => {
   }
 });
 
-// A brief original cash-register chime, synthesized locally using Web Audio.
+// An original, short double bicycle-bell ring, synthesized with Web Audio.
 function playChime() {
   if (!audioCtx || audioCtx.state !== "running") return;
   const now = audioCtx.currentTime;
-  function tone(time, frequency, duration, volume) {
-    [1, 2.01, 3.91].forEach((ratio, index) => {
+  function strike(time, volume) {
+    // Inharmonic partials make each strike sound metallic rather than musical.
+    [[1760, 1], [2640, 0.42], [4310, 0.19], [5710, 0.08]].forEach(([frequency, level]) => {
       const osc = audioCtx.createOscillator();
       const gain = audioCtx.createGain();
       osc.type = "sine";
-      osc.frequency.setValueAtTime(frequency * ratio, time);
-      const peak = volume * [1, 0.32, 0.13][index];
+      osc.frequency.setValueAtTime(frequency, time);
       gain.gain.setValueAtTime(0.0001, time);
-      gain.gain.exponentialRampToValueAtTime(peak, time + 0.005);
-      gain.gain.exponentialRampToValueAtTime(0.0001, time + duration);
+      gain.gain.exponentialRampToValueAtTime(volume * level, time + 0.004);
+      gain.gain.exponentialRampToValueAtTime(0.0001, time + 0.22);
       osc.connect(gain);
       gain.connect(audioCtx.destination);
       osc.start(time);
-      osc.stop(time + duration + 0.02);
+      osc.stop(time + 0.23);
     });
   }
-  // A quick register click followed by two bright, descending bell notes.
-  tone(now, 420, 0.07, 0.08);
-  tone(now + 0.09, 2093, 0.24, 0.10);
-  tone(now + 0.25, 1568, 0.65, 0.13);
+  // Two quick bursts of repeated strikes, with a natural fading tail.
+  [0, 0.055, 0.11, 0.165, 0.42, 0.475, 0.53, 0.585, 0.64, 0.70]
+    .forEach((offset, i) => strike(now + offset, 0.10 * (1 - i * 0.045)));
 }
 
 function sourceClass(code) {
