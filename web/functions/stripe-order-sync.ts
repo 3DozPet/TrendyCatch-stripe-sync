@@ -62,7 +62,10 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   let event: any
   try {
     if (!signature) throw new Error("Missing stripe-signature header")
-    event = await verifyStripeSignature(rawBody, signature, env.STRIPE_WEBHOOK_SECRET)
+    // Trim in case the secret was pasted into Cloudflare with a trailing
+    // newline/space — that invisible difference otherwise makes every
+    // signature check fail with no obvious cause.
+    event = await verifyStripeSignature(rawBody, signature, env.STRIPE_WEBHOOK_SECRET.trim())
   } catch (err) {
     console.error("Stripe signature verification failed:", (err as Error).message)
     return new Response("Invalid signature", { status: 400 })

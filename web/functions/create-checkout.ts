@@ -23,7 +23,12 @@ const SHIP_TO_COUNTRIES: CountryCode[] = ["AU", "NZ", "US", "CA"]
 export const onRequestPost: PagesFunction<Env> = async (context) => {
   const { request, env } = context
 
-  if (!env.STRIPE_SECRET_KEY) {
+  // Secrets pasted into the Cloudflare dashboard sometimes pick up a trailing
+  // newline or space from the copy — that's an invisible difference that
+  // otherwise throws an uncaught "invalid header value" error and crashes the
+  // whole function (a raw Cloudflare 502, not our own JSON error below).
+  const stripeSecretKey = (env.STRIPE_SECRET_KEY || "").trim()
+  if (!stripeSecretKey) {
     return json({ error: "Server misconfigured: missing STRIPE_SECRET_KEY" }, 500)
   }
 
@@ -106,16 +111,31 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
   params.set("metadata[source]", source)
   if (landingUrl) params.set("metadata[landing_url]", landingUrl)
 
-  const stripeRes = await fetch("https://api.stripe.com/v1/checkout/sessions", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${env.STRIPE_SECRET_KEY}`,
-      "Content-Type": "application/x-www-form-urlencoded",
-    },
-    body: params.toString(),
-  })
+  // Wrapped in try/catch so a bad key, network hiccup, or malformed header
+  // never crashes the function with a raw Cloudflare 502 — the client always
+  // gets back a readable JSON error instead.
+  let stripeRes: Response
+  try {
+    stripeRes = await fetch("https://api.stripe.com/v1/checkout/sessions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${stripeSecretKey}`,
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: params.toString(),
+    })
+  } catch (err) {
+    console.error("Stripe request failed:", err instanceof Error ? err.message : err)
+    return json({ error: "Could not reach Stripe" }, 502)
+  }
 
-  const session = await stripeRes.json()
+  let session: any
+  try {
+    session = await stripeRes.json()
+  } catch {
+    return json({ error: "Stripe returned an unreadable response" }, 502)
+  }
+
   if (!stripeRes.ok) {
     console.error("Stripe session create failed:", JSON.stringify(session))
     return json({ error: session?.error?.message ?? "Stripe error" }, 502)
