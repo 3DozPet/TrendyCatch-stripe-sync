@@ -374,19 +374,30 @@ function escapeHtml(str) {
   return String(str).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 }
 
+// Some variants (e.g. a bigger pack size or bag size) cost more than others.
+// A variant with its own `prices` object overrides the product's base price
+// for the selected country; products with no per-variant pricing (or a
+// variant missing a price for this country) just fall back to the product's
+// flat price, same as before.
+function getPriceForVariant(product, variantSku) {
+  const variant = (product.variants || []).find((v) => v.sku === variantSku);
+  const variantPrice = variant && variant.prices ? variant.prices[currentCountry] : undefined;
+  return variantPrice !== undefined ? variantPrice : product.prices[currentCountry];
+}
+
 function renderProducts() {
   const grid = document.getElementById("productGrid");
   grid.innerHTML = "";
   const symbol = COUNTRY_SYMBOL[currentCountry] || "$";
 
   products.forEach((product) => {
-    const price = product.prices[currentCountry];
     const images = (product.images && product.images.length ? product.images : [product.image]).filter(Boolean);
     const primaryImage = images[0] || "";
     const variants = product.variants || [];
     if (variants.length && !selectedVariant[product.id]) {
       selectedVariant[product.id] = variants[0].sku;
     }
+    const price = getPriceForVariant(product, selectedVariant[product.id]);
 
     const thumbStrip = images.length > 1
       ? `<div class="thumb-strip" data-id="${product.id}">${images
@@ -420,7 +431,7 @@ function renderProducts() {
         <div class="hook">${escapeHtml(product.hook || "")}</div>
         ${variantControl}
         <div class="price-row">
-          <div class="price">${symbol}${price.toFixed(2)}</div>
+          <div class="price" data-price-id="${product.id}">${symbol}${price.toFixed(2)}</div>
           <div class="price-note">free shipping</div>
         </div>
         <button class="buy-btn" data-id="${product.id}">Buy Now</button>
@@ -436,7 +447,15 @@ function renderProducts() {
 
   grid.querySelectorAll(".variant-picker").forEach((sel) => {
     sel.addEventListener("change", () => {
-      selectedVariant[sel.dataset.id] = sel.value;
+      const productId = sel.dataset.id;
+      selectedVariant[productId] = sel.value;
+      const product = products.find((p) => p.id === productId);
+      if (!product) return;
+      const priceEl = grid.querySelector(`[data-price-id="${productId}"]`);
+      if (priceEl) {
+        const newPrice = getPriceForVariant(product, sel.value);
+        priceEl.textContent = `${symbol}${newPrice.toFixed(2)}`;
+      }
     });
   });
 

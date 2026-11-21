@@ -66,7 +66,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     id: string
     title: string
     variant: string
-    variants?: Array<{ label: string; sku: string }>
+    variants?: Array<{ label: string; sku: string; prices?: Record<CountryCode, number> }>
     image?: string
     images?: string[]
     prices: Record<CountryCode, number>
@@ -76,10 +76,6 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
   if (!product) {
     return json({ error: "Unknown product" }, 404)
   }
-  const unitPrice = product.prices[country]
-  if (typeof unitPrice !== "number") {
-    return json({ error: "No price configured for this country" }, 400)
-  }
 
   // If this product has real selectable options, the chosen one must be one
   // of the catalog's own skus — never trust an arbitrary string from the
@@ -88,6 +84,17 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
   const availableVariants = product.variants ?? []
   const matchedVariant = availableVariants.find((v) => v.sku === body.variantSku)
   const variantLabel = matchedVariant ? matchedVariant.label : product.variant
+
+  // A variant like a bigger pack or bag size can cost more than the base
+  // product price. The charged amount always comes from this catalog file,
+  // computed from the matched variant — never from a price the browser
+  // sends — so it can't be tampered with and stays correct if the variant
+  // carries its own price for this country; otherwise it falls back to the
+  // product's flat price, same as before per-variant pricing existed.
+  const unitPrice = matchedVariant?.prices?.[country] ?? product.prices[country]
+  if (typeof unitPrice !== "number") {
+    return json({ error: "No price configured for this country" }, 400)
+  }
 
   const currency = CURRENCY_BY_COUNTRY[country]
 
