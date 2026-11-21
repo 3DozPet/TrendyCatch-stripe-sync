@@ -76,7 +76,7 @@
 </head>
 <body>
 <div class="topbar"><span class="brandmark">T</span><strong>TrendyCatch</strong><span class="spacer"></span><a href="/" target="_blank" rel="noopener">View store ↗</a></div>
-<div class="shell"><nav class="side" aria-label="Dashboard navigation"><div><a class="active" href="#home"><span>⌂</span>Home</a><a href="#history"><span>▤</span>Orders</a><a href="#orders"><span>◷</span>Live alerts</a><a href="#analytics"><span>◫</span>Analytics</a><a href="#customers"><span>♙</span>Email signups</a><div class="side-title">STORE</div><a href="/" target="_blank" rel="noopener"><span>↗</span>Online store</a></div></nav><div class="content"><header id="home" class="anchor">
+<div class="shell"><nav class="side" aria-label="Dashboard navigation"><div><a class="active" href="#home"><span>⌂</span>Home</a><a href="#history"><span>▤</span>Orders</a><a href="#orders"><span>◷</span>Live alerts</a><a href="#custpanel"><span>☺</span>Customers</a><a href="#products"><span>▦</span>Products</a><a href="#analytics"><span>◫</span>Analytics</a><a href="#signups"><span>♙</span>Email signups</a><div class="side-title">STORE</div><a href="/" target="_blank" rel="noopener"><span>↗</span>Online store</a></div></nav><div class="content"><header id="home" class="anchor">
   <div><h1>Home</h1><p class="heading-sub">Your TrendyCatch business at a glance</p></div>
   <div class="status">
     <span class="dot"></span><span id="statusText">Listening…</span>
@@ -118,13 +118,17 @@
       <div id="liveByCountry"></div>
     </div>
   </div>
-  <div class="breakdown subscribers-panel anchor" id="customers">
+  <div class="breakdown subscribers-panel anchor" id="signups">
     <h3>Recent email signups — admin only, never shown to customers</h3>
     <div id="subscriberList"></div>
   </div>
 </section>
 
 <section class="history-panel anchor" id="history"><div class="history-head"><div><h2>Order history</h2><p>View customer details and update fulfilment</p></div><button id="historyRefresh" type="button">Refresh</button></div><p id="historyStatus" role="status">Loading orders…</p><div id="historyList"></div></section>
+<div class="section-heading anchor" id="custpanel"><div><h2>Customers</h2><p>Order history and lifetime spend per customer</p></div><button id="customersRefresh" type="button" class="header-btn">Refresh</button></div>
+<div class="breakdown" style="max-width:1160px;margin:0 auto 24px;"><div id="customersList"></div></div>
+<div class="section-heading anchor" id="products"><div><h2>Products</h2><p>Catalog currently listed on the store</p></div></div>
+<div class="breakdown" style="max-width:1160px;margin:0 auto 24px;"><div id="productsList"></div></div>
 <div class="section-heading anchor" id="orders"><div><h2>Recent orders</h2><p>Live order notifications from the past 6 hours</p></div></div>
 <main id="orderList">
   <div class="empty" id="emptyState">Waiting for the first order to come in…</div>
@@ -406,6 +410,49 @@ async function refreshHistory() {
 }
 document.getElementById('historyRefresh').addEventListener('click',refreshHistory);
 refreshHistory();
+
+async function refreshCustomers() {
+  const list = document.getElementById('customersList');
+  try {
+    const res = await fetch('/admin-customers', { cache: 'no-store' });
+    if (reloadIfUnauthorized(res.status)) return;
+    if (!res.ok) throw new Error('Customers are not connected yet.');
+    const data = await res.json();
+    const customers = data.customers || [];
+    if (!customers.length) { list.innerHTML = '<div class="breakdown-item"><span class="tag">No customers yet</span></div>'; return; }
+    list.innerHTML = customers.map((c) => {
+      const spent = Number(c.totalSpentMinor || 0) / 100;
+      return `<div style="display:flex;flex-direction:column;gap:2px;border-bottom:1px solid var(--border);padding:10px 0;">
+        <div style="display:flex;justify-content:space-between;width:100%;"><strong>${escapeHtml(c.name || c.email || 'Customer')}</strong><span>${escapeHtml(c.currency || '')} ${spent.toFixed(2)}</span></div>
+        <div class="meta">${escapeHtml(c.email || '')}${c.phone ? ' · ' + escapeHtml(c.phone) : ''} · ${c.orderCount} order${c.orderCount === 1 ? '' : 's'} · last ${timeAgo(c.lastOrderAt)}</div>
+      </div>`;
+    }).join('');
+  } catch (e) {
+    list.innerHTML = `<div class="breakdown-item"><span class="tag">${escapeHtml(e.message || 'Customers unavailable')}</span></div>`;
+  }
+}
+document.getElementById('customersRefresh').addEventListener('click', refreshCustomers);
+refreshCustomers();
+setInterval(refreshCustomers, 30000);
+
+async function refreshProducts() {
+  const list = document.getElementById('productsList');
+  try {
+    const res = await fetch('/products.json', { cache: 'no-store' });
+    if (!res.ok) throw new Error('Products unavailable');
+    const products = await res.json();
+    const arr = Array.isArray(products) ? products : [];
+    if (!arr.length) { list.innerHTML = '<div class="breakdown-item"><span class="tag">No products found</span></div>'; return; }
+    list.innerHTML = arr.map((p) => {
+      const price = p.prices && p.prices.AU != null ? `$${Number(p.prices.AU).toFixed(2)}` : '—';
+      const was = p.compareAt && p.compareAt.AU != null ? `<span style="text-decoration:line-through;color:var(--muted);margin-right:6px;">$${Number(p.compareAt.AU).toFixed(2)}</span>` : '';
+      return `<div class="breakdown-item"><span class="tag">${escapeHtml(p.title || p.id || 'Untitled')}</span><span class="num">${was}${price}</span></div>`;
+    }).join('');
+  } catch (e) {
+    list.innerHTML = `<div class="breakdown-item"><span class="tag">${escapeHtml(e.message || 'Products unavailable')}</span></div>`;
+  }
+}
+refreshProducts();
 
 poll();
 pollStats();
