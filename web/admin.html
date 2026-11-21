@@ -76,7 +76,7 @@
 </head>
 <body>
 <div class="topbar"><span class="brandmark">T</span><strong>TrendyCatch</strong><span class="spacer"></span><a href="/" target="_blank" rel="noopener">View store ↗</a></div>
-<div class="shell"><nav class="side" aria-label="Dashboard navigation"><div><a class="active" href="#home"><span>⌂</span>Home</a><a href="#orders"><span>▤</span>Recent orders</a><a href="#analytics"><span>◫</span>Analytics</a><a href="#customers"><span>♙</span>Email signups</a><div class="side-title">STORE</div><a href="/" target="_blank" rel="noopener"><span>↗</span>Online store</a></div></nav><div class="content"><header id="home" class="anchor">
+<div class="shell"><nav class="side" aria-label="Dashboard navigation"><div><a class="active" href="#home"><span>⌂</span>Home</a><a href="#history"><span>▤</span>Orders</a><a href="#orders"><span>◷</span>Live alerts</a><a href="#analytics"><span>◫</span>Analytics</a><a href="#customers"><span>♙</span>Email signups</a><div class="side-title">STORE</div><a href="/" target="_blank" rel="noopener"><span>↗</span>Online store</a></div></nav><div class="content"><header id="home" class="anchor">
   <div><h1>Home</h1><p class="heading-sub">Your TrendyCatch business at a glance</p></div>
   <div class="status">
     <span class="dot"></span><span id="statusText">Listening…</span>
@@ -124,6 +124,7 @@
   </div>
 </section>
 
+<section class="history-panel anchor" id="history"><div class="history-head"><div><h2>Order history</h2><p>View customer details and update fulfilment</p></div><button id="historyRefresh" type="button">Refresh</button></div><p id="historyStatus" role="status">Loading orders…</p><div id="historyList"></div></section>
 <div class="section-heading anchor" id="orders"><div><h2>Recent orders</h2><p>Live order notifications from the past 6 hours</p></div></div>
 <main id="orderList">
   <div class="empty" id="emptyState">Waiting for the first order to come in…</div>
@@ -365,6 +366,46 @@ document.getElementById("changePwBtn").addEventListener("click", async () => {
     alert("Network error — try again.");
   }
 });
+
+
+function orderElement(tag, value, className) {
+  const el = document.createElement(tag); if (value != null) el.textContent = String(value); if (className) el.className = className; return el;
+}
+function printableAddress(raw) {
+  if (!raw) return 'Not provided';
+  try { const a=JSON.parse(raw); return [a.line1,a.line2,a.city,a.state,a.postal_code,a.country].filter(Boolean).join(', ') || 'Not provided'; } catch { return 'Address unavailable'; }
+}
+function orderField(parent, label, value) { const p=orderElement('p'); const strong=orderElement('strong',label+': '); p.append(strong, document.createTextNode(value || 'Not provided')); parent.append(p); }
+function formInput(form, label, name, value, type='text') {
+  const wrap=orderElement('label',label); const input=document.createElement('input'); input.type=type; input.name=name; input.value=value || ''; wrap.append(input); form.append(wrap); return input;
+}
+async function refreshHistory() {
+  const status=document.getElementById('historyStatus'), list=document.getElementById('historyList');
+  try {
+    const response=await fetch('/admin-order-history', {cache:'no-store'});
+    if (reloadIfUnauthorized(response.status)) return;
+    if (!response.ok) throw new Error('Order history is not connected yet.');
+    const data=await response.json(); list.replaceChildren();
+    status.textContent=data.orders.length ? `Showing up to ${data.limit} orders` : 'No orders in order history yet.';
+    for (const order of data.orders) {
+      const entry=orderElement('details',null,'history-order');
+      const total=Number(order.total_minor || 0)/100;
+      entry.append(orderElement('summary',`${order.customer_name || 'Customer'} · ${order.currency} ${total.toFixed(2)} · ${order.fulfillment_status}`));
+      const fields=orderElement('div',null,'history-fields');
+      orderField(fields,'Order ID',order.id); orderField(fields,'Date',order.created_at); orderField(fields,'Email',order.customer_email); orderField(fields,'Phone',order.customer_phone);
+      orderField(fields,'Shipping name',order.shipping_name); orderField(fields,'Shipping address',printableAddress(order.shipping_address_json)); orderField(fields,'Billing address',printableAddress(order.billing_address_json));
+      orderField(fields,'Payment',order.payment_status); orderField(fields,'Items',(data.items || []).filter(i=>i.order_id===order.id).map(i=>`${i.quantity} × ${i.title}${i.variant ? ' — '+i.variant : ''}`).join(', ')); entry.append(fields);
+      const form=orderElement('form',null,'history-form'); const label=orderElement('label','Fulfilment'); const select=document.createElement('select'); select.name='status';
+      for (const value of ['unfulfilled','fulfilled']) { const opt=orderElement('option',value==='fulfilled' ? 'Fulfilled' : 'Unfulfilled'); opt.value=value; opt.selected=value===order.fulfillment_status; select.append(opt); } label.append(select); form.append(label);
+      const number=formInput(form,'Tracking number','number',order.tracking_number); const carrier=formInput(form,'Carrier','carrier',order.tracking_carrier); const url=formInput(form,'Tracking URL','url',order.tracking_url,'url');
+      const button=orderElement('button','Save fulfilment'); button.type='submit'; form.append(button); const result=orderElement('span'); result.setAttribute('role','status'); form.append(result);
+      form.addEventListener('submit',async e=>{e.preventDefault(); button.disabled=true; result.textContent='Saving…'; try {const r=await fetch('/admin-order-history',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:order.id,status:select.value,trackingNumber:number.value,carrier:carrier.value,trackingUrl:url.value})}); const d=await r.json(); if(!r.ok) throw Error(d.error || 'Unable to save'); result.textContent='Saved'; entry.querySelector('summary').textContent=`${order.customer_name || 'Customer'} · ${order.currency} ${total.toFixed(2)} · ${select.value}`; } catch(err) { result.textContent=err.message || 'Unable to save'; } finally {button.disabled=false;} });
+      entry.append(form); list.append(entry);
+    }
+  } catch(error) { status.textContent=error.message || 'Order history unavailable'; }
+}
+document.getElementById('historyRefresh').addEventListener('click',refreshHistory);
+refreshHistory();
 
 poll();
 pollStats();
