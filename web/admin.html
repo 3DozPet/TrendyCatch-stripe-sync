@@ -68,11 +68,16 @@
   }
   .header-btn:hover { border-color:var(--accent); color:var(--accent); }
 </style>
+<style>
+:root{--bg:#f1f1f1;--card:#fff;--border:#e3e3e3;--ink:#303030;--muted:#616161;--accent:#18845b} html{scroll-behavior:smooth} body{background:var(--bg);color:var(--ink)}
+.topbar{height:56px;background:#1a1a1a;color:white;display:flex;align-items:center;padding:0 22px;gap:20px;position:sticky;top:0;z-index:3}.brandmark{background:#8cd7ac;color:#122b1a;border-radius:8px;padding:7px 9px;font-weight:800}.topbar strong{font-size:16px}.topbar .spacer{flex:1}.topbar a{color:#fff;text-decoration:none;font-size:14px}.shell{display:grid;grid-template-columns:230px minmax(0,1fr);min-height:calc(100vh - 56px)}.side{padding:22px 12px;background:#ebebeb}.side a{display:flex;align-items:center;gap:12px;padding:11px 14px;text-decoration:none;color:#303030;border-radius:8px;font-size:14px;font-weight:600}.side a:hover,.side a.active{background:#fff}.side .side-title{font-size:12px;color:#666;padding:22px 14px 8px}.side a span{width:22px;text-align:center}.content{min-width:0;padding:28px 32px 90px}header{border:0;padding:0;max-width:1160px;margin:0 auto 20px;align-items:flex-start;gap:12px}header h1{font-size:24px;letter-spacing:-.02em}header .status{font-size:13px;flex-wrap:wrap;justify-content:flex-end}.header-btn{color:#303030;background:white;border-color:#c6c6c6;padding:8px 12px;font-size:13px;font-weight:600}.heading-sub{font-size:14px;color:var(--muted);margin:6px 0 0}.summary,main{max-width:1160px;padding:0;margin:0 auto}.summary{gap:16px}.stat-row{gap:0;background:#fff;border:1px solid #dedede;border-radius:14px;box-shadow:0 1px 2px #00000012;overflow:hidden}.stat-card{border:0;border-right:1px solid #eee;border-radius:0;box-shadow:none;padding:20px}.stat-card:last-child{border:0}.stat-card .label,.breakdown h3{font-size:14px;letter-spacing:0;text-transform:none;color:#4a4a4a;font-weight:600}.stat-card .value{font-size:25px;color:#1a1a1a;margin-top:8px}.breakdown{border-color:#dedede;box-shadow:0 1px 2px #00000012;padding:20px;border-radius:14px}.breakdown h3{margin-bottom:12px}.breakdown-item{font-size:14px;padding:7px 0}.breakdown-item .tag,.subscribers-panel .sub-email{color:#303030}.subscribers-panel .sub-row{font-size:14px}.subscribers-panel .sub-meta{font-size:13px}.section-heading{max-width:1160px;margin:28px auto 12px;display:flex;align-items:end;justify-content:space-between}.section-heading h2{font-size:18px;margin:0}.section-heading p{margin:5px 0 0;color:#666;font-size:13px}.order{background:#fff;color:#303030;border-color:#dedede;box-shadow:0 1px 2px #00000012}.order .items{color:#4a4a4a;font-size:14px}.order .meta{font-size:13px}.badge.direct,.badge.organic_search,.badge.referral{background:#eee;color:#404040;border-color:#ddd}.empty{background:#fff;border:1px solid #dedede;border-radius:14px}.enable-sound{background:#303030;color:#fff;box-shadow:0 4px 16px #0002}.anchor{scroll-margin-top:76px}.live-dot{background:#18845b}@media(max-width:760px){.shell{display:block}.side{display:flex;gap:4px;overflow:auto;padding:8px;position:sticky;top:56px;z-index:2}.side a{white-space:nowrap;padding:9px}.side .side-title{display:none}.content{padding:22px 16px 90px}header{display:block}header .status{justify-content:flex-start;margin-top:12px}.stat-row{grid-template-columns:repeat(2,minmax(0,1fr))}.stat-card:nth-child(2){border-right:0}.stat-card{border-bottom:1px solid #eee}.order{flex-direction:column}.right{align-items:flex-start;text-align:left}.topbar{padding:0 16px}}
+</style>
+
 </head>
 <body>
-
-<header>
-  <h1>TrendyCatch — Live Orders</h1>
+<div class="topbar"><span class="brandmark">T</span><strong>TrendyCatch</strong><span class="spacer"></span><a href="/" target="_blank" rel="noopener">View store ↗</a></div>
+<div class="shell"><nav class="side" aria-label="Dashboard navigation"><div><a class="active" href="#home"><span>⌂</span>Home</a><a href="#history"><span>▤</span>Orders</a><a href="#orders"><span>◷</span>Live alerts</a><a href="#custpanel"><span>☺</span>Customers</a><a href="#products"><span>▦</span>Products</a><a href="#analytics"><span>◫</span>Analytics</a><a href="#signups"><span>♙</span>Email signups</a><div class="side-title">STORE</div><a href="/" target="_blank" rel="noopener"><span>↗</span>Online store</a></div></nav><div class="content"><header id="home" class="anchor">
+  <div><h1>Home</h1><p class="heading-sub">Your TrendyCatch business at a glance</p></div>
   <div class="status">
     <span class="dot"></span><span id="statusText">Listening…</span>
     <button id="changePwBtn" class="header-btn">Change password</button>
@@ -80,7 +85,7 @@
   </div>
 </header>
 
-<section class="summary">
+<section class="summary anchor" id="analytics" aria-label="Business overview">
   <div class="stat-row">
     <div class="stat-card">
       <div class="label">Total revenue</div>
@@ -113,16 +118,23 @@
       <div id="liveByCountry"></div>
     </div>
   </div>
-  <div class="breakdown subscribers-panel">
+  <div class="breakdown subscribers-panel anchor" id="signups">
     <h3>Recent email signups — admin only, never shown to customers</h3>
     <div id="subscriberList"></div>
   </div>
 </section>
 
+<section class="history-panel anchor" id="history"><div class="history-head"><div><h2>Order history</h2><p>View customer details and update fulfilment</p></div><button id="historyRefresh" type="button">Refresh</button></div><p id="historyStatus" role="status">Loading orders…</p><div id="historyList"></div></section>
+<div class="section-heading anchor" id="custpanel"><div><h2>Customers</h2><p>Order history and lifetime spend per customer</p></div><button id="customersRefresh" type="button" class="header-btn">Refresh</button></div>
+<div class="breakdown" style="max-width:1160px;margin:0 auto 24px;"><div id="customersList"></div></div>
+<div class="section-heading anchor" id="products"><div><h2>Products</h2><p>Catalog currently listed on the store</p></div></div>
+<div class="breakdown" style="max-width:1160px;margin:0 auto 24px;"><div id="productsList"></div></div>
+<div class="section-heading anchor" id="orders"><div><h2>Recent orders</h2><p>Live order notifications from the past 6 hours</p></div></div>
 <main id="orderList">
   <div class="empty" id="emptyState">Waiting for the first order to come in…</div>
 </main>
 
+</div></div>
 <button class="enable-sound" id="soundBtn">🔇 Enable order sound</button>
 
 <script>
@@ -150,43 +162,60 @@ document.getElementById("soundBtn").addEventListener("click", async () => {
   }
 });
 
-// A continuous metallic bicycle-bell ring, lasting half a second.
+// A synthesized cash-register "cha-ching", like the classic new-order sound
+// on Shopify: a quick coin-jingle burst followed by two ringing bell notes.
 function playChime() {
   if (!audioCtx || audioCtx.state !== "running") return;
   const now = audioCtx.currentTime;
-  const duration = 0.5;
-  const tremolo = audioCtx.createGain();
-  tremolo.gain.setValueAtTime(0.65, now);
-  tremolo.connect(audioCtx.destination);
+  const master = audioCtx.createGain();
+  master.gain.setValueAtTime(0.8, now);
+  master.connect(audioCtx.destination);
 
-  const lfo = audioCtx.createOscillator();
-  const depth = audioCtx.createGain();
-  lfo.type = "sine";
-  lfo.frequency.setValueAtTime(25, now);
-  lfo.frequency.exponentialRampToValueAtTime(15, now + duration);
-  depth.gain.value = 0.35;
-  lfo.connect(depth);
-  depth.connect(tremolo.gain);
-  lfo.start(now);
-  lfo.stop(now + duration);
+  // Coin-jingle: short burst of filtered noise right at the start.
+  const jingleDuration = 0.18;
+  const bufferSize = Math.floor(audioCtx.sampleRate * jingleDuration);
+  const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+  const data = buffer.getChannelData(0);
+  for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+  const noise = audioCtx.createBufferSource();
+  noise.buffer = buffer;
+  const noiseFilter = audioCtx.createBiquadFilter();
+  noiseFilter.type = "bandpass";
+  noiseFilter.frequency.value = 4200;
+  noiseFilter.Q.value = 1.2;
+  const noiseGain = audioCtx.createGain();
+  noiseGain.gain.setValueAtTime(0.0001, now);
+  noiseGain.gain.exponentialRampToValueAtTime(0.5, now + 0.01);
+  noiseGain.gain.exponentialRampToValueAtTime(0.0001, now + jingleDuration);
+  noise.connect(noiseFilter);
+  noiseFilter.connect(noiseGain);
+  noiseGain.connect(master);
+  noise.start(now);
+  noise.stop(now + jingleDuration + 0.02);
 
-  // Three overlapping bells, each with metallic overtones, ring together.
-  [2637, 2793, 3136].flatMap((base) =>
-    [[base, 0.05], [base * 2.76, 0.02], [base * 4.1, 0.01]]
-  ).forEach(([frequency, level]) => {
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.type = "sine";
-      osc.frequency.setValueAtTime(frequency, now);
-      gain.gain.setValueAtTime(0.0001, now);
-      gain.gain.exponentialRampToValueAtTime(level, now + 0.005);
-      gain.gain.setValueAtTime(level, now + duration - 0.2);
-      gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
-      osc.connect(gain);
-      gain.connect(tremolo);
-      osc.start(now);
-      osc.stop(now + duration + 0.02);
-    });
+  // "Cha" then "Ching": two struck bell notes, the second higher and ringing longer.
+  const notes = [
+    { start: 0.0, freq: 1568, ringTime: 0.28, level: 0.3 },   // cha
+    { start: 0.14, freq: 2349, ringTime: 0.55, level: 0.32 }, // ching
+  ];
+  notes.forEach(({ start, freq, ringTime, level }) => {
+    const t0 = now + start;
+    [[freq, level], [freq * 2.0, level * 0.35], [freq * 3.0, level * 0.15]].forEach(
+      ([frequency, lvl]) => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(frequency, t0);
+        gain.gain.setValueAtTime(0.0001, t0);
+        gain.gain.exponentialRampToValueAtTime(lvl, t0 + 0.006);
+        gain.gain.exponentialRampToValueAtTime(0.0001, t0 + ringTime);
+        osc.connect(gain);
+        gain.connect(master);
+        osc.start(t0);
+        osc.stop(t0 + ringTime + 0.02);
+      }
+    );
+  });
 }
 
 function sourceClass(code) {
@@ -203,13 +232,13 @@ function renderOrder(order, isNew) {
   const itemsText = (order.items || []).map((i) => `${i.quantity}× ${i.title}`).join(", ");
   el.innerHTML = `
     <div class="left">
-      <div class="top-line">${order.orderName} — ${order.customerName}</div>
-      <div class="items">${itemsText}</div>
-      <div class="meta">${order.email || ""} ${order.phone ? "· " + order.phone : ""} ${order.country ? "· " + order.country : ""}</div>
+      <div class="top-line">${escapeHtml(order.orderName || "New order")} — ${escapeHtml(order.customerName || "Unknown customer")}</div>
+      <div class="items">${escapeHtml(itemsText)}</div>
+      <div class="meta">${escapeHtml(order.email || "")} ${order.phone ? "· " + escapeHtml(order.phone) : ""} ${order.country ? "· " + escapeHtml(order.country) : ""}</div>
     </div>
     <div class="right">
-      <div class="amount">${order.currency || ""} ${Number(order.total || 0).toFixed(2)}</div>
-      <span class="badge ${sourceClass(order.source)}">${sourceLabel(order)}</span>
+      <div class="amount">${escapeHtml(order.currency || "")} ${Number(order.total || 0).toFixed(2)}</div>
+      <span class="badge ${sourceClass(order.source)}">${escapeHtml(sourceLabel(order))}</span>
     </div>
   `;
   return el;
@@ -257,7 +286,7 @@ function renderBreakdown(containerId, entries, formatValue) {
     return;
   }
   el.innerHTML = entries
-    .map(([key, val]) => `<div class="breakdown-item"><span class="tag">${countryName(key)}</span><span class="num">${formatValue(val)}</span></div>`)
+    .map(([key, val]) => `<div class="breakdown-item"><span class="tag">${escapeHtml(countryName(key))}</span><span class="num">${formatValue(val)}</span></div>`)
     .join("");
 }
 
@@ -358,6 +387,89 @@ document.getElementById("changePwBtn").addEventListener("click", async () => {
     alert("Network error — try again.");
   }
 });
+
+
+function orderElement(tag, value, className) {
+  const el = document.createElement(tag); if (value != null) el.textContent = String(value); if (className) el.className = className; return el;
+}
+function printableAddress(raw) {
+  if (!raw) return 'Not provided';
+  try { const a=JSON.parse(raw); return [a.line1,a.line2,a.city,a.state,a.postal_code,a.country].filter(Boolean).join(', ') || 'Not provided'; } catch { return 'Address unavailable'; }
+}
+function orderField(parent, label, value) { const p=orderElement('p'); const strong=orderElement('strong',label+': '); p.append(strong, document.createTextNode(value || 'Not provided')); parent.append(p); }
+function formInput(form, label, name, value, type='text') {
+  const wrap=orderElement('label',label); const input=document.createElement('input'); input.type=type; input.name=name; input.value=value || ''; wrap.append(input); form.append(wrap); return input;
+}
+async function refreshHistory() {
+  const status=document.getElementById('historyStatus'), list=document.getElementById('historyList');
+  try {
+    const response=await fetch('/admin-order-history', {cache:'no-store'});
+    if (reloadIfUnauthorized(response.status)) return;
+    if (!response.ok) throw new Error('Order history is not connected yet.');
+    const data=await response.json(); list.replaceChildren();
+    status.textContent=data.orders.length ? `Showing up to ${data.limit} orders` : 'No orders in order history yet.';
+    for (const order of data.orders) {
+      const entry=orderElement('details',null,'history-order');
+      const total=Number(order.total_minor || 0)/100;
+      entry.append(orderElement('summary',`${order.customer_name || 'Customer'} · ${order.currency} ${total.toFixed(2)} · ${order.fulfillment_status}`));
+      const fields=orderElement('div',null,'history-fields');
+      orderField(fields,'Order ID',order.id); orderField(fields,'Date',order.created_at); orderField(fields,'Email',order.customer_email); orderField(fields,'Phone',order.customer_phone);
+      orderField(fields,'Shipping name',order.shipping_name); orderField(fields,'Shipping address',printableAddress(order.shipping_address_json)); orderField(fields,'Billing address',printableAddress(order.billing_address_json));
+      orderField(fields,'Payment',order.payment_status); orderField(fields,'Items',(data.items || []).filter(i=>i.order_id===order.id).map(i=>`${i.quantity} × ${i.title}${i.variant ? ' — '+i.variant : ''}`).join(', ')); entry.append(fields);
+      const form=orderElement('form',null,'history-form'); const label=orderElement('label','Fulfilment'); const select=document.createElement('select'); select.name='status';
+      for (const value of ['unfulfilled','fulfilled']) { const opt=orderElement('option',value==='fulfilled' ? 'Fulfilled' : 'Unfulfilled'); opt.value=value; opt.selected=value===order.fulfillment_status; select.append(opt); } label.append(select); form.append(label);
+      const number=formInput(form,'Tracking number','number',order.tracking_number); const carrier=formInput(form,'Carrier','carrier',order.tracking_carrier); const url=formInput(form,'Tracking URL','url',order.tracking_url,'url');
+      const button=orderElement('button','Save fulfilment'); button.type='submit'; form.append(button); const result=orderElement('span'); result.setAttribute('role','status'); form.append(result);
+      form.addEventListener('submit',async e=>{e.preventDefault(); button.disabled=true; result.textContent='Saving…'; try {const r=await fetch('/admin-order-history',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:order.id,status:select.value,trackingNumber:number.value,carrier:carrier.value,trackingUrl:url.value})}); const d=await r.json(); if(!r.ok) throw Error(d.error || 'Unable to save'); result.textContent='Saved'; entry.querySelector('summary').textContent=`${order.customer_name || 'Customer'} · ${order.currency} ${total.toFixed(2)} · ${select.value}`; } catch(err) { result.textContent=err.message || 'Unable to save'; } finally {button.disabled=false;} });
+      entry.append(form); list.append(entry);
+    }
+  } catch(error) { status.textContent=error.message || 'Order history unavailable'; }
+}
+document.getElementById('historyRefresh').addEventListener('click',refreshHistory);
+refreshHistory();
+
+async function refreshCustomers() {
+  const list = document.getElementById('customersList');
+  try {
+    const res = await fetch('/admin-customers', { cache: 'no-store' });
+    if (reloadIfUnauthorized(res.status)) return;
+    if (!res.ok) throw new Error('Customers are not connected yet.');
+    const data = await res.json();
+    const customers = data.customers || [];
+    if (!customers.length) { list.innerHTML = '<div class="breakdown-item"><span class="tag">No customers yet</span></div>'; return; }
+    list.innerHTML = customers.map((c) => {
+      const spent = Number(c.totalSpentMinor || 0) / 100;
+      return `<div style="display:flex;flex-direction:column;gap:2px;border-bottom:1px solid var(--border);padding:10px 0;">
+        <div style="display:flex;justify-content:space-between;width:100%;"><strong>${escapeHtml(c.name || c.email || 'Customer')}</strong><span>${escapeHtml(c.currency || '')} ${spent.toFixed(2)}</span></div>
+        <div class="meta">${escapeHtml(c.email || '')}${c.phone ? ' · ' + escapeHtml(c.phone) : ''} · ${c.orderCount} order${c.orderCount === 1 ? '' : 's'} · last ${timeAgo(c.lastOrderAt)}</div>
+      </div>`;
+    }).join('');
+  } catch (e) {
+    list.innerHTML = `<div class="breakdown-item"><span class="tag">${escapeHtml(e.message || 'Customers unavailable')}</span></div>`;
+  }
+}
+document.getElementById('customersRefresh').addEventListener('click', refreshCustomers);
+refreshCustomers();
+setInterval(refreshCustomers, 5000);
+
+async function refreshProducts() {
+  const list = document.getElementById('productsList');
+  try {
+    const res = await fetch('/products.json', { cache: 'no-store' });
+    if (!res.ok) throw new Error('Products unavailable');
+    const products = await res.json();
+    const arr = Array.isArray(products) ? products : [];
+    if (!arr.length) { list.innerHTML = '<div class="breakdown-item"><span class="tag">No products found</span></div>'; return; }
+    list.innerHTML = arr.map((p) => {
+      const price = p.prices && p.prices.AU != null ? `$${Number(p.prices.AU).toFixed(2)}` : '—';
+      const was = p.compareAt && p.compareAt.AU != null ? `<span style="text-decoration:line-through;color:var(--muted);margin-right:6px;">$${Number(p.compareAt.AU).toFixed(2)}</span>` : '';
+      return `<div class="breakdown-item"><span class="tag">${escapeHtml(p.title || p.id || 'Untitled')}</span><span class="num">${was}${price}</span></div>`;
+    }).join('');
+  } catch (e) {
+    list.innerHTML = `<div class="breakdown-item"><span class="tag">${escapeHtml(e.message || 'Products unavailable')}</span></div>`;
+  }
+}
+refreshProducts();
 
 poll();
 pollStats();

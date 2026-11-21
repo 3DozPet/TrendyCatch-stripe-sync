@@ -37,6 +37,7 @@ interface Env {
   // KV namespace binding (see wrangler.toml) used only for the admin sound
   // notification feed; never required for the order to sync to Shopify.
   ORDERS_KV?: KVNamespace
+  ORDERS_DB?: D1Database
 }
 
 const SHOPIFY_API_VERSION = "2025-01"
@@ -87,6 +88,13 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     `/v1/checkout/sessions/${sessionSummary.id}`,
     "expand[]=line_items.data.price.product&expand[]=customer_details",
   )
+
+  // Durable history is written before the alert feed and Shopify sync. A batch
+  // and unique Stripe IDs make retrying an event safe for these records.
+  if (env.ORDERS_DB) {
+    try { await recordOrderHistory(env.ORDERS_DB, session) }
+    catch (error) { console.error('Order history write failed', (error as Error).message); return new Response('Order storage unavailable', { status: 503 }) }
+  }
 
   const sessionIdHash = await sha256Hex(session.id)
   const tagSessionId = `stripe-${sessionIdHash.slice(0, 16)}`
@@ -385,6 +393,30 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     status: 200,
     headers: { "content-type": "application/json" },
   })
+}
+
+async function recordOrderHistory(db: D1Database, session: any): Promise<void> {
+  if (typeof session.id !== 'string' || !Array.isArray(session.line_items?.data)) throw new Error('Incomplete checkout session')
+  const customer = session.customer_details ?? {}
+  const shipping = session.collected_information?.shipping_details ?? session.shipping_details ?? null
+  const created = new Date((session.created ?? Date.now() / 1000) * 1000).toISOString()
+  const now = new Date().toISOString()
+  const stmts = [db.prepare(`INSERT OR IGNORE INTO orders (id, stripe_session_id, created_at, customer_name, customer_email, customer_phone, shipping_name, shipping_address_json, billing_address_json, currency, total_minor, payment_status, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(
+    session.id, session.id, created, customer.name ?? null, customer.email ?? null, customer.phone ?? null,
+    shipping?.name ?? null, shipping?.address ? JSON.stringify(shipping.address) : null,
+    customer.address ? JSON.stringify(customer.address) : null, String(session.currency ?? '').toUpperCase(),
+    session.amount_total ?? 0, session.payment_status, now,
+  )]
+  for (const item of session.line_items.data) {
+    if (typeof item.id !== 'string') throw new Error('Missing Stripe line item ID')
+    const product = typeof item.price?.product === 'object' ? item.price.product : null
+    stmts.push(db.prepare(`INSERT OR IGNORE INTO order_items (order_id, stripe_line_id, product_id, title, variant, quantity, unit_amount_minor) VALUES (?, ?, ?, ?, ?, ?, ?)`).bind(
+      session.id, item.id, product?.metadata?.product_id ?? session.metadata?.product_id ?? null,
+      product?.name ?? item.description ?? 'Item', product?.metadata?.variant ?? session.metadata?.variant ?? null,
+      item.quantity ?? 1, item.price?.unit_amount ?? null,
+    ))
+  }
+  await db.batch(stmts)
 }
 
 // ---------------------------------------------------------------------------
