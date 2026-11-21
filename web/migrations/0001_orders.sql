@@ -21,6 +21,7 @@ CREATE TABLE IF NOT EXISTS orders (
 CREATE TABLE IF NOT EXISTS order_items (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   order_id TEXT NOT NULL REFERENCES orders(id),
+  stripe_line_id TEXT NOT NULL UNIQUE,
   product_id TEXT,
   title TEXT NOT NULL,
   variant TEXT,
