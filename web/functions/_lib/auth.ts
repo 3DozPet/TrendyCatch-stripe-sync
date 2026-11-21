@@ -11,7 +11,7 @@ const PASSWORD_KEY = "admin:password"
 const SESSION_SECRET_KEY = "admin:session_secret"
 const SESSION_COOKIE = "tc_admin_session"
 const SESSION_TTL_SECONDS = 60 * 60 * 24 * 14 // 14 days
-const PBKDF2_ITERATIONS = 150000
+const PBKDF2_ITERATIONS = 100000
 
 function b64encode(bytes: ArrayBuffer | Uint8Array): string {
   const arr = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes)

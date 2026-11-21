@@ -14,7 +14,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env, next }) =
     // Can't gate without KV — fail open rather than lock the owner out
     // entirely. In practice KV is always bound (the rest of the dashboard
     // needs it too), so this should never trigger.
-    return next()
+    return new Response("Admin unavailable: storage is not configured.", { status: 503 })
   }
 
   const passwordSet = await hasPasswordSet(env.ORDERS_KV)
@@ -67,6 +67,10 @@ function renderSetPasswordPage(): string {
     <h1>Set your admin password</h1>
     <p class="sub">No password is configured yet. Choose one now to protect this dashboard — at least 8 characters.</p>
     <form id="f">
+      <label for="u">Admin username</label>
+      <input id="u" type="email" required autocomplete="username" />
+      <label for="t">Private setup key</label>
+      <input id="t" type="password" required autocomplete="off" />
       <label for="p1">New password</label>
       <input id="p1" type="password" minlength="8" required autocomplete="new-password" />
       <label for="p2">Confirm password</label>
@@ -88,7 +92,7 @@ function renderSetPasswordPage(): string {
           const res = await fetch("/admin-set-password", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ password: p1 }),
+            body: JSON.stringify({ username: document.getElementById("u").value, setupToken: document.getElementById("t").value, password: p1 }),
           });
           const data = await res.json();
           if (res.ok) { location.href = "/admin.html"; }
@@ -102,8 +106,10 @@ function renderSetPasswordPage(): string {
 function renderLoginPage(): string {
   const inner = `
     <h1>Admin login</h1>
-    <p class="sub">Enter your password to view the TrendyCatch dashboard.</p>
+    <p class="sub">Enter your username and password to view the TrendyCatch dashboard.</p>
     <form id="f">
+      <label for="u">Admin username</label>
+      <input id="u" type="email" required autocomplete="username" />
       <label for="p">Password</label>
       <input id="p" type="password" required autocomplete="current-password" autofocus />
       <p class="error" id="err"></p>
@@ -121,7 +127,7 @@ function renderLoginPage(): string {
           const res = await fetch("/admin-login", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ password: p }),
+            body: JSON.stringify({ username: document.getElementById("u").value, password: p }),
           });
           const data = await res.json();
           if (res.ok) { location.href = "/admin.html"; }

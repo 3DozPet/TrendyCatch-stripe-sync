@@ -14,7 +14,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     return json({ error: "Too many attempts. Try again in a few minutes." }, 429)
   }
 
-  let body: { password?: string } = {}
+  let body: { password?: string; username?: string } = {}
   try {
     body = await request.json()
   } catch {
@@ -22,10 +22,10 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   }
   const password = (body.password || "").toString()
 
-  const ok = await verifyPassword(env.ORDERS_KV, password)
+  const ok = (body.username || "").trim().toLowerCase() === "robbie@trendycatch.us" && await verifyPassword(env.ORDERS_KV, password)
   if (!ok) {
     await recordFailedAttempt(env.ORDERS_KV, ip)
-    return json({ error: "Incorrect password." }, 401)
+    return json({ error: "Incorrect username or password." }, 401)
   }
 
   await clearFailedAttempts(env.ORDERS_KV, ip)
