@@ -150,11 +150,11 @@ document.getElementById("soundBtn").addEventListener("click", async () => {
   }
 });
 
-// A continuous metallic bicycle-bell ring, lasting about one second.
+// A continuous metallic bicycle-bell ring, lasting three seconds.
 function playChime() {
   if (!audioCtx || audioCtx.state !== "running") return;
   const now = audioCtx.currentTime;
-  const duration = 0.95;
+  const duration = 3;
   const tremolo = audioCtx.createGain();
   tremolo.gain.setValueAtTime(0.65, now);
   tremolo.connect(audioCtx.destination);
@@ -172,19 +172,20 @@ function playChime() {
 
   // Three overlapping bells, each with metallic overtones, ring together.
   [2637, 2793, 3136].flatMap((base) =>
-    [[base, 0.05, 0.95], [base * 2.76, 0.02, 0.72], [base * 4.1, 0.01, 0.5]]
-  ).forEach(([frequency, level, decay]) => {
+    [[base, 0.05], [base * 2.76, 0.02], [base * 4.1, 0.01]]
+  ).forEach(([frequency, level]) => {
       const osc = audioCtx.createOscillator();
       const gain = audioCtx.createGain();
       osc.type = "sine";
       osc.frequency.setValueAtTime(frequency, now);
       gain.gain.setValueAtTime(0.0001, now);
       gain.gain.exponentialRampToValueAtTime(level, now + 0.005);
-      gain.gain.exponentialRampToValueAtTime(0.0001, now + decay);
+      gain.gain.setValueAtTime(level, now + duration - 0.2);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
       osc.connect(gain);
       gain.connect(tremolo);
       osc.start(now);
-      osc.stop(now + decay + 0.02);
+      osc.stop(now + duration + 0.02);
     });
 }
 
