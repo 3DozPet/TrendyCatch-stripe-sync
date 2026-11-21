@@ -150,11 +150,11 @@ document.getElementById("soundBtn").addEventListener("click", async () => {
   }
 });
 
-// A continuous metallic bicycle-bell ring, lasting one second.
+// A continuous metallic bicycle-bell ring, lasting half a second.
 function playChime() {
   if (!audioCtx || audioCtx.state !== "running") return;
   const now = audioCtx.currentTime;
-  const duration = 1;
+  const duration = 0.5;
   const tremolo = audioCtx.createGain();
   tremolo.gain.setValueAtTime(0.65, now);
   tremolo.connect(audioCtx.destination);
