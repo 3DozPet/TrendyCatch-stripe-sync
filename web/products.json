@@ -228,6 +228,70 @@
       "CA": 44.95,
       "NZ": 50.95,
       "US": 37.95
+    },
+    "detail": {
+      "eyebrow": "NO-DRILL \u00b7 MAGNETIC MOUNT",
+      "bullets": [
+        "Sticks to any wall, cabinet, or fridge in seconds \u2014 no drilling, no screws",
+        "Strong magnetic grip holds remotes, phones, or small tools securely",
+        "3-piece set \u2014 one for the living room, bedroom, and kitchen",
+        "Removable and repositionable without damaging paint or surfaces",
+        "Slim, low-profile design that blends into any room"
+      ],
+      "features": [
+        {
+          "icon": "\ud83e\uddf2",
+          "title": "Strong hold",
+          "text": "Industrial-strength magnets keep your remote locked in place, even if the mount gets bumped."
+        },
+        {
+          "icon": "\ud83d\udee0\ufe0f",
+          "title": "Zero installation",
+          "text": "Peel-and-stick adhesive backing means no drill, no screws, and no mess."
+        },
+        {
+          "icon": "\ud83d\udce6",
+          "title": "3-piece set",
+          "text": "Mount one in every room that needs it \u2014 living room, bedroom, home office."
+        },
+        {
+          "icon": "\ud83c\udfaf",
+          "title": "Reposition anytime",
+          "text": "Didn't get the spot right the first time? Pull it off and restick it somewhere better."
+        }
+      ],
+      "howItWorks": [
+        {
+          "title": "Peel",
+          "text": "Peel the adhesive backing off the mount."
+        },
+        {
+          "title": "Stick",
+          "text": "Press it firmly onto a clean, dry wall or cabinet surface for 30 seconds."
+        },
+        {
+          "title": "Snap on",
+          "text": "Snap your remote (or phone) onto the magnetic holder \u2014 done."
+        }
+      ],
+      "faq": [
+        {
+          "q": "Will it damage my wall or paint?",
+          "a": "No \u2014 the adhesive backing is designed to be removed cleanly from most painted walls and cabinet surfaces."
+        },
+        {
+          "q": "How much weight can it hold?",
+          "a": "It's built to securely hold a standard remote control or similar lightweight item \u2014 not heavier tools or electronics."
+        },
+        {
+          "q": "Can I move it to a different spot later?",
+          "a": "Yes, you can remove and reposition it, though the adhesive grip is strongest on the first placement."
+        },
+        {
+          "q": "How many mounts come in a set?",
+          "a": "Each order includes 3 mounts, so you can place one in every room that needs it."
+        }
+      ]
     }
   },
   {
@@ -335,6 +399,71 @@
       "CA": 55.95,
       "NZ": 61.95,
       "US": 45.95
+    },
+    "detail": {
+      "eyebrow": "CORDLESS \u00b7 FOOD STORAGE",
+      "bullets": [
+        "Removes air in seconds with one button press \u2014 no bulky machine needed",
+        "USB-rechargeable pump, fully cordless and portable",
+        "Reusable zipper bags from snack-size to family-meal-size",
+        "Keeps fruit, meat, and leftovers fresh up to 5x longer",
+        "Helps stop freezer burn and fridge odours",
+        "Compact enough to store in a kitchen drawer"
+      ],
+      "features": [
+        {
+          "icon": "\u26a1",
+          "title": "Charges in no time",
+          "text": "Built-in battery recharges fully via USB and lasts for dozens of seals before needing a top-up."
+        },
+        {
+          "icon": "\ud83e\uddca",
+          "title": "Fridge & freezer friendly",
+          "text": "Reusable bags are safe for both the fridge and freezer, so food stays fresh wherever you store it."
+        },
+        {
+          "icon": "\u267b\ufe0f",
+          "title": "Reusable, not wasteful",
+          "text": "Wash and reuse the same bags hundreds of times instead of throwing out cling wrap or single-use bags."
+        },
+        {
+          "icon": "\ud83d\udd07",
+          "title": "Quiet, one-button operation",
+          "text": "Press once, the pump does the rest \u2014 no loud machine humming on your counter."
+        }
+      ],
+      "howItWorks": [
+        {
+          "title": "Fill",
+          "text": "Pack your food into the reusable bag and seal the zipper most of the way."
+        },
+        {
+          "title": "Press",
+          "text": "Press the pump button and let it pull the air out in seconds."
+        },
+        {
+          "title": "Store",
+          "text": "Zip the last bit shut and pop it in the fridge, freezer, or pantry."
+        }
+      ],
+      "faq": [
+        {
+          "q": "What sizes of bags are included?",
+          "a": "Bags range from 16x22cm up to 30x34cm, so you can choose the size that matches what you're sealing, from snacks to full meals."
+        },
+        {
+          "q": "How long does the battery last?",
+          "a": "A full charge handles dozens of seals before you need to plug it in again via USB."
+        },
+        {
+          "q": "Can I wash and reuse the bags?",
+          "a": "Yes \u2014 the bags are designed to be washed and reused many times."
+        },
+        {
+          "q": "Does it work for both wet and dry food?",
+          "a": "Yes, the bags are suitable for both \u2014 just make sure the top is dry before sealing for the best grip."
+        }
+      ]
     }
   },
   {
@@ -439,6 +568,70 @@
       "CA": 66.95,
       "NZ": 72.95,
       "US": 57.95
+    },
+    "detail": {
+      "eyebrow": "HEAVY-DUTY \u00b7 NO STRAIN",
+      "bullets": [
+        "Slide your washer, dryer, or fridge out solo \u2014 no lifting required",
+        "Adjustable 46.5\u201370cm fit, works with most standard appliances",
+        "Non-slip rollers glide smoothly across tile, vinyl and hardwood",
+        "Protects floors from scratches while you clean behind appliances",
+        "Two-piece set supports both the front and back of the appliance"
+      ],
+      "features": [
+        {
+          "icon": "\ud83d\udcaa",
+          "title": "No more straining",
+          "text": "Slide the base under each side and roll heavy appliances without lifting or hurting your back."
+        },
+        {
+          "icon": "\ud83d\udccf",
+          "title": "Adjustable fit",
+          "text": "Adjusts from 46.5cm to 70cm wide, fitting most washers, dryers, and fridges."
+        },
+        {
+          "icon": "\ud83d\udee1\ufe0f",
+          "title": "Floor-safe rollers",
+          "text": "Smooth rollers glide across tile, vinyl, and hardwood without scratching."
+        },
+        {
+          "icon": "\ud83d\udd27",
+          "title": "Simple to set up",
+          "text": "No tools or assembly \u2014 just slide the base into place and go."
+        }
+      ],
+      "howItWorks": [
+        {
+          "title": "Position",
+          "text": "Tilt the appliance slightly and slide a roller base under each side."
+        },
+        {
+          "title": "Adjust",
+          "text": "Extend the base to fit snugly against your appliance, 46.5\u201370cm."
+        },
+        {
+          "title": "Roll",
+          "text": "Roll the appliance out to clean behind it, then roll it back \u2014 solo, no straining."
+        }
+      ],
+      "faq": [
+        {
+          "q": "What size appliances does it fit?",
+          "a": "The base adjusts from 46.5cm to 70cm wide, which covers most standard washers, dryers, and fridges."
+        },
+        {
+          "q": "Can one person use it alone?",
+          "a": "Yes \u2014 that's the main point. Slide the bases under each side and you can roll the appliance out solo."
+        },
+        {
+          "q": "Will it scratch my floors?",
+          "a": "No, the rollers are designed to glide smoothly across tile, vinyl, and hardwood without scratching."
+        },
+        {
+          "q": "Does it come fully assembled?",
+          "a": "Yes, no tools or assembly required \u2014 just position it under the appliance."
+        }
+      ]
     }
   },
   {

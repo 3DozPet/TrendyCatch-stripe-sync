@@ -1,0 +1,516 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>TrendyCatch</title>
+<meta name="description" content="Clever everyday gadgets that actually solve a problem. Fast shipping to Australia, New Zealand, the US and Canada." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --ink: #1a1a1a;
+    --muted: #6b7280;
+    --bg: #fff8e7;
+    --card: #ffffff;
+    --green: #1b5e20;
+    --green-dark: #0f3d14;
+    --accent: #ffb703;
+    --accent-dark: #e4a300;
+    --price: #d62828;
+    --border: #e7e7e7;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: "Montserrat", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: var(--bg); color: var(--ink); }
+  a { color: inherit; }
+  header.site {
+    position: sticky; top: 0; z-index: 10;
+    background: var(--green); color: #fff; padding: 14px 20px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  header.site .brand { font-weight: 800; font-size: 20px; letter-spacing: -0.02em; text-decoration: none; }
+  header.site .brand span { color: var(--accent); }
+  header.site .geo-pill { font-size: 12px; font-weight: 600; background: rgba(255,255,255,0.14); padding: 6px 12px; border-radius: 999px; }
+  .back-link { display: block; max-width: 1040px; margin: 16px auto 0; padding: 0 20px; font-size: 13px; font-weight: 600; color: var(--green); text-decoration: none; }
+  .back-link:hover { text-decoration: underline; }
+
+  .trust-strip {
+    background: #fff; border-bottom: 1px solid var(--border); border-top: 1px solid var(--border);
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    margin-top: 24px;
+  }
+  .trust-strip .item { display: flex; align-items: center; gap: 10px; padding: 16px 20px; border-right: 1px solid var(--border); }
+  .trust-strip .item:last-child { border-right: none; }
+  .trust-strip .icon { font-size: 22px; line-height: 1; }
+  .trust-strip .title { font-size: 13px; font-weight: 700; }
+  .trust-strip .subtitle { font-size: 11px; color: var(--muted); }
+
+  .pdp { max-width: 1040px; margin: 0 auto; padding: 24px 20px 0; }
+  .pdp-top { display: grid; grid-template-columns: 1fr 1fr; gap: 36px; align-items: start; }
+  @media (max-width: 800px) { .pdp-top { grid-template-columns: 1fr; } }
+
+  .gallery .main-img { aspect-ratio: 1/1; background: #f1f1f1; border-radius: 16px; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+  .gallery .main-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .gallery .thumbs { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+  .gallery .thumbs img { width: 60px; height: 60px; object-fit: cover; border-radius: 8px; cursor: pointer; border: 2px solid transparent; opacity: 0.7; }
+  .gallery .thumbs img.active { opacity: 1; border-color: var(--accent); }
+
+  .buybox .eyebrow { font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--green); margin: 0 0 8px; }
+  .buybox h1 { font-size: 28px; line-height: 1.2; margin: 0 0 10px; letter-spacing: -0.01em; font-weight: 800; }
+  .buybox .subhead { color: var(--muted); font-size: 15px; line-height: 1.55; margin: 0 0 18px; }
+  .buybox .bullets { margin: 0 0 20px; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 9px; }
+  .buybox .bullets li { display: flex; gap: 8px; font-size: 14px; line-height: 1.45; }
+  .buybox .bullets li::before { content: "✓"; color: var(--green); font-weight: 800; flex-shrink: 0; }
+  .buybox .variant-select { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+  .buybox .variant-select label { font-size: 12px; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; }
+  .buybox .variant-select select { font-size: 14px; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border); background: #fff; cursor: pointer; max-width: 320px; }
+  .buybox .price-row { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
+  .buybox .price { font-size: 24px; font-weight: 800; color: #fff; background: var(--price); padding: 6px 14px; border-radius: 999px; }
+  .buybox .price-note { font-size: 12px; color: var(--muted); }
+  .buy-btn {
+    display: block; width: 100%; max-width: 360px; border: none; border-radius: 999px; padding: 16px 20px;
+    background: var(--accent); color: var(--ink); font-size: 16px; font-weight: 800;
+    cursor: pointer; transition: background 0.15s ease, transform 0.1s ease;
+  }
+  .buy-btn:hover { background: var(--accent-dark); }
+  .buy-btn:active { transform: scale(0.98); }
+  .buy-btn:disabled { opacity: 0.6; cursor: wait; }
+  .buybox .guarantee { margin-top: 14px; font-size: 12px; color: var(--muted); }
+
+  section.block { max-width: 1040px; margin: 52px auto 0; padding: 0 20px; }
+  section.block h2 { font-size: 24px; text-align: center; margin: 0 0 28px; letter-spacing: -0.01em; }
+
+  .features-grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+  .feature-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 20px; }
+  .feature-card .icon { font-size: 26px; margin-bottom: 10px; }
+  .feature-card .title { font-weight: 700; font-size: 15px; margin-bottom: 6px; }
+  .feature-card .text { font-size: 13px; color: var(--muted); line-height: 1.5; }
+
+  .steps { display: grid; gap: 20px; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); counter-reset: step; }
+  .step { text-align: center; }
+  .step .num {
+    counter-increment: step; width: 40px; height: 40px; border-radius: 999px; background: var(--green); color: #fff;
+    display: flex; align-items: center; justify-content: center; font-weight: 800; margin: 0 auto 12px; font-size: 16px;
+  }
+  .step .num::before { content: counter(step); }
+  .step .title { font-weight: 700; font-size: 15px; margin-bottom: 6px; }
+  .step .text { font-size: 13px; color: var(--muted); line-height: 1.5; }
+
+  .pdp-gallery-grid { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
+  .pdp-gallery-grid img { width: 100%; aspect-ratio: 1/1; object-fit: cover; border-radius: 12px; cursor: zoom-in; }
+
+  .faq-item { border-bottom: 1px solid var(--border); padding: 16px 0; }
+  .faq-item summary { cursor: pointer; font-weight: 700; font-size: 15px; list-style: none; display: flex; justify-content: space-between; align-items: center; }
+  .faq-item summary::-webkit-details-marker { display: none; }
+  .faq-item summary::after { content: "+"; font-size: 20px; color: var(--muted); }
+  .faq-item[open] summary::after { content: "–"; }
+  .faq-item p { font-size: 13px; color: var(--muted); line-height: 1.6; margin: 10px 0 0; }
+
+  .closing-cta { text-align: center; background: var(--green); background-image: linear-gradient(180deg, var(--green) 0%, var(--green-dark) 100%); color: #fff; border-radius: 20px; padding: 44px 24px; margin: 52px 20px 0; }
+  .closing-cta h2 { color: #fff; }
+  .closing-cta .price { background: var(--accent); color: var(--ink); }
+  .closing-cta .buy-btn { margin: 0 auto; }
+
+  footer.site { text-align: center; color: var(--muted); font-size: 12px; padding: 32px 20px 100px; line-height: 1.8; }
+  footer.site a { color: var(--muted); text-decoration: underline; }
+
+  .sticky-bar {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 20;
+    background: #fff; border-top: 1px solid var(--border); padding: 10px 16px;
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    transform: translateY(100%); transition: transform 0.2s ease;
+    box-shadow: 0 -4px 16px rgba(0,0,0,0.06);
+  }
+  .sticky-bar.show { transform: translateY(0); }
+  .sticky-bar .info { min-width: 0; }
+  .sticky-bar .title { font-size: 13px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 42vw; }
+  .sticky-bar .price { font-size: 13px; color: var(--price); font-weight: 800; }
+  .sticky-bar .buy-btn { width: auto; padding: 10px 20px; font-size: 14px; flex-shrink: 0; }
+
+  .toast {
+    position: fixed; left: 50%; bottom: 90px; transform: translateX(-50%) translateY(20px);
+    background: var(--ink); color: #fff; padding: 12px 18px; border-radius: 10px; font-size: 13px;
+    opacity: 0; transition: all 0.25s ease; pointer-events: none; max-width: 90vw; text-align: center; z-index: 30;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  .loading-state, .not-found { max-width: 600px; margin: 80px auto; text-align: center; padding: 0 20px; color: var(--muted); }
+</style>
+</head>
+<body>
+
+<header class="site">
+  <a href="/" class="brand">Trendy<span>Catch</span></a>
+  <div class="geo-pill" id="geoPill">Loading pricing…</div>
+</header>
+
+<a href="/" class="back-link">&larr; Back to all products</a>
+
+<div id="loadingState" class="loading-state">Loading product…</div>
+<div id="notFound" class="not-found" style="display:none;">
+  Couldn't find that product. <a href="/">Browse everything →</a>
+</div>
+
+<main id="pdpRoot" style="display:none;">
+
+  <div class="pdp">
+    <div class="pdp-top">
+      <div class="gallery">
+        <div class="main-img"><img id="mainImg" src="" alt="" /></div>
+        <div class="thumbs" id="thumbs"></div>
+      </div>
+      <div class="buybox">
+        <p class="eyebrow" id="eyebrow"></p>
+        <h1 id="title"></h1>
+        <p class="subhead" id="subhead"></p>
+        <ul class="bullets" id="bullets"></ul>
+        <div class="variant-select" id="variantWrap" style="display:none;">
+          <label for="variantPicker">Option</label>
+          <select id="variantPicker"></select>
+        </div>
+        <div class="price-row">
+          <div class="price" id="price"></div>
+          <div class="price-note">free shipping</div>
+        </div>
+        <button class="buy-btn" id="buyBtnMain">Buy Now</button>
+        <p class="guarantee">🔒 Secure checkout via Stripe · 🚚 Free shipping to AU, NZ, US &amp; Canada</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="trust-strip">
+    <div class="item"><span class="icon">🚚</span><div><div class="title">Free shipping</div><div class="subtitle">AU, NZ, US &amp; Canada</div></div></div>
+    <div class="item"><span class="icon">↩️</span><div><div class="title">Easy returns</div><div class="subtitle">Shop with confidence</div></div></div>
+    <div class="item"><span class="icon">🔒</span><div><div class="title">Secure checkout</div><div class="subtitle">Safe &amp; encrypted</div></div></div>
+    <div class="item"><span class="icon">✉️</span><div><div class="title">Email support</div><div class="subtitle">orders@trendycatch.us</div></div></div>
+  </div>
+
+  <section class="block" id="featuresBlock" style="display:none;">
+    <h2>Why you'll love it</h2>
+    <div class="features-grid" id="featuresGrid"></div>
+  </section>
+
+  <section class="block" id="howBlock" style="display:none;">
+    <h2>How it works</h2>
+    <div class="steps" id="stepsGrid"></div>
+  </section>
+
+  <section class="block" id="galleryBlock" style="display:none;">
+    <h2>See it up close</h2>
+    <div class="pdp-gallery-grid" id="galleryGrid"></div>
+  </section>
+
+  <section class="block" id="faqBlock" style="display:none;">
+    <h2>Questions, answered</h2>
+    <div id="faqList"></div>
+  </section>
+
+  <section class="closing-cta">
+    <h2>Ready to grab yours?</h2>
+    <div class="price-row" style="justify-content:center; margin-bottom:20px;">
+      <div class="price" id="priceClosing"></div>
+    </div>
+    <button class="buy-btn" id="buyBtnClosing">Buy Now</button>
+  </section>
+
+</main>
+
+<footer class="site">
+  <a href="/privacy-policy.html">Privacy Policy</a> · <a href="/terms-of-service.html">Terms of Service</a> ·
+  <a href="/refund-policy.html">Refund Policy</a> · <a href="/shipping-policy.html">Shipping Policy</a><br/><br/>
+  © <span id="year"></span> TrendyCatch. Questions? <a href="mailto:orders@trendycatch.us">orders@trendycatch.us</a>
+</footer>
+
+<div class="sticky-bar" id="stickyBar">
+  <div class="info">
+    <div class="title" id="stickyTitle"></div>
+    <div class="price" id="stickyPrice"></div>
+  </div>
+  <button class="buy-btn" id="buyBtnSticky">Buy Now</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+document.getElementById("year").textContent = new Date().getFullYear();
+
+const COUNTRY_SYMBOL = { AU: "A$", NZ: "NZ$", US: "$", CA: "C$" };
+const COUNTRY_LABEL = { AU: "Australia", NZ: "New Zealand", US: "United States", CA: "Canada" };
+
+let currentCountry = "AU";
+let product = null;
+let selectedVariantSku = null;
+
+function showToast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  setTimeout(() => t.classList.remove("show"), 3500);
+}
+
+function escapeHtml(str) {
+  return String(str).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+// Same first-touch ad-attribution logic as the homepage, so an order placed
+// from a product page is traced back to the right ad platform too.
+function detectSource() {
+  const stored = sessionStorage.getItem("tc_source");
+  if (stored) return stored;
+  const params = new URLSearchParams(location.search);
+  let source = null;
+  const utmSource = (params.get("utm_source") || "").toLowerCase();
+  if (utmSource) {
+    if (utmSource.includes("facebook") || utmSource.includes("fb")) source = "facebook";
+    else if (utmSource.includes("instagram") || utmSource.includes("ig")) source = "instagram";
+    else if (utmSource.includes("tiktok")) source = "tiktok";
+    else if (utmSource.includes("google")) source = "google";
+    else if (utmSource.includes("youtube")) source = "youtube";
+    else if (utmSource.includes("bing") || utmSource.includes("microsoft")) source = "bing";
+    else if (utmSource.includes("pinterest")) source = "pinterest";
+    else if (utmSource.includes("snapchat") || utmSource.includes("snap")) source = "snapchat";
+    else source = utmSource;
+  }
+  if (!source) {
+    if (params.has("fbclid")) source = "facebook";
+    else if (params.has("ttclid")) source = "tiktok";
+    else if (params.has("gclid") || params.has("gad_source") || params.has("gbraid") || params.has("wbraid")) source = "google";
+    else if (params.has("msclkid")) source = "bing";
+    else if (params.has("epik")) source = "pinterest";
+    else if (params.has("igshid") || params.has("ig_mid")) source = "instagram";
+    else if (params.has("sc_cid") || params.has("ScCid")) source = "snapchat";
+  }
+  if (!source && document.referrer) {
+    try {
+      const refHost = new URL(document.referrer).hostname.replace(/^www\./, "");
+      if (refHost.includes("facebook.com")) source = "facebook";
+      else if (refHost.includes("instagram.com")) source = "instagram";
+      else if (refHost.includes("tiktok.com")) source = "tiktok";
+      else if (refHost.includes("youtube.com")) source = "youtube";
+      else if (refHost.includes("google.")) source = "organic_search";
+      else if (refHost.includes("bing.com")) source = "bing";
+      else if (refHost.includes("pinterest.")) source = "pinterest";
+      else if (refHost) source = "referral";
+    } catch {}
+  }
+  source = source || "direct";
+  sessionStorage.setItem("tc_source", source);
+  return source;
+}
+const visitorSource = detectSource();
+
+async function detectCountry() {
+  try {
+    const res = await fetch("/geo");
+    const data = await res.json();
+    return data.country || "AU";
+  } catch {
+    return "AU";
+  }
+}
+
+function getPriceForVariant(prod, variantSku) {
+  const variant = (prod.variants || []).find((v) => v.sku === variantSku);
+  const variantPrice = variant && variant.prices ? variant.prices[currentCountry] : undefined;
+  return variantPrice !== undefined ? variantPrice : prod.prices[currentCountry];
+}
+
+function fireViewContent(prod) {
+  const currency = currentCountry === "US" ? "USD" : currentCountry === "NZ" ? "NZD" : currentCountry === "CA" ? "CAD" : "AUD";
+  const value = getPriceForVariant(prod, selectedVariantSku);
+  if (window.__tcFbq) window.__tcFbq("track", "ViewContent", { content_ids: [prod.id], content_name: prod.title, currency, value });
+  if (window.__tcTtq) window.__tcTtq.track("ViewContent", { content_id: prod.id, content_name: prod.title, value, currency });
+}
+
+function fireInitiateCheckout(prod) {
+  const value = getPriceForVariant(prod, selectedVariantSku);
+  const currency = currentCountry === "US" ? "USD" : currentCountry === "NZ" ? "NZD" : currentCountry === "CA" ? "CAD" : "AUD";
+  if (window.__tcFbq) window.__tcFbq("track", "InitiateCheckout", { content_ids: [prod.id], content_name: prod.title, currency, value });
+  if (window.__tcTtq) window.__tcTtq.track("InitiateCheckout", { content_id: prod.id, content_name: prod.title, value, currency });
+  if (window.__tcGtag) window.__tcGtag("event", "begin_checkout", { currency, value, items: [{ item_id: prod.id, item_name: prod.title }] });
+}
+
+function updatePriceDisplay() {
+  const symbol = COUNTRY_SYMBOL[currentCountry] || "$";
+  const price = getPriceForVariant(product, selectedVariantSku);
+  const text = `${symbol}${price.toFixed(2)}`;
+  document.getElementById("price").textContent = text;
+  document.getElementById("priceClosing").textContent = text;
+  document.getElementById("stickyPrice").textContent = text;
+}
+
+function renderProduct() {
+  const images = (product.images && product.images.length ? product.images : [product.image]).filter(Boolean);
+  const detail = product.detail || {};
+
+  document.getElementById("eyebrow").textContent = detail.eyebrow || "TRENDYCATCH PICK";
+  document.getElementById("title").textContent = product.title;
+  document.getElementById("subhead").textContent = product.hook || "";
+  document.title = `${product.title} — TrendyCatch`;
+  const metaDesc = document.querySelector('meta[name="description"]');
+  if (metaDesc) metaDesc.setAttribute("content", product.hook || product.title);
+
+  // Gallery
+  document.getElementById("mainImg").src = images[0] || "";
+  document.getElementById("mainImg").alt = product.title;
+  const thumbs = document.getElementById("thumbs");
+  thumbs.innerHTML = images.map((src, i) => `<img src="${src}" data-full="${src}" class="${i === 0 ? "active" : ""}" alt="${escapeHtml(product.title)} view ${i + 1}" />`).join("");
+  thumbs.querySelectorAll("img").forEach((img) => {
+    img.addEventListener("click", () => {
+      document.getElementById("mainImg").src = img.dataset.full;
+      thumbs.querySelectorAll("img").forEach((t) => t.classList.remove("active"));
+      img.classList.add("active");
+    });
+  });
+
+  // Bullets — product-specific list if we have one, otherwise fall back to
+  // the hook + the plain variant description so the page never looks empty.
+  const bulletsEl = document.getElementById("bullets");
+  const bulletList = (detail.bullets && detail.bullets.length) ? detail.bullets : [product.hook, product.variant].filter(Boolean);
+  bulletsEl.innerHTML = bulletList.map((b) => `<li>${escapeHtml(b)}</li>`).join("");
+
+  // Variant picker
+  const variants = product.variants || [];
+  if (variants.length) {
+    document.getElementById("variantWrap").style.display = "";
+    const picker = document.getElementById("variantPicker");
+    picker.innerHTML = variants.map((v) => `<option value="${escapeHtml(v.sku)}">${escapeHtml(v.label)}</option>`).join("");
+    selectedVariantSku = variants[0].sku;
+    picker.value = selectedVariantSku;
+    picker.addEventListener("change", () => {
+      selectedVariantSku = picker.value;
+      updatePriceDisplay();
+    });
+  } else {
+    selectedVariantSku = undefined;
+  }
+
+  updatePriceDisplay();
+
+  // Features grid
+  if (detail.features && detail.features.length) {
+    document.getElementById("featuresBlock").style.display = "";
+    document.getElementById("featuresGrid").innerHTML = detail.features.map((f) => `
+      <div class="feature-card">
+        <div class="icon">${f.icon || "✨"}</div>
+        <div class="title">${escapeHtml(f.title)}</div>
+        <div class="text">${escapeHtml(f.text)}</div>
+      </div>
+    `).join("");
+  }
+
+  // How it works
+  if (detail.howItWorks && detail.howItWorks.length) {
+    document.getElementById("howBlock").style.display = "";
+    document.getElementById("stepsGrid").innerHTML = detail.howItWorks.map((s) => `
+      <div class="step">
+        <div class="num"></div>
+        <div class="title">${escapeHtml(s.title)}</div>
+        <div class="text">${escapeHtml(s.text)}</div>
+      </div>
+    `).join("");
+  }
+
+  // Bigger image gallery block (same images, larger grid)
+  if (images.length > 1) {
+    document.getElementById("galleryBlock").style.display = "";
+    document.getElementById("galleryGrid").innerHTML = images.map((src) => `<img src="${src}" alt="${escapeHtml(product.title)}" loading="lazy" />`).join("");
+  }
+
+  // FAQ
+  if (detail.faq && detail.faq.length) {
+    document.getElementById("faqBlock").style.display = "";
+    document.getElementById("faqList").innerHTML = detail.faq.map((f) => `
+      <details class="faq-item">
+        <summary>${escapeHtml(f.q)}</summary>
+        <p>${escapeHtml(f.a)}</p>
+      </details>
+    `).join("");
+  }
+
+  document.getElementById("stickyTitle").textContent = product.title;
+
+  [document.getElementById("buyBtnMain"), document.getElementById("buyBtnClosing"), document.getElementById("buyBtnSticky")].forEach((btn) => {
+    btn.addEventListener("click", () => handleBuy(btn));
+  });
+
+  fireViewContent(product);
+
+  document.getElementById("loadingState").style.display = "none";
+  document.getElementById("pdpRoot").style.display = "";
+}
+
+async function handleBuy(btn) {
+  const originalText = btn.textContent;
+  [document.getElementById("buyBtnMain"), document.getElementById("buyBtnClosing"), document.getElementById("buyBtnSticky")].forEach((b) => {
+    b.disabled = true;
+    b.textContent = "Loading…";
+  });
+
+  fireInitiateCheckout(product);
+
+  try {
+    const res = await fetch("/create-checkout", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        productId: product.id,
+        variantSku: selectedVariantSku || undefined,
+        country: currentCountry,
+        source: visitorSource,
+        landingUrl: location.href,
+      }),
+    });
+    const data = await res.json();
+    if (data.url) {
+      location.href = data.url;
+    } else {
+      showToast(data.error || "Something went wrong — please try again.");
+      resetButtons(originalText);
+    }
+  } catch (e) {
+    console.error(e);
+    showToast("Network error — please try again.");
+    resetButtons(originalText);
+  }
+}
+
+function resetButtons() {
+  document.getElementById("buyBtnMain").disabled = false;
+  document.getElementById("buyBtnMain").textContent = "Buy Now";
+  document.getElementById("buyBtnClosing").disabled = false;
+  document.getElementById("buyBtnClosing").textContent = "Buy Now";
+  document.getElementById("buyBtnSticky").disabled = false;
+  document.getElementById("buyBtnSticky").textContent = "Buy Now";
+}
+
+window.addEventListener("scroll", () => {
+  const bar = document.getElementById("stickyBar");
+  if (!product) return;
+  const pastHero = window.scrollY > 420;
+  bar.classList.toggle("show", pastHero);
+});
+
+async function init() {
+  const id = new URLSearchParams(location.search).get("id");
+  const [country, productsRes] = await Promise.all([detectCountry(), fetch("/products.json")]);
+  currentCountry = country;
+  document.getElementById("geoPill").textContent = `Shipping to ${COUNTRY_LABEL[currentCountry] || currentCountry}`;
+
+  const allProducts = await productsRes.json();
+  product = allProducts.find((p) => p.id === id);
+
+  if (!product) {
+    document.getElementById("loadingState").style.display = "none";
+    document.getElementById("notFound").style.display = "";
+    return;
+  }
+
+  renderProduct();
+}
+init();
+</script>
+
+</body>
+</html>

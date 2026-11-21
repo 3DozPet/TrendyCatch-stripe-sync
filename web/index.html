@@ -146,6 +146,7 @@
   .card .compare-price { font-size: 13px; color: var(--muted); text-decoration: line-through; }
   .card .price-note { font-size: 11px; color: var(--muted); width: 100%; }
   .buy-btn {
+    display: block; text-align: center; text-decoration: none;
     margin-top: 6px; border: none; border-radius: 999px; padding: 12px 14px;
     background: var(--accent); color: var(--ink); font-size: 14px; font-weight: 700;
     cursor: pointer; transition: background 0.15s ease, transform 0.1s ease;
@@ -520,15 +521,29 @@ function renderProducts() {
         <div class="hook">${escapeHtml(product.hook || "")}</div>
         ${variantControl}
         <div class="price-row">${priceRowHtml(symbol, product.id, pricing)}</div>
-        <button class="buy-btn" data-id="${product.id}">Buy Now</button>
+        <a class="buy-btn" href="/product.html?id=${product.id}" data-id="${product.id}">View &amp; Buy</a>
       </div>
     `;
     grid.appendChild(card);
     fireViewContent(product);
   });
 
-  grid.querySelectorAll(".buy-btn").forEach((btn) => {
-    btn.addEventListener("click", () => handleBuy(btn));
+  grid.querySelectorAll(".thumb").forEach((thumb) => {
+    thumb.style.cursor = "pointer";
+    thumb.addEventListener("click", () => {
+      const card = thumb.closest(".card");
+      const id = card.querySelector(".buy-btn").dataset.id;
+      location.href = `/product.html?id=${id}`;
+    });
+  });
+
+  grid.querySelectorAll(".title").forEach((title) => {
+    title.style.cursor = "pointer";
+    title.addEventListener("click", () => {
+      const card = title.closest(".card");
+      const id = card.querySelector(".buy-btn").dataset.id;
+      location.href = `/product.html?id=${id}`;
+    });
   });
 
   grid.querySelectorAll(".variant-picker").forEach((sel) => {
