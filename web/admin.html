@@ -162,43 +162,60 @@ document.getElementById("soundBtn").addEventListener("click", async () => {
   }
 });
 
-// A continuous metallic bicycle-bell ring, lasting half a second.
+// A synthesized cash-register "cha-ching", like the classic new-order sound
+// on Shopify: a quick coin-jingle burst followed by two ringing bell notes.
 function playChime() {
   if (!audioCtx || audioCtx.state !== "running") return;
   const now = audioCtx.currentTime;
-  const duration = 0.5;
-  const tremolo = audioCtx.createGain();
-  tremolo.gain.setValueAtTime(0.65, now);
-  tremolo.connect(audioCtx.destination);
+  const master = audioCtx.createGain();
+  master.gain.setValueAtTime(0.8, now);
+  master.connect(audioCtx.destination);
 
-  const lfo = audioCtx.createOscillator();
-  const depth = audioCtx.createGain();
-  lfo.type = "sine";
-  lfo.frequency.setValueAtTime(25, now);
-  lfo.frequency.exponentialRampToValueAtTime(15, now + duration);
-  depth.gain.value = 0.35;
-  lfo.connect(depth);
-  depth.connect(tremolo.gain);
-  lfo.start(now);
-  lfo.stop(now + duration);
+  // Coin-jingle: short burst of filtered noise right at the start.
+  const jingleDuration = 0.18;
+  const bufferSize = Math.floor(audioCtx.sampleRate * jingleDuration);
+  const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+  const data = buffer.getChannelData(0);
+  for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+  const noise = audioCtx.createBufferSource();
+  noise.buffer = buffer;
+  const noiseFilter = audioCtx.createBiquadFilter();
+  noiseFilter.type = "bandpass";
+  noiseFilter.frequency.value = 4200;
+  noiseFilter.Q.value = 1.2;
+  const noiseGain = audioCtx.createGain();
+  noiseGain.gain.setValueAtTime(0.0001, now);
+  noiseGain.gain.exponentialRampToValueAtTime(0.5, now + 0.01);
+  noiseGain.gain.exponentialRampToValueAtTime(0.0001, now + jingleDuration);
+  noise.connect(noiseFilter);
+  noiseFilter.connect(noiseGain);
+  noiseGain.connect(master);
+  noise.start(now);
+  noise.stop(now + jingleDuration + 0.02);
 
-  // Three overlapping bells, each with metallic overtones, ring together.
-  [2637, 2793, 3136].flatMap((base) =>
-    [[base, 0.05], [base * 2.76, 0.02], [base * 4.1, 0.01]]
-  ).forEach(([frequency, level]) => {
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.type = "sine";
-      osc.frequency.setValueAtTime(frequency, now);
-      gain.gain.setValueAtTime(0.0001, now);
-      gain.gain.exponentialRampToValueAtTime(level, now + 0.005);
-      gain.gain.setValueAtTime(level, now + duration - 0.2);
-      gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
-      osc.connect(gain);
-      gain.connect(tremolo);
-      osc.start(now);
-      osc.stop(now + duration + 0.02);
-    });
+  // "Cha" then "Ching": two struck bell notes, the second higher and ringing longer.
+  const notes = [
+    { start: 0.0, freq: 1568, ringTime: 0.28, level: 0.3 },   // cha
+    { start: 0.14, freq: 2349, ringTime: 0.55, level: 0.32 }, // ching
+  ];
+  notes.forEach(({ start, freq, ringTime, level }) => {
+    const t0 = now + start;
+    [[freq, level], [freq * 2.0, level * 0.35], [freq * 3.0, level * 0.15]].forEach(
+      ([frequency, lvl]) => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(frequency, t0);
+        gain.gain.setValueAtTime(0.0001, t0);
+        gain.gain.exponentialRampToValueAtTime(lvl, t0 + 0.006);
+        gain.gain.exponentialRampToValueAtTime(0.0001, t0 + ringTime);
+        osc.connect(gain);
+        gain.connect(master);
+        osc.start(t0);
+        osc.stop(t0 + ringTime + 0.02);
+      }
+    );
+  });
 }
 
 function sourceClass(code) {
