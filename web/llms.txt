@@ -1,0 +1,15 @@
+# TrendyCatch
+
+> TrendyCatch sells clever, problem-solving everyday gadgets (home, kitchen, personal care and travel items) with free shipping to Australia, New Zealand, the United States and Canada.
+
+TrendyCatch is a single-page storefront. Products, prices and variants are listed on the homepage and are also available as structured data.
+
+## Key pages
+- [Homepage and product catalog](https://trendycatch.us/)
+- [Product data (JSON)](https://trendycatch.us/products.json)
+
+## Policies
+- [Privacy Policy](https://trendycatch.us/privacy-policy.html)
+- [Terms of Service](https://trendycatch.us/terms-of-service.html)
+- [Shipping Policy](https://trendycatch.us/shipping-policy.html)
+- [Refund Policy](https://trendycatch.us/refund-policy.html)
