@@ -3,120 +3,235 @@
     "id": "razor-holder",
     "title": "Stainless Steel Wall Razor Holder",
     "hook": "No more rusty razors cluttering your sink — this punch-free steel holder keeps your shaver dry and off the counter in seconds.",
-    "image": "/images/razor-holder.jpg",
-    "variant": "Plastic hook, wall-mount",
+    "images": [
+      "https://ae-pic-a1.aliexpress-media.com/kf/S51a4fb253a6144539471cc76b2d3ccc9x.jpeg",
+      "https://ae-pic-a1.aliexpress-media.com/kf/Sdb18e378cada47d48ac0f1ccdfced23aq.jpeg",
+      "https://ae-pic-a1.aliexpress-media.com/kf/Sa64506c515c04939aa8e01570eb285cfW.jpeg",
+      "https://ae-pic-a1.aliexpress-media.com/kf/S2e24800d556a48b0a0a48f2dea92bb45D.jpeg",
+      "https://ae-pic-a1.aliexpress-media.com/kf/S7e793e95d21c4256ad5b805539bb7e002.jpeg"
+    ],
+    "variant": "Punch-free wall mount, stainless steel",
+    "variants": [
+      { "label": "1 Pack", "sku": "1PC" },
+      { "label": "2 Pack", "sku": "2PCS" },
+      { "label": "4 Pack", "sku": "4PCS" }
+    ],
     "prices": { "AU": 22.95, "CA": 22.95, "NZ": 25.95, "US": 18.95 }
   },
   {
     "id": "butterfly-pillow",
     "title": "Butterfly-Shaped Memory Foam Neck Pillow",
     "hook": "Wake up without the neck ache — contoured memory foam cradles your neck and shoulders so you actually sleep through the night.",
-    "image": "/images/butterfly-pillow.jpg",
-    "variant": "Black",
+    "images": [
+      "https://ae-pic-a1.aliexpress-media.com/kf/S4b7178562b53466384f75850f01e76dcL.jpg",
+      "https://ae-pic-a1.aliexpress-media.com/kf/S23cafcce20cd4f2ab6fe296f7cc23b96f.jpg",
+      "https://ae-pic-a1.aliexpress-media.com/kf/Sbba3bc5d4d4c498696aa37c6a2f4a766R.jpg",
+      "https://ae-pic-a1.aliexpress-media.com/kf/S885595c2bade45778217f479820ba080A.jpg",
+      "https://ae-pic-a1.aliexpress-media.com/kf/Sa897344569d443069bcc506a4b0a4a43R.jpg"
+    ],
+    "variant": "Black, slow-rebound memory foam",
+    "variants": [],
     "prices": { "AU": 45.95, "CA": 45.95, "NZ": 50.95, "US": 34.95 }
   },
   {
     "id": "usb-c-cable-stand",
     "title": "USB-C Fast Charging Cable with Foldable Stand",
     "hook": "Charge and watch at the same time — this braided USB-C cable folds into its own phone stand so you're never hunting for a holder again.",
-    "image": "/images/usb-c-cable-stand.jpg",
-    "variant": "Blue bracket",
+    "images": [
+      "https://ae-pic-a1.aliexpress-media.com/kf/Sac2d286066b843919f2f67290e3e61c7k.png",
+      "https://ae-pic-a1.aliexpress-media.com/kf/S57d8af278a0c48dc8c236582bf6891acp.png",
+      "https://ae-pic-a1.aliexpress-media.com/kf/S7b5f02bf22b04732bb14ff2a1ad512e0o.png",
+      "https://ae-pic-a1.aliexpress-media.com/kf/Sf4060e9e75bc4aabade232a76863e9c42.png",
+      "https://ae-pic-a1.aliexpress-media.com/kf/S67e780e1f1cf47a6a5c5970d17755ae67.png"
+    ],
+    "variant": "240W braided cable, 1.5m, foldable stand",
+    "variants": [],
     "prices": { "AU": 25.95, "CA": 25.95, "NZ": 28.95, "US": 21.95 }
   },
   {
     "id": "nose-ear-trimmer",
     "title": "Washable Manual Nose & Ear Hair Trimmer",
     "hook": "No batteries, no noise, no nicks — just a precise stainless trimmer that works in the shower and cleans up in seconds.",
-    "image": "/images/nose-ear-trimmer.jpg",
-    "variant": "Light Grey",
+    "images": [
+      "https://ae-pic-a1.aliexpress-media.com/kf/Saf592855a5f74fd485d26b634b6f336e2.jpg",
+      "https://ae-pic-a1.aliexpress-media.com/kf/S41977265ab544044bcc988c96c829f9bw.jpg",
+      "https://ae-pic-a1.aliexpress-media.com/kf/Sbb516b118aca40a6b7400e7734bf09b2Q.jpg",
+      "https://ae-pic-a1.aliexpress-media.com/kf/S256066dd0b244306825071c103148df6w.jpg",
+      "https://ae-pic-a1.aliexpress-media.com/kf/Secc87f1049f24e14927b10149655a3e9f.jpg"
+    ],
+    "variant": "Light grey, stainless steel, manual (no batteries)",
+    "variants": [],
     "prices": { "AU": 22.95, "CA": 22.95, "NZ": 25.95, "US": 19.95 }
   },
   {
     "id": "period-heating-belt",
     "title": "Electric Period & Waist Heating Massage Belt",
     "hook": "Cramps don't stand a chance — strap on adjustable heat and vibration therapy and get back to your day.",
-    "image": "/images/period-heating-belt.jpg",
-    "variant": "White",
+    "images": [
+      "https://ae-pic-a1.aliexpress-media.com/kf/S11aa69bc00fb4d4191ec1321fecb1b41d.png",
+      "https://ae-pic-a1.aliexpress-media.com/kf/Sf5b76a852aa2454d9ba062019af77d67q.png",
+      "https://ae-pic-a1.aliexpress-media.com/kf/S5367fba1cb5a4e5e91476f5286f95309E.png",
+      "https://ae-pic-a1.aliexpress-media.com/kf/S2eb71b6da74740c681a9e97f09ca6b08x.png",
+      "https://ae-pic-a1.aliexpress-media.com/kf/S010e19ede06449df994be95ca6ca7bafN.png"
+    ],
+    "variant": "Grey, rechargeable 5000mAh, heat + vibration",
+    "variants": [],
     "prices": { "AU": 41.95, "CA": 41.95, "NZ": 45.95, "US": 29.95 }
   },
   {
     "id": "phone-charger-stand",
     "title": "240W Fast Charge Foldable Phone Charger Cable",
     "hook": "Full power, zero tangles — a 240W fast-charge cable that doubles as a fold-flat stand for hands-free scrolling.",
-    "image": "/images/phone-charger-stand.jpg",
-    "variant": "240W C to C, 1.5m",
+    "images": [
+      "https://ae-pic-a1.aliexpress-media.com/kf/Sd4bcb25a3361406b8164d24f46e589d3M.jpg",
+      "https://ae-pic-a1.aliexpress-media.com/kf/S05815d30754d4e75956b2f060b3ae7aeM.jpg",
+      "https://ae-pic-a1.aliexpress-media.com/kf/S471347c530a1490bb6daac09fb0e4284J.jpg",
+      "https://ae-pic-a1.aliexpress-media.com/kf/Sf30d89212b2c46b19a2e7f64849fdaa1l.jpg",
+      "https://ae-pic-a1.aliexpress-media.com/kf/Sb3edaa66ad094b59b4238a885ef7f9538.jpg"
+    ],
+    "variant": "Black, 240W, 1.5m, integrated stand",
+    "variants": [],
     "prices": { "AU": 27.95, "CA": 27.95, "NZ": 30.95, "US": 22.95 }
   },
   {
     "id": "magnetic-wall-holder",
     "title": "No-Drill Magnetic Remote Control Wall Holder",
     "hook": "Remotes gone for good — stick these magnetic mounts anywhere and never dig between couch cushions again.",
-    "image": "/images/magnetic-wall-holder.jpg",
-    "variant": "3-piece set",
+    "images": [
+      "https://ae-pic-a1.aliexpress-media.com/kf/Sa51d755f9f6c41e1bf523229e3ae963fz.jpg",
+      "https://ae-pic-a1.aliexpress-media.com/kf/S6a18635dd4f34876beab71588b331fdcy.jpg",
+      "https://ae-pic-a1.aliexpress-media.com/kf/Sdfed58ac203e4526892747fb39e30224O.jpg",
+      "https://ae-pic-a1.aliexpress-media.com/kf/S5da648ee7feb4a28897add47a268d791m.jpg",
+      "https://ae-pic-a1.aliexpress-media.com/kf/Sd316d58a1a0f4cb78d86f7b49ed13b96b.jpg"
+    ],
+    "variant": "3-piece set, adhesive mount, no drilling",
+    "variants": [],
     "prices": { "AU": 24.95, "CA": 24.95, "NZ": 27.95, "US": 20.95 }
   },
   {
     "id": "vacuum-sealer-pump",
     "title": "Rechargeable Vacuum Sealer Pump + Bags",
     "hook": "Food stays fresh 5x longer — this cordless vacuum pump sucks the air out of reusable bags in one button press.",
-    "image": "/images/vacuum-sealer-pump.jpg",
-    "variant": "10pcs 22x21cm bags",
+    "images": [
+      "https://ae-pic-a1.aliexpress-media.com/kf/S338537c544a94a068e8781de75686e94U.jpg",
+      "https://ae-pic-a1.aliexpress-media.com/kf/S02602d287c9840bd9f536814d5cd2711I.png",
+      "https://ae-pic-a1.aliexpress-media.com/kf/S816e9fefe2f1491b842951751b7e63a6F.png",
+      "https://ae-pic-a1.aliexpress-media.com/kf/S27c4110ce20b45d987dc6d90d55ccd5eE.jpg",
+      "https://ae-pic-a1.aliexpress-media.com/kf/Sc26a86f9a79645e0ab24e267cdbe57e68.jpg"
+    ],
+    "variant": "USB-rechargeable pump + reusable zipper bags",
+    "variants": [
+      { "label": "16x22cm bags", "sku": "16x22cm" },
+      { "label": "21x22cm bags", "sku": "21x22cm" },
+      { "label": "26x28cm bags", "sku": "26x28cm" },
+      { "label": "26x34cm bags", "sku": "26x34cm" },
+      { "label": "30x34cm bags", "sku": "30x34cm" }
+    ],
     "prices": { "AU": 27.95, "CA": 27.95, "NZ": 30.95, "US": 22.95 }
   },
   {
     "id": "washing-machine-drip-tray",
     "title": "Washing Machine Drain Water Collection Tray",
     "hook": "Stop mopping up overflow — this no-spill drip tray catches every drop so your laundry room stays bone dry.",
-    "image": "/images/washing-machine-drip-tray.jpg",
-    "variant": "Standard",
+    "images": [
+      "https://ae-pic-a1.aliexpress-media.com/kf/S4b8941cb093f42f7a96c769e613baac1v.jpg",
+      "https://ae-pic-a1.aliexpress-media.com/kf/S82c92a79f5194fc99c456dab4d51bf44B.jpg",
+      "https://ae-pic-a1.aliexpress-media.com/kf/S4191f321249847aca87d4e70a49f090cE.jpg",
+      "https://ae-pic-a1.aliexpress-media.com/kf/S4a6bf1b53c5a442d9ecca0dbf68aacddA.jpg",
+      "https://ae-pic-a1.aliexpress-media.com/kf/S19ec0c392a2443b4b80e69b996a59c5aC.jpg"
+    ],
+    "variant": "Universal fit, built-in lint filter",
+    "variants": [],
     "prices": { "AU": 25.95, "CA": 25.95, "NZ": 28.95, "US": 20.95 }
   },
   {
     "id": "dishwashing-cloth-clip",
     "title": "No-Punch Dishwashing Cloth Storage Clip (3pc)",
     "hook": "Soggy sponges, sorted — these wall clips air-dry your cloths and gloves without a single screw.",
-    "image": "/images/dishwashing-cloth-clip.jpg",
-    "variant": "3pcs White",
+    "images": [
+      "https://ae-pic-a1.aliexpress-media.com/kf/Sb9dd59c0b78348a487bb2d9ba7eaff31Y.jpg",
+      "https://ae-pic-a1.aliexpress-media.com/kf/S119a7ef63e58445eb28f85880f49cf969.jpg",
+      "https://ae-pic-a1.aliexpress-media.com/kf/S7aabad88c6794d0f9820e373c67ff632s.jpg",
+      "https://ae-pic-a1.aliexpress-media.com/kf/S269e74bca3634d2ebfaf0ae157baeccfZ.jpg",
+      "https://ae-pic-a1.aliexpress-media.com/kf/S0d4497f43795426b8434e51b43bc8eb9I.jpg"
+    ],
+    "variant": "3-piece set, white, adhesive mount",
+    "variants": [],
     "prices": { "AU": 24.95, "CA": 24.95, "NZ": 27.95, "US": 21.95 }
   },
   {
     "id": "mini-bag-sealer",
     "title": "Mini Rechargeable Bag Heat Sealer",
     "hook": "Chip bags, snack bags, freezer bags — reseal any of them airtight in one swipe, no twist ties required.",
-    "image": "/images/mini-bag-sealer.jpg",
-    "variant": "White",
+    "images": [
+      "https://ae-pic-a1.aliexpress-media.com/kf/Sad42db1beb3b4ea2b7ebf204caa4b949q.jpg",
+      "https://ae-pic-a1.aliexpress-media.com/kf/S516dfea207c94bfa96d4977c8237d775S.jpg",
+      "https://ae-pic-a1.aliexpress-media.com/kf/Seaae1198f8864240909778c20efb1320E.jpg",
+      "https://ae-pic-a1.aliexpress-media.com/kf/Sd7ae99df77cb4bc2944e8abd24e2cebce.jpg",
+      "https://ae-pic-a1.aliexpress-media.com/kf/S303aecfb031044ba897e0613dbb80aa6C.jpg"
+    ],
+    "variant": "White, USB-C rechargeable",
+    "variants": [],
     "prices": { "AU": 25.95, "CA": 25.95, "NZ": 28.95, "US": 19.95 }
   },
   {
     "id": "appliance-roller-base",
     "title": "Adjustable Heavy-Duty Appliance Roller Base (2pc)",
     "hook": "Move your washer or fridge solo — these rolling bases let you slide heavy appliances out for cleaning without straining your back.",
-    "image": "/images/appliance-roller-base.jpg",
-    "variant": "2pcs Grey, 46.5-70cm",
+    "images": [
+      "https://ae-pic-a1.aliexpress-media.com/kf/S985e6ade457749fa9068e7b24e783b17d.jpg",
+      "https://ae-pic-a1.aliexpress-media.com/kf/S49ec2d6d08e04a68aa942850e5a733190.jpg",
+      "https://ae-pic-a1.aliexpress-media.com/kf/S8a25c4e3c5e14d3e8ec9a8c7d842db0eL.jpg",
+      "https://ae-pic-a1.aliexpress-media.com/kf/S39d82e2781aa4a9da3c4ec2013353225n.jpg",
+      "https://ae-pic-a1.aliexpress-media.com/kf/S2d56e6d8637b438399a09aa82f1ed8b9P.jpg"
+    ],
+    "variant": "2-piece set, grey, adjustable 46.5-70cm",
+    "variants": [],
     "prices": { "AU": 29.95, "CA": 29.95, "NZ": 32.95, "US": 25.95 }
   },
   {
     "id": "magnetic-cabinet-catches",
     "title": "Ultra-Thin Magnetic Cabinet Catches (6-pack)",
     "hook": "Silence every cupboard slam — these invisible magnetic catches hold doors shut without a single drill hole.",
-    "image": "/images/magnetic-cabinet-catches.jpg",
-    "variant": "6 Pack",
+    "images": [
+      "https://ae-pic-a1.aliexpress-media.com/kf/S631d01852afa49c39ea6f4a3166d2437K.jpg",
+      "https://ae-pic-a1.aliexpress-media.com/kf/S273a4f7307264e9f914960575d2254daB.jpg",
+      "https://ae-pic-a1.aliexpress-media.com/kf/S111bfb56986d4b4395f5b24ec0cceac36.jpg",
+      "https://ae-pic-a1.aliexpress-media.com/kf/S3febe0cae97c4f8ab25ffc60e30f8064x.jpg",
+      "https://ae-pic-a1.aliexpress-media.com/kf/Sdb2003810ac0479aad0e9384bfc23cdfn.jpg"
+    ],
+    "variant": "Ultra-thin adhesive magnetic catch",
+    "variants": [],
     "prices": { "AU": 27.95, "CA": 27.95, "NZ": 30.95, "US": 22.95 }
   },
   {
     "id": "nose-pore-patch",
     "title": "Deep Cleansing Nose Pore & Blackhead Patches",
     "hook": "Blackheads, gone in one peel — these cleansing patches pull out buildup without the breakouts a scrub leaves behind.",
-    "image": "/images/nose-pore-patch.jpg",
-    "variant": "10pc Black",
+    "images": [
+      "https://ae-pic-a1.aliexpress-media.com/kf/S1824d241abe04a69b04195b66dd25a04y.jpg",
+      "https://ae-pic-a1.aliexpress-media.com/kf/S4af00fe91b1a4ec5ad0b2f07e2f7a96fH.png",
+      "https://ae-pic-a1.aliexpress-media.com/kf/Sa63e48ab1fb742349de1d466719bd492V.jpg",
+      "https://ae-pic-a1.aliexpress-media.com/kf/Sd8b037cf86464b4c81c4de91be8e7313A.jpg",
+      "https://ae-pic-a1.aliexpress-media.com/kf/Seb63d9c5c91a4be4a97fd47fafdd937em.jpg"
+    ],
+    "variant": "20-count pack, alcohol-free, fragrance-free",
+    "variants": [],
     "prices": { "AU": 20.95, "CA": 20.95, "NZ": 22.95, "US": 19.95 }
   },
   {
     "id": "ergonomic-neck-pillow",
     "title": "Ergonomic 2-in-1 Memory Foam Travel Neck Pillow",
     "hook": "Plane, car or couch — this orthopedic pillow supports your neck everywhere you actually need it to.",
-    "image": "/images/ergonomic-neck-pillow.jpg",
-    "variant": "Black",
+    "images": [
+      "https://ae-pic-a1.aliexpress-media.com/kf/S0f9e8d71b184440a87e11c32dbab7a2dP.jpg",
+      "https://ae-pic-a1.aliexpress-media.com/kf/S4c870d02db2646dfba335c63a8922084V.jpg",
+      "https://ae-pic-a1.aliexpress-media.com/kf/Sa97b8dba5a39447196eab7c8493cedf6j.jpg",
+      "https://ae-pic-a1.aliexpress-media.com/kf/See02d2531e0149e0af95ce796b61b229X.jpg",
+      "https://ae-pic-a1.aliexpress-media.com/kf/S5f1eaaeab3d34baeb124ed693b5e9f424.jpg"
+    ],
+    "variant": "Black, orthopedic memory foam",
+    "variants": [],
     "prices": { "AU": 56.95, "CA": 56.95, "NZ": 62.95, "US": 40.95 }
   }
 ]

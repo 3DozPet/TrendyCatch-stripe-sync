@@ -42,12 +42,26 @@
     aspect-ratio: 1 / 1; background: #f1f1f1; display: flex; align-items: center; justify-content: center;
     overflow: hidden;
   }
+  .card .thumb { position: relative; }
   .card .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .card .thumb .fallback { font-size: 42px; opacity: 0.25; }
+  .card .thumb-strip { display: flex; gap: 6px; padding: 8px 10px 0; }
+  .card .thumb-strip img {
+    width: 36px; height: 36px; object-fit: cover; border-radius: 6px; cursor: pointer;
+    border: 2px solid transparent; opacity: 0.7; transition: opacity 0.15s ease, border-color 0.15s ease;
+  }
+  .card .thumb-strip img:hover { opacity: 1; }
+  .card .thumb-strip img.active { opacity: 1; border-color: var(--accent); }
   .card .body { padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
   .card .title { font-size: 15px; font-weight: 650; line-height: 1.3; }
   .card .hook { font-size: 13px; color: var(--muted); line-height: 1.45; flex: 1; }
   .card .variant { font-size: 12px; color: var(--muted); }
+  .card .variant-select { display: flex; flex-direction: column; gap: 4px; }
+  .card .variant-select label { font-size: 11px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; }
+  .card .variant-select select {
+    font-size: 13px; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--border);
+    background: #fff; cursor: pointer;
+  }
   .card .price-row { display: flex; align-items: baseline; gap: 8px; margin-top: 4px; }
   .card .price { font-size: 20px; font-weight: 800; }
   .card .price-note { font-size: 11px; color: var(--muted); }
@@ -302,6 +316,14 @@ async function detectCountry() {
   }
 }
 
+// Tracks the currently chosen variant sku per product id, so Buy Now knows
+// which option the shopper picked.
+const selectedVariant = {};
+
+function escapeHtml(str) {
+  return String(str).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
 function renderProducts() {
   const grid = document.getElementById("productGrid");
   grid.innerHTML = "";
@@ -309,18 +331,44 @@ function renderProducts() {
 
   products.forEach((product) => {
     const price = product.prices[currentCountry];
+    const images = (product.images && product.images.length ? product.images : [product.image]).filter(Boolean);
+    const primaryImage = images[0] || "";
+    const variants = product.variants || [];
+    if (variants.length && !selectedVariant[product.id]) {
+      selectedVariant[product.id] = variants[0].sku;
+    }
+
+    const thumbStrip = images.length > 1
+      ? `<div class="thumb-strip" data-id="${product.id}">${images
+          .map(
+            (src, i) =>
+              `<img src="${src}" loading="lazy" class="${i === 0 ? "active" : ""}" data-full="${src}" alt="${escapeHtml(product.title)} view ${i + 1}" />`
+          )
+          .join("")}</div>`
+      : "";
+
+    const variantControl = variants.length
+      ? `<div class="variant-select">
+           <label for="variant-${product.id}">Option</label>
+           <select id="variant-${product.id}" class="variant-picker" data-id="${product.id}">
+             ${variants.map((v) => `<option value="${escapeHtml(v.sku)}">${escapeHtml(v.label)}</option>`).join("")}
+           </select>
+         </div>`
+      : `<div class="variant">${escapeHtml(product.variant || "")}</div>`;
+
     const card = document.createElement("div");
     card.className = "card";
     card.innerHTML = `
       <div class="thumb">
-        <img src="${product.image}" alt="${product.title}" loading="lazy"
+        <img src="${primaryImage}" alt="${escapeHtml(product.title)}" loading="lazy"
              onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
         <div class="fallback" style="display:none;">📦</div>
       </div>
+      ${thumbStrip}
       <div class="body">
-        <div class="title">${product.title}</div>
-        <div class="hook">${product.hook || ""}</div>
-        <div class="variant">${product.variant || ""}</div>
+        <div class="title">${escapeHtml(product.title)}</div>
+        <div class="hook">${escapeHtml(product.hook || "")}</div>
+        ${variantControl}
         <div class="price-row">
           <div class="price">${symbol}${price.toFixed(2)}</div>
           <div class="price-note">free shipping</div>
@@ -334,6 +382,24 @@ function renderProducts() {
 
   grid.querySelectorAll(".buy-btn").forEach((btn) => {
     btn.addEventListener("click", () => handleBuy(btn));
+  });
+
+  grid.querySelectorAll(".variant-picker").forEach((sel) => {
+    sel.addEventListener("change", () => {
+      selectedVariant[sel.dataset.id] = sel.value;
+    });
+  });
+
+  grid.querySelectorAll(".thumb-strip").forEach((strip) => {
+    strip.querySelectorAll("img").forEach((thumb) => {
+      thumb.addEventListener("click", () => {
+        const card = strip.closest(".card");
+        const mainImg = card.querySelector(".thumb img");
+        mainImg.src = thumb.dataset.full;
+        strip.querySelectorAll("img").forEach((t) => t.classList.remove("active"));
+        thumb.classList.add("active");
+      });
+    });
   });
 }
 
@@ -354,6 +420,7 @@ async function handleBuy(btn) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         productId,
+        variantSku: selectedVariant[productId] || undefined,
         country: currentCountry,
         source: visitorSource,
         landingUrl: location.href,

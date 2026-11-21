@@ -27,7 +27,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     return json({ error: "Server misconfigured: missing STRIPE_SECRET_KEY" }, 500)
   }
 
-  let body: { productId?: string; country?: string; source?: string; landingUrl?: string }
+  let body: { productId?: string; variantSku?: string; country?: string; source?: string; landingUrl?: string }
   try {
     body = await request.json()
   } catch {
@@ -61,7 +61,9 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     id: string
     title: string
     variant: string
-    image: string
+    variants?: Array<{ label: string; sku: string }>
+    image?: string
+    images?: string[]
     prices: Record<CountryCode, number>
   }> = await productsRes.json()
 
@@ -73,6 +75,14 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
   if (typeof unitPrice !== "number") {
     return json({ error: "No price configured for this country" }, 400)
   }
+
+  // If this product has real selectable options, the chosen one must be one
+  // of the catalog's own skus — never trust an arbitrary string from the
+  // browser. Falls back to the product's single descriptive variant text
+  // when it has no selectable options (or none/an invalid one was sent).
+  const availableVariants = product.variants ?? []
+  const matchedVariant = availableVariants.find((v) => v.sku === body.variantSku)
+  const variantLabel = matchedVariant ? matchedVariant.label : product.variant
 
   const currency = CURRENCY_BY_COUNTRY[country]
 
@@ -87,11 +97,11 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
   params.set("line_items[0][price_data][currency]", currency)
   params.set("line_items[0][price_data][unit_amount]", String(Math.round(unitPrice * 100)))
   params.set("line_items[0][price_data][product_data][name]", product.title)
-  params.set("line_items[0][price_data][product_data][description]", product.variant)
+  params.set("line_items[0][price_data][product_data][description]", variantLabel)
   params.set("line_items[0][price_data][product_data][metadata][product_id]", product.id)
-  params.set("line_items[0][price_data][product_data][metadata][variant]", product.variant)
+  params.set("line_items[0][price_data][product_data][metadata][variant]", variantLabel)
   params.set("metadata[product_id]", product.id)
-  params.set("metadata[variant]", product.variant)
+  params.set("metadata[variant]", variantLabel)
   params.set("metadata[country]", country)
   params.set("metadata[source]", source)
   if (landingUrl) params.set("metadata[landing_url]", landingUrl)
