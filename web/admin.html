@@ -130,78 +130,50 @@ let soundEnabled = false;
 let since = Date.now() - 1000 * 60 * 60 * 6; // show orders from the last 6h on first load
 let audioCtx = null;
 
-document.getElementById("soundBtn").addEventListener("click", () => {
-  soundEnabled = !soundEnabled;
-  if (soundEnabled && !audioCtx) {
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+document.getElementById("soundBtn").addEventListener("click", async () => {
+  if (soundEnabled) {
+    soundEnabled = false;
+    document.getElementById("soundBtn").textContent = "🔇 Enable order sound";
+    return;
   }
-  document.getElementById("soundBtn").textContent = soundEnabled ? "🔊 Sound on" : "🔇 Enable order sound";
-  if (soundEnabled) playChime();
+  try {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    await audioCtx.resume();
+    if (audioCtx.state !== "running") throw new Error("Audio is unavailable");
+    soundEnabled = true;
+    document.getElementById("soundBtn").textContent = "🔊 Sound on";
+    playChime();
+  } catch (error) {
+    soundEnabled = false;
+    document.getElementById("soundBtn").textContent = "🔇 Enable order sound";
+    document.getElementById("statusText").textContent = "Sound unavailable — check browser audio";
+  }
 });
 
-// A synthesized "bicycle bell" ring — the classic small-gong "briiing" you
-// get from thumbing a handlebar bell lever — built entirely from oscillators
-// and an LFO-driven tremolo in code, no sound file or copyrighted audio
-// involved. The metallic character comes from a few inharmonic partials
-// (like a real small bell/gong); the trembling "briiing" comes from rapidly
-// wobbling the volume (tremolo), the way the spring-loaded striker keeps
-// re-hitting the bell while the lever is held.
-function playBicycleBell(startTime, freq, peakGain, duration) {
-  // Envelope + tremolo gain stage all the partials share.
-  const tremoloGain = audioCtx.createGain();
-  tremoloGain.gain.setValueAtTime(0, startTime);
-  tremoloGain.connect(audioCtx.destination);
-
-  // LFO that makes the volume "wobble" fast, like the striker re-hitting
-  // the bell — starts brisk and eases as the ring settles, the way a real
-  // bell's strike rate (and the ring itself) decays.
-  const lfo = audioCtx.createOscillator();
-  lfo.type = "sine";
-  lfo.frequency.setValueAtTime(26, startTime);
-  lfo.frequency.exponentialRampToValueAtTime(14, startTime + duration);
-  const lfoDepth = audioCtx.createGain();
-  lfoDepth.gain.value = 0.4;
-  lfo.connect(lfoDepth);
-  lfoDepth.connect(tremoloGain.gain);
-
-  const tremoloBase = audioCtx.createConstantSource();
-  tremoloBase.offset.value = 0.6;
-  tremoloBase.connect(tremoloGain.gain);
-
-  lfo.start(startTime);
-  lfo.stop(startTime + duration + 0.1);
-  tremoloBase.start(startTime);
-  tremoloBase.stop(startTime + duration + 0.1);
-
-  // Inharmonic partials of a small bell/gong, each decaying at its own rate.
-  const partials = [
-    { ratio: 1, gain: 1.0, decay: duration },
-    { ratio: 2.76, gain: 0.5, decay: duration * 0.7 },
-    { ratio: 4.1, gain: 0.26, decay: duration * 0.45 },
-    { ratio: 5.4, gain: 0.14, decay: duration * 0.3 },
-  ];
-  partials.forEach((p) => {
-    const osc = audioCtx.createOscillator();
-    const env = audioCtx.createGain();
-    osc.type = "sine";
-    osc.frequency.value = freq * p.ratio;
-    const g = peakGain * p.gain;
-    env.gain.setValueAtTime(0, startTime);
-    env.gain.linearRampToValueAtTime(g, startTime + 0.006);
-    env.gain.exponentialRampToValueAtTime(0.0006, startTime + p.decay);
-    osc.connect(env);
-    env.connect(tremoloGain);
-    osc.start(startTime);
-    osc.stop(startTime + p.decay + 0.05);
-  });
-}
-
+// A brief original cash-register chime, synthesized locally using Web Audio.
 function playChime() {
-  if (!audioCtx) return;
+  if (!audioCtx || audioCtx.state !== "running") return;
   const now = audioCtx.currentTime;
-  // The classic double "ring-ring!" of a handlebar bell — two quick strikes.
-  playBicycleBell(now, 2793.0, 0.4, 0.55); // F7
-  playBicycleBell(now + 0.42, 2793.0, 0.42, 0.6); // F7, second ring slightly fuller
+  function tone(time, frequency, duration, volume) {
+    [1, 2.01, 3.91].forEach((ratio, index) => {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(frequency * ratio, time);
+      const peak = volume * [1, 0.32, 0.13][index];
+      gain.gain.setValueAtTime(0.0001, time);
+      gain.gain.exponentialRampToValueAtTime(peak, time + 0.005);
+      gain.gain.exponentialRampToValueAtTime(0.0001, time + duration);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start(time);
+      osc.stop(time + duration + 0.02);
+    });
+  }
+  // A quick register click followed by two bright, descending bell notes.
+  tone(now, 420, 0.07, 0.08);
+  tone(now + 0.09, 2093, 0.24, 0.10);
+  tone(now + 0.25, 1568, 0.65, 0.13);
 }
 
 function sourceClass(code) {
