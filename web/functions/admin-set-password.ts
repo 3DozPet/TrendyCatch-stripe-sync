@@ -2,7 +2,7 @@
 // first-visit "create your password" flow). Once a password is set, this
 // endpoint always refuses; change-password is the only way to update it
 // after that, and it requires the current password.
-import { hasPasswordSet, setPassword, createSessionCookie } from "./_lib/auth"
+import { hasPasswordSet, setPassword, createSessionCookie, isLockedOut, recordFailedAttempt, clearFailedAttempts } from "./_lib/auth"
 
 interface Env {
   ORDERS_KV?: KVNamespace
@@ -12,6 +12,8 @@ interface Env {
 export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   if (!env.ORDERS_KV) return json({ error: "Server not configured." }, 500)
 
+  const ip = request.headers.get("cf-connecting-ip") || "unknown"
+  if (await isLockedOut(env.ORDERS_KV, ip)) return json({ error: "Too many attempts. Try again later." }, 429)
   if (!env.ADMIN_SETUP_TOKEN || env.ADMIN_SETUP_TOKEN.length < 24) return json({ error: "Admin setup is not configured." }, 503)
 
   if (await hasPasswordSet(env.ORDERS_KV)) {
@@ -31,7 +33,11 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   const a = new Uint8Array(expected), b = new Uint8Array(supplied)
   let diff = 0
   for (let i = 0; i < a.length; i++) diff |= a[i] ^ b[i]
-  if (diff !== 0 || (body.username || "").trim().toLowerCase() !== "robbie@trendycatch.us") return json({ error: "Invalid setup credentials." }, 403)
+  if (diff !== 0 || (body.username || "").trim().toLowerCase() !== "robbie@trendycatch.us") {
+    await recordFailedAttempt(env.ORDERS_KV, ip)
+    return json({ error: "Invalid setup credentials." }, 403)
+  }
+  await clearFailedAttempts(env.ORDERS_KV, ip)
   const password = (body.password || "").toString()
   if (password.length < 8) {
     return json({ error: "Password must be at least 8 characters." }, 400)
