@@ -36,6 +36,7 @@
     font-size: 11px; font-weight: 600; background: rgba(255,255,255,0.14);
     padding: 5px 10px; border-radius: 999px; white-space: nowrap;
   }
+  .tracking-box{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end}.tracking-box label{font-size:12px;font-weight:700}.tracking-box input{width:195px;min-height:40px;padding:8px 10px;border:0;border-radius:7px;font:inherit;font-size:16px;color:#1a1a1a}.tracking-box button{min-height:40px;border:0;border-radius:7px;background:#ffb703;color:#173e1a;font-size:13px;font-weight:800;padding:8px 14px;cursor:pointer}.tracking-box output{flex-basis:100%;font-size:12px;line-height:1.5;max-width:450px}.tracking-box a{color:white}.tracking-box :focus-visible{outline:3px solid white;outline-offset:2px}@media(max-width:650px){header.site .tracking-box{order:3;flex-basis:100%;justify-content:flex-start}.tracking-box label{flex-basis:100%}.tracking-box input{flex:1;width:auto;min-width:0}.tracking-box button{flex:0 0 auto}.tracking-box output{max-width:none}}
   .hero {
     background: var(--green); background-image: linear-gradient(180deg, var(--green) 0%, var(--green-dark) 100%);
     padding: 26px 20px;
@@ -207,7 +208,8 @@
 
 <header class="site">
   <div class="brand">Trendy<span>Catch</span></div>
-  <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><a href="/apps/17TRACK/" style="font-size:11px;font-weight:700;color:#fff;text-decoration:none;border:1px solid rgba(255,255,255,.6);border-radius:999px;padding:8px 10px;white-space:nowrap">Track Order</a><div class="geo-pill" id="geoPill">Loading pricing…</div></div>
+  <div class="geo-pill" id="geoPill">Loading pricing…</div>
+  <form id="homeTracking" class="tracking-box"><label for="homeTrackingNumber">Track your order</label><input id="homeTrackingNumber" name="trackingNumber" placeholder="Tracking number" autocomplete="off" maxlength="100" required><button type="submit">Track</button><output id="homeTrackingResult" aria-live="polite"></output></form>
 </header>
 
 <section class="hero">
@@ -677,5 +679,16 @@ document.getElementById("signupForm").addEventListener("submit", async (e) => {
 });
 </script>
 
+<script>
+document.getElementById('homeTracking').addEventListener('submit',async function(e){
+  e.preventDefault(); var result=document.getElementById('homeTrackingResult'); var button=this.querySelector('button'); var number=document.getElementById('homeTrackingNumber').value.trim();
+  if(!number) return; button.disabled=true; result.textContent='Checking tracking…';
+  try { var response=await fetch('/track-order',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({number:number})}); var data=await response.json();
+    if(!response.ok){result.textContent=data.error||'Tracking is temporarily unavailable.';return}
+    result.textContent=data.message;
+    if(Array.isArray(data.updates)&&data.updates.length){var list=document.createElement('div');data.updates.forEach(function(u){var item=document.createElement('div');item.textContent=u.label+' — '+new Date(u.time).toLocaleDateString();list.appendChild(item)});result.appendChild(list)}
+  } catch(err){result.textContent='Tracking is temporarily unavailable. Please try again later.'} finally{button.disabled=false}
+});
+</script>
 </body>
 </html>
