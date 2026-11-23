@@ -3,8 +3,9 @@
 // literal file path, so a file named admin.html.ts only intercepts the exact
 // path /admin.html — a request to /admin falls straight through to the raw,
 // unauthenticated static asset otherwise. This file closes that gap by
-// running the exact same gate check in-process (see adminGateResponse in
-// admin.html.ts) rather than redirecting to /admin.html.
+// running the same gate check as admin.html.ts (from _lib/admin-gate.ts, a
+// non-route shared module — see that file's and admin.html.ts's comments for
+// why it must not be imported directly from admin.html.ts instead).
 //
 // Do NOT change this back to a redirect to /admin.html. That was tried and
 // caused an infinite redirect loop (ERR_TOO_MANY_REDIRECTS) once logged in:
@@ -12,13 +13,9 @@
 // static-asset layer, which canonicalizes straight .html requests by
 // redirecting them to the extensionless path (/admin.html -> /admin); a
 // redirect here back to /admin.html would then bounce forever against that.
-import { adminGateResponse } from "./admin.html"
+import { adminGateResponse, type AdminGateEnv } from "./_lib/admin-gate"
 
-interface Env {
-  ORDERS_KV?: KVNamespace
-}
-
-export const onRequestGet: PagesFunction<Env> = async ({ request, env, next }) => {
+export const onRequestGet: PagesFunction<AdminGateEnv> = async ({ request, env, next }) => {
   const gate = await adminGateResponse(request, env)
   if (gate) return gate
   return next()
