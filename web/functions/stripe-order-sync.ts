@@ -302,10 +302,12 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     // "home screen" summary — total revenue, revenue by country, orders by
     // ad platform — the same kind of numbers Shopify's own Home shows.
     try {
+      const taxCollected = (session.total_details?.amount_tax ?? 0) / 100
       await updateStatsSummary(env.ORDERS_KV, {
         country: addr?.country ?? "UNKNOWN",
         source: rawSource.toLowerCase(),
         total: orderTotal,
+        taxCollected,
       })
     } catch (err) {
       console.error("Stats summary update failed (order was still created):", (err as Error).message)
@@ -445,25 +447,52 @@ function labelForSource(code: string): string {
   return labels[code.toLowerCase()] ?? `Other (${code})`
 }
 
+// Stripe's exact per-transaction fee lives on the charge's balance
+// transaction, which the restricted "admin-customers" style read-only key
+// this project uses is deliberately not scoped to read (Checkout Sessions
+// read-only — see the Stripe key created for least-privilege). Rather than
+// widen that key's permissions just to show a number, net revenue uses a
+// published-rate ESTIMATE (2.9% + 0.30 per order, in the order's own
+// currency) and is labelled as an estimate everywhere it's shown.
+const ESTIMATED_STRIPE_FEE_PERCENT = 0.029
+const ESTIMATED_STRIPE_FEE_FLAT = 0.3
+
+// GST applies only to Australia (10%) and New Zealand (15%) orders — the two
+// jurisdictions this store collects consumption tax for and needs to lodge
+// with (the ATO and NZ Inland Revenue respectively).
+const GST_RATE: Record<string, number> = { AU: 0.1, NZ: 0.15 }
+
 // Keeps one small, permanent JSON summary in KV — total revenue/orders, plus
 // broken down by country and by ad-platform source — so the admin dashboard
 // can show a Shopify-Home-style "how's business doing" snapshot instead of
-// only the rolling 48h new-order feed. Read-modify-write against a single
-// key; fine at this order volume (a lost increment under a rare simultaneous
-// webhook pair just means the next poll is one order behind, never wrong for
-// long).
+// only the rolling 48h new-order feed. Also tracks an estimated Stripe-fee
+// total (for a net-revenue figure) and GST collected per country (for AU/NZ
+// tax lodgement), the same way Shopify's own Taxes report breaks GST out by
+// country/region. Read-modify-write against a single key; fine at this order
+// volume (a lost increment under a rare simultaneous webhook pair just means
+// the next poll is one order behind, never wrong for long).
 async function updateStatsSummary(
   kv: KVNamespace,
-  order: { country: string; source: string; total: number },
+  order: { country: string; source: string; total: number; taxCollected: number },
 ): Promise<void> {
   const key = "stats:summary"
   const raw = await kv.get(key)
   const stats = raw
     ? JSON.parse(raw)
-    : { totalRevenue: 0, totalOrders: 0, byCountry: {} as Record<string, { revenue: number; orders: number }>, bySource: {} as Record<string, { revenue: number; orders: number }> }
+    : {
+        totalRevenue: 0,
+        totalOrders: 0,
+        totalFeesEstimated: 0,
+        byCountry: {} as Record<string, { revenue: number; orders: number }>,
+        bySource: {} as Record<string, { revenue: number; orders: number }>,
+        gstByCountry: {} as Record<string, { collected: number; orders: number; rate: number }>,
+      }
 
   stats.totalRevenue = (stats.totalRevenue ?? 0) + order.total
   stats.totalOrders = (stats.totalOrders ?? 0) + 1
+
+  const feeEstimate = order.total * ESTIMATED_STRIPE_FEE_PERCENT + ESTIMATED_STRIPE_FEE_FLAT
+  stats.totalFeesEstimated = (stats.totalFeesEstimated ?? 0) + feeEstimate
 
   const country = order.country || "UNKNOWN"
   stats.byCountry[country] = stats.byCountry[country] ?? { revenue: 0, orders: 0 }
@@ -474,6 +503,14 @@ async function updateStatsSummary(
   stats.bySource[source] = stats.bySource[source] ?? { revenue: 0, orders: 0 }
   stats.bySource[source].revenue += order.total
   stats.bySource[source].orders += 1
+
+  const gstRate = GST_RATE[country]
+  if (gstRate && order.taxCollected > 0) {
+    stats.gstByCountry = stats.gstByCountry ?? {}
+    stats.gstByCountry[country] = stats.gstByCountry[country] ?? { collected: 0, orders: 0, rate: gstRate }
+    stats.gstByCountry[country].collected += order.taxCollected
+    stats.gstByCountry[country].orders += 1
+  }
 
   stats.updatedAt = new Date().toISOString()
 

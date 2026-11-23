@@ -92,6 +92,10 @@
       <div class="value" id="statRevenue">—</div>
     </div>
     <div class="stat-card">
+      <div class="label">Net revenue (after Stripe fees, est.)</div>
+      <div class="value" id="statNetRevenue">—</div>
+    </div>
+    <div class="stat-card">
       <div class="label">Orders</div>
       <div class="value" id="statOrders">—</div>
     </div>
@@ -117,6 +121,11 @@
       <h3>Live visitors by country</h3>
       <div id="liveByCountry"></div>
     </div>
+  </div>
+  <div class="breakdown anchor" id="taxpanel">
+    <h3>GST to lodge — Australia (10%) &amp; New Zealand (15%)</h3>
+    <p class="heading-sub" style="margin:0 0 10px;">GST collected on paid orders, not yet marked as filed. Lodge with the ATO (Australia) and NZ Inland Revenue (New Zealand) separately.</p>
+    <div id="gstByCountry"></div>
   </div>
   <div class="breakdown subscribers-panel anchor" id="signups">
     <h3>Recent email signups — admin only, never shown to customers</h3>
@@ -290,12 +299,36 @@ function renderBreakdown(containerId, entries, formatValue) {
     .join("");
 }
 
+// Mirrors Shopify's own Analytics > Reports > Taxes report: country, GST
+// rate, orders, GST collected, and a "Not filed" status until the owner has
+// actually lodged it with the ATO / NZ Inland Revenue.
+function renderGstBreakdown(gstByCountry) {
+  const el = document.getElementById("gstByCountry");
+  const entries = Object.entries(gstByCountry);
+  if (!entries.length) {
+    el.innerHTML = `<div class="breakdown-item"><span class="tag">No GST collected yet</span></div>`;
+    return;
+  }
+  el.innerHTML = entries
+    .map(([country, v]) => {
+      const rate = Math.round((v.rate || 0) * 100);
+      return `<div class="breakdown-item">
+        <span class="tag">${escapeHtml(countryName(country))} · GST ${rate}% · ${v.orders} order${v.orders === 1 ? "" : "s"}</span>
+        <span class="num">$${Number(v.collected || 0).toFixed(2)} — Not filed</span>
+      </div>`;
+    })
+    .join("");
+}
+
 async function pollStats() {
   try {
     const res = await fetch("/stats");
     if (reloadIfUnauthorized(res.status)) return;
     const stats = await res.json();
-    document.getElementById("statRevenue").textContent = `$${Number(stats.totalRevenue || 0).toFixed(2)}`;
+    const totalRevenue = Number(stats.totalRevenue || 0);
+    const feesEstimated = Number(stats.totalFeesEstimated || 0);
+    document.getElementById("statRevenue").textContent = `$${totalRevenue.toFixed(2)}`;
+    document.getElementById("statNetRevenue").textContent = `$${(totalRevenue - feesEstimated).toFixed(2)}`;
     document.getElementById("statOrders").textContent = stats.totalOrders || 0;
 
     const byCountry = Object.entries(stats.byCountry || {}).sort((a, b) => b[1].revenue - a[1].revenue);
@@ -307,6 +340,8 @@ async function pollStats() {
       bySource.map(([key, val]) => [key.charAt(0).toUpperCase() + key.slice(1), val]),
       (v) => `${v.orders} · $${v.revenue.toFixed(2)}`,
     );
+
+    renderGstBreakdown(stats.gstByCountry || {});
   } catch (e) {
     // keep showing the last known numbers rather than blanking the dashboard
   }
