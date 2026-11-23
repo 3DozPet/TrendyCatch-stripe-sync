@@ -443,6 +443,33 @@ function formInput(form, label, name, value, type='text') {
 }
 function trackLink17(number) { const n=(number || '').trim(); return n ? `https://t.17track.net/en#nums=${encodeURIComponent(n)}` : ''; }
 
+// Renders one order's line items as a small list, each with a tiny product
+// thumbnail (when Stripe has an image for that product) beside the
+// quantity/title/variant text. Replaces the old plain-text "Items: ..." line.
+function buildItemsRow(items) {
+  const wrap = orderElement('div', null, 'history-fields');
+  const label = orderElement('strong', 'Items:'); label.style.display = 'block'; wrap.append(label);
+  const list = orderElement('div', null, 'history-items');
+  list.style.display = 'flex'; list.style.flexDirection = 'column'; list.style.gap = '4px'; list.style.marginTop = '4px';
+  for (const i of (items || [])) {
+    const row = orderElement('div');
+    row.style.display = 'flex'; row.style.alignItems = 'center'; row.style.gap = '8px';
+    if (i.image_url) {
+      const img = document.createElement('img');
+      img.src = i.image_url; img.alt = '';
+      img.style.width = '28px'; img.style.height = '28px'; img.style.objectFit = 'cover';
+      img.style.borderRadius = '4px'; img.style.flex = 'none'; img.style.border = '1px solid #e0e0e0';
+      img.loading = 'lazy';
+      img.addEventListener('error', () => { img.style.display = 'none'; });
+      row.append(img);
+    }
+    row.append(document.createTextNode(`${i.quantity} × ${i.title}${i.variant ? ' — ' + i.variant : ''}`));
+    list.append(row);
+  }
+  wrap.append(list);
+  return wrap;
+}
+
 // Builds one order's expandable detail block: full customer/address detail, a
 // "Send order confirmation" action, and the fulfilment form (tracking number,
 // carrier, and a tracking link auto-filled from 17TRACK). Shared by the Order
@@ -456,7 +483,8 @@ function buildOrderEntry(order, items, opts) {
   const fields=orderElement('div',null,'history-fields');
   orderField(fields,'Order ID',order.id); orderField(fields,'Date',order.created_at); orderField(fields,'Email',order.customer_email); orderField(fields,'Phone',order.customer_phone);
   orderField(fields,'Shipping name',order.shipping_name); orderField(fields,'Shipping address',printableAddress(order.shipping_address_json)); orderField(fields,'Billing address',printableAddress(order.billing_address_json));
-  orderField(fields,'Payment',order.payment_status); orderField(fields,'Items',(items || []).map(i=>`${i.quantity} × ${i.title}${i.variant ? ' — '+i.variant : ''}`).join(', ')); entry.append(fields);
+  orderField(fields,'Payment',order.payment_status); entry.append(fields);
+  entry.append(buildItemsRow(items));
 
   const confirmRow=orderElement('div',null,'history-fields'); confirmRow.style.marginTop='4px';
   const confirmBtn=orderElement('button','Send order confirmation'); confirmBtn.type='button'; confirmBtn.className='header-btn';

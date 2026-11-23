@@ -26,11 +26,23 @@ export async function recordOrderHistory(db: D1Database, session: any): Promise<
   for (const item of session.line_items.data) {
     if (typeof item.id !== 'string') throw new Error('Missing Stripe line item ID')
     const product = typeof item.price?.product === 'object' ? item.price.product : null
-    stmts.push(db.prepare(`INSERT OR IGNORE INTO order_items (order_id, stripe_line_id, product_id, title, variant, quantity, unit_amount_minor) VALUES (?, ?, ?, ?, ?, ?, ?)`).bind(
+    // Stripe's expanded Product object carries an `images` array (set when the
+    // product was created/updated in Stripe) — take the first one, if any, as
+    // the small thumbnail shown next to this line item in the admin dashboard.
+    const imageUrl = Array.isArray(product?.images) && typeof product.images[0] === 'string' ? product.images[0] : null
+    stmts.push(db.prepare(`INSERT OR IGNORE INTO order_items (order_id, stripe_line_id, product_id, title, variant, quantity, unit_amount_minor, image_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`).bind(
       session.id, item.id, product?.metadata?.product_id ?? session.metadata?.product_id ?? null,
       product?.name ?? item.description ?? 'Item', product?.metadata?.variant ?? session.metadata?.variant ?? null,
-      item.quantity ?? 1, item.price?.unit_amount ?? null,
+      item.quantity ?? 1, item.price?.unit_amount ?? null, imageUrl,
     ))
+    // INSERT OR IGNORE above leaves an already-written row untouched, so a
+    // line item synced before this column existed (or before its product had
+    // an image) would otherwise never pick one up. Backfill it in place —
+    // only when the row still has no image — on every call, including a
+    // repeat "Sync from Stripe" click or the next live webhook delivery.
+    if (imageUrl) {
+      stmts.push(db.prepare(`UPDATE order_items SET image_url = ? WHERE stripe_line_id = ? AND image_url IS NULL`).bind(imageUrl, item.id))
+    }
   }
   await db.batch(stmts)
 }

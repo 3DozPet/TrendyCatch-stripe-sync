@@ -8,7 +8,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
   if (!(await hasValidSession(request, env.ORDERS_KV))) return reply({ error: 'Unauthorized' }, 401)
   const result = await env.ORDERS_DB.prepare('SELECT id, created_at, customer_name, customer_email, customer_phone, shipping_name, shipping_address_json, billing_address_json, currency, total_minor, payment_status, fulfillment_status, tracking_number, tracking_carrier, tracking_url, updated_at FROM orders ORDER BY created_at DESC, id DESC LIMIT 100').all()
   const orders = result.results || []
-  const items = await env.ORDERS_DB.prepare('SELECT order_id, product_id, title, variant, quantity, unit_amount_minor FROM order_items WHERE order_id IN (SELECT id FROM orders ORDER BY created_at DESC, id DESC LIMIT 100) ORDER BY id').all()
+  const items = await env.ORDERS_DB.prepare('SELECT order_id, product_id, title, variant, quantity, unit_amount_minor, image_url FROM order_items WHERE order_id IN (SELECT id FROM orders ORDER BY created_at DESC, id DESC LIMIT 100) ORDER BY id').all()
   return reply({ orders, items: items.results || [], limit: 100 })
 }
 
