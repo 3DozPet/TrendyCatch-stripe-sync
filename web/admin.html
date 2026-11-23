@@ -133,7 +133,7 @@
   </div>
 </section>
 
-<section class="history-panel anchor" id="history"><div class="history-head"><div><h2>Order history</h2><p>View customer details and update fulfilment</p></div><button id="historyRefresh" type="button">Refresh</button></div><p id="historyStatus" role="status">Loading orders…</p><div id="historyList"></div></section>
+<section class="history-panel anchor" id="history"><div class="history-head"><div><h2>Order history</h2><p>View customer details and update fulfilment</p></div><button id="historySyncStripe" type="button" class="header-btn" title="Pull in any Stripe orders missing from this list (e.g. ones placed before this dashboard existed)">Sync from Stripe</button><button id="historyRefresh" type="button">Refresh</button></div><p id="historyStatus" role="status">Loading orders…</p><div id="historyList"></div></section>
 <div class="section-heading anchor" id="custpanel"><div><h2>Customers</h2><p>Order history and lifetime spend per customer</p></div><button id="customersRefresh" type="button" class="header-btn">Refresh</button></div>
 <div class="breakdown" style="max-width:1160px;margin:0 auto 24px;"><div id="customersList"></div></div>
 <div class="section-heading anchor" id="products"><div><h2>Products</h2><p>Catalog currently listed on the store</p></div></div>
@@ -510,6 +510,26 @@ async function refreshHistory() {
   } catch(error) { status.textContent=error.message || 'Order history unavailable'; }
 }
 document.getElementById('historyRefresh').addEventListener('click',refreshHistory);
+
+document.getElementById('historySyncStripe').addEventListener('click', async () => {
+  const btn = document.getElementById('historySyncStripe');
+  const status = document.getElementById('historyStatus');
+  const originalLabel = btn.textContent;
+  btn.disabled = true; btn.textContent = 'Syncing…';
+  try {
+    const res = await fetch('/admin-backfill-stripe', { method: 'POST' });
+    if (reloadIfUnauthorized(res.status)) return;
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Sync failed');
+    status.textContent = `Synced: checked ${data.scanned} Stripe orders, ${data.written} written/already present` + (data.truncated ? ' — more remain, click Sync again to continue' : '') + (data.failures && data.failures.length ? ` (${data.failures.length} failed)` : '');
+    await refreshHistory();
+    await refreshCustomers();
+  } catch (error) {
+    status.textContent = error.message || 'Sync failed';
+  } finally {
+    btn.disabled = false; btn.textContent = originalLabel;
+  }
+});
 
 async function refreshCustomers() {
   const list = document.getElementById('customersList');
