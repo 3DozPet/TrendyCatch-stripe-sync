@@ -1,19 +1,34 @@
-// Gatekeeper for GET /admin.html. Cloudflare Pages Functions run in front of
-// static assets, so this intercepts every request to the dashboard before it
-// reaches the real admin.html file: no password set yet -> show the "create
-// your password" page; password set but no valid session -> show the login
-// page; valid session -> fall through to the real static file via next().
+// Gatekeeper for the admin dashboard. Cloudflare Pages Functions run in front
+// of static assets, so this intercepts requests before they reach the real
+// admin.html file: no password set yet -> show the "create your password"
+// page; password set but no valid session -> show the login page; valid
+// session -> let the caller fall through to the real static file via next().
+//
+// IMPORTANT: this used to also live at the extensionless /admin.ts path via a
+// 302 redirect to /admin.html. That caused an infinite redirect loop once
+// logged in: an authed request to /admin.html falls through via next() to
+// Cloudflare's static-asset layer, which canonicalizes the URL and redirects
+// straight .html requests to the extensionless path (/admin.html -> /admin);
+// admin.ts then redirected /admin back to /admin.html, bouncing forever
+// (ERR_TOO_MANY_REDIRECTS). Fix: export the gate check itself so admin.ts can
+// run the exact same logic in-process and call its OWN next() when
+// authenticated, instead of redirecting to this file at all. No code path
+// anywhere should redirect between /admin and /admin.html again.
 import { hasPasswordSet, hasValidSession } from "./_lib/auth"
 
 interface Env {
   ORDERS_KV?: KVNamespace
 }
 
-export const onRequestGet: PagesFunction<Env> = async ({ request, env, next }) => {
+// Returns a Response to send immediately (storage unavailable, or a gate
+// page to show), or null when the request is authenticated and the caller
+// should proceed (normally by returning its own next()).
+export async function adminGateResponse(request: Request, env: Env): Promise<Response | null> {
   if (!env.ORDERS_KV) {
-    // Can't gate without KV — fail open rather than lock the owner out
-    // entirely. In practice KV is always bound (the rest of the dashboard
-    // needs it too), so this should never trigger.
+    // Can't gate without KV — fail closed with a clear message rather than
+    // silently serving the dashboard unprotected. In practice KV is always
+    // bound (the rest of the dashboard needs it too), so this should never
+    // trigger.
     return new Response("Admin unavailable: storage is not configured.", { status: 503 })
   }
 
@@ -27,6 +42,12 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env, next }) =
     return htmlResponse(renderLoginPage())
   }
 
+  return null
+}
+
+export const onRequestGet: PagesFunction<Env> = async ({ request, env, next }) => {
+  const gate = await adminGateResponse(request, env)
+  if (gate) return gate
   return next()
 }
 
@@ -95,7 +116,7 @@ function renderSetPasswordPage(): string {
             body: JSON.stringify({ username: document.getElementById("u").value, setupToken: document.getElementById("t").value, password: p1 }),
           });
           const data = await res.json();
-          if (res.ok) { location.href = "/admin.html"; }
+          if (res.ok) { location.href = "/admin"; }
           else { err.textContent = data.error || "Something went wrong."; btn.disabled = false; }
         } catch (e2) { err.textContent = "Network error — try again."; btn.disabled = false; }
       });
@@ -130,7 +151,7 @@ function renderLoginPage(): string {
             body: JSON.stringify({ username: document.getElementById("u").value, password: p }),
           });
           const data = await res.json();
-          if (res.ok) { location.href = "/admin.html"; }
+          if (res.ok) { location.href = "/admin"; }
           else { err.textContent = data.error || "Login failed."; btn.disabled = false; }
         } catch (e2) { err.textContent = "Network error — try again."; btn.disabled = false; }
       });
