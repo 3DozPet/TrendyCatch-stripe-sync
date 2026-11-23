@@ -435,6 +435,59 @@ function orderField(parent, label, value) { const p=orderElement('p'); const str
 function formInput(form, label, name, value, type='text') {
   const wrap=orderElement('label',label); const input=document.createElement('input'); input.type=type; input.name=name; input.value=value || ''; wrap.append(input); form.append(wrap); return input;
 }
+function trackLink17(number) { const n=(number || '').trim(); return n ? `https://t.17track.net/en#nums=${encodeURIComponent(n)}` : ''; }
+
+// Builds one order's expandable detail block: full customer/address detail, a
+// "Send order confirmation" action, and the fulfilment form (tracking number,
+// carrier, and a tracking link auto-filled from 17TRACK). Shared by the Order
+// history panel and by the Customers panel's per-customer order list.
+function buildOrderEntry(order, items, opts) {
+  opts = opts || {};
+  const entry=orderElement('details',null,'history-order');
+  if (opts.nested) { entry.style.marginTop='10px'; entry.style.paddingLeft='14px'; entry.style.borderLeft='2px solid #e0e0e0'; }
+  const total=Number(order.total_minor || 0)/100;
+  entry.append(orderElement('summary',`${order.customer_name || 'Customer'} · ${order.currency} ${total.toFixed(2)} · ${order.fulfillment_status}`));
+  const fields=orderElement('div',null,'history-fields');
+  orderField(fields,'Order ID',order.id); orderField(fields,'Date',order.created_at); orderField(fields,'Email',order.customer_email); orderField(fields,'Phone',order.customer_phone);
+  orderField(fields,'Shipping name',order.shipping_name); orderField(fields,'Shipping address',printableAddress(order.shipping_address_json)); orderField(fields,'Billing address',printableAddress(order.billing_address_json));
+  orderField(fields,'Payment',order.payment_status); orderField(fields,'Items',(items || []).map(i=>`${i.quantity} × ${i.title}${i.variant ? ' — '+i.variant : ''}`).join(', ')); entry.append(fields);
+
+  const confirmRow=orderElement('div',null,'history-fields'); confirmRow.style.marginTop='4px';
+  const confirmBtn=orderElement('button','Send order confirmation'); confirmBtn.type='button'; confirmBtn.className='header-btn';
+  const confirmStatus=orderElement('span'); confirmStatus.setAttribute('role','status'); confirmStatus.style.marginLeft='10px'; confirmStatus.style.fontSize='13px'; confirmStatus.style.color='#666';
+  confirmBtn.addEventListener('click', async () => {
+    confirmBtn.disabled=true; confirmStatus.textContent='Sending from orders@trendycatch.us…';
+    try {
+      const r=await fetch('/admin-send-confirmation',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:order.id})});
+      const d=await r.json().catch(()=>({}));
+      if (reloadIfUnauthorized(r.status)) return;
+      if (!r.ok) throw new Error(d.error || 'Unable to send confirmation email');
+      confirmStatus.textContent='Sent from orders@trendycatch.us';
+    } catch(err) { confirmStatus.textContent=err.message || 'Unable to send confirmation email'; }
+    finally { confirmBtn.disabled=false; }
+  });
+  confirmRow.append(confirmBtn, confirmStatus); entry.append(confirmRow);
+
+  const form=orderElement('form',null,'history-form'); const label=orderElement('label','Fulfilment'); const select=document.createElement('select'); select.name='status';
+  for (const value of ['unfulfilled','fulfilled']) { const opt=orderElement('option',value==='fulfilled' ? 'Fulfilled' : 'Unfulfilled'); opt.value=value; opt.selected=value===order.fulfillment_status; select.append(opt); } label.append(select); form.append(label);
+  const number=formInput(form,'Tracking number','number',order.tracking_number); const carrier=formInput(form,'Carrier','carrier',order.tracking_carrier);
+  const url=formInput(form,'Tracking link (auto-filled from 17TRACK)','url',order.tracking_url,'url');
+  let urlEdited = Boolean(order.tracking_url);
+  url.addEventListener('input', () => { urlEdited = true; });
+  number.addEventListener('input', () => { if (!urlEdited) url.value = trackLink17(number.value); });
+  const track17Btn = orderElement('button','Use 17TRACK link'); track17Btn.type='button'; track17Btn.className='header-btn'; track17Btn.style.marginLeft='8px';
+  track17Btn.addEventListener('click', () => { url.value = trackLink17(number.value); urlEdited = true; });
+  form.append(track17Btn);
+  const button=orderElement('button','Save fulfilment'); button.type='submit'; form.append(button); const result=orderElement('span'); result.setAttribute('role','status'); form.append(result);
+  form.addEventListener('submit',async e=>{e.preventDefault(); button.disabled=true; result.textContent='Saving…'; try {
+      if (select.value==='fulfilled' && number.value.trim() && !url.value.trim()) url.value = trackLink17(number.value);
+      const r=await fetch('/admin-order-history',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:order.id,status:select.value,trackingNumber:number.value,carrier:carrier.value,trackingUrl:url.value})}); const d=await r.json(); if(!r.ok) throw Error(d.error || 'Unable to save'); result.textContent='Saved'; order.fulfillment_status=select.value; order.tracking_number=number.value; order.tracking_carrier=carrier.value; order.tracking_url=url.value; entry.querySelector('summary').textContent=`${order.customer_name || 'Customer'} · ${order.currency} ${total.toFixed(2)} · ${select.value}`;
+    } catch(err) { result.textContent=err.message || 'Unable to save'; } finally {button.disabled=false;} });
+  entry.append(form);
+  return entry;
+}
+
+let latestOrders = [], latestItems = [];
 async function refreshHistory() {
   const status=document.getElementById('historyStatus'), list=document.getElementById('historyList');
   try {
@@ -442,29 +495,19 @@ async function refreshHistory() {
     if (reloadIfUnauthorized(response.status)) return;
     if (!response.ok) throw new Error('Order history is not connected yet.');
     const data=await response.json(); list.replaceChildren();
-    status.textContent=data.orders.length ? `Showing up to ${data.limit} orders` : 'No orders in order history yet.';
-    for (const order of data.orders) {
-      const entry=orderElement('details',null,'history-order');
-      const total=Number(order.total_minor || 0)/100;
-      entry.append(orderElement('summary',`${order.customer_name || 'Customer'} · ${order.currency} ${total.toFixed(2)} · ${order.fulfillment_status}`));
-      const fields=orderElement('div',null,'history-fields');
-      orderField(fields,'Order ID',order.id); orderField(fields,'Date',order.created_at); orderField(fields,'Email',order.customer_email); orderField(fields,'Phone',order.customer_phone);
-      orderField(fields,'Shipping name',order.shipping_name); orderField(fields,'Shipping address',printableAddress(order.shipping_address_json)); orderField(fields,'Billing address',printableAddress(order.billing_address_json));
-      orderField(fields,'Payment',order.payment_status); orderField(fields,'Items',(data.items || []).filter(i=>i.order_id===order.id).map(i=>`${i.quantity} × ${i.title}${i.variant ? ' — '+i.variant : ''}`).join(', ')); entry.append(fields);
-      const form=orderElement('form',null,'history-form'); const label=orderElement('label','Fulfilment'); const select=document.createElement('select'); select.name='status';
-      for (const value of ['unfulfilled','fulfilled']) { const opt=orderElement('option',value==='fulfilled' ? 'Fulfilled' : 'Unfulfilled'); opt.value=value; opt.selected=value===order.fulfillment_status; select.append(opt); } label.append(select); form.append(label);
-      const number=formInput(form,'Tracking number','number',order.tracking_number); const carrier=formInput(form,'Carrier','carrier',order.tracking_carrier); const url=formInput(form,'Tracking URL','url',order.tracking_url,'url');
-      const button=orderElement('button','Save fulfilment'); button.type='submit'; form.append(button); const result=orderElement('span'); result.setAttribute('role','status'); form.append(result);
-      form.addEventListener('submit',async e=>{e.preventDefault(); button.disabled=true; result.textContent='Saving…'; try {const r=await fetch('/admin-order-history',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:order.id,status:select.value,trackingNumber:number.value,carrier:carrier.value,trackingUrl:url.value})}); const d=await r.json(); if(!r.ok) throw Error(d.error || 'Unable to save'); result.textContent='Saved'; entry.querySelector('summary').textContent=`${order.customer_name || 'Customer'} · ${order.currency} ${total.toFixed(2)} · ${select.value}`; } catch(err) { result.textContent=err.message || 'Unable to save'; } finally {button.disabled=false;} });
-      entry.append(form); list.append(entry);
+    latestOrders = data.orders || []; latestItems = data.items || [];
+    status.textContent=latestOrders.length ? `Showing up to ${data.limit} orders` : 'No orders in order history yet.';
+    for (const order of latestOrders) {
+      const items = latestItems.filter(i=>i.order_id===order.id);
+      list.append(buildOrderEntry(order, items));
     }
   } catch(error) { status.textContent=error.message || 'Order history unavailable'; }
 }
 document.getElementById('historyRefresh').addEventListener('click',refreshHistory);
-refreshHistory();
 
 async function refreshCustomers() {
   const list = document.getElementById('customersList');
+  const openEmails = new Set(Array.from(list.querySelectorAll('details[data-email]')).filter(d=>d.open).map(d=>d.dataset.email));
   try {
     const res = await fetch('/admin-customers', { cache: 'no-store' });
     if (reloadIfUnauthorized(res.status)) return;
@@ -472,20 +515,38 @@ async function refreshCustomers() {
     const data = await res.json();
     const customers = data.customers || [];
     if (!customers.length) { list.innerHTML = '<div class="breakdown-item"><span class="tag">No customers yet</span></div>'; return; }
-    list.innerHTML = customers.map((c) => {
+    list.replaceChildren();
+    for (const c of customers) {
       const spent = Number(c.totalSpentMinor || 0) / 100;
-      return `<div style="display:flex;flex-direction:column;gap:2px;border-bottom:1px solid var(--border);padding:10px 0;">
-        <div style="display:flex;justify-content:space-between;width:100%;"><strong>${escapeHtml(c.name || c.email || 'Customer')}</strong><span>${escapeHtml(c.currency || '')} ${spent.toFixed(2)}</span></div>
-        <div class="meta">${escapeHtml(c.email || '')}${c.phone ? ' · ' + escapeHtml(c.phone) : ''} · ${c.orderCount} order${c.orderCount === 1 ? '' : 's'} · last ${timeAgo(c.lastOrderAt)}</div>
-      </div>`;
-    }).join('');
+      const email = (c.email || '').trim().toLowerCase();
+      const entry = orderElement('details', null, 'history-order');
+      entry.dataset.email = email;
+      if (openEmails.has(email)) entry.open = true;
+      entry.append(orderElement('summary', `${c.name || c.email || 'Customer'} · ${c.email || ''} · ${c.orderCount} order${c.orderCount===1?'':'s'} · ${c.currency || ''} ${spent.toFixed(2)}`));
+      const body = orderElement('div', null, 'history-fields');
+      const matched = latestOrders.filter(o => (o.customer_email || '').trim().toLowerCase() === email);
+      const addressSource = matched.find(o => o.shipping_address_json) || matched[0];
+      orderField(body, 'Phone', c.phone);
+      orderField(body, 'Last order', timeAgo(c.lastOrderAt));
+      orderField(body, 'Address', addressSource ? printableAddress(addressSource.shipping_address_json) : 'No synced order yet');
+      entry.append(body);
+      if (matched.length) {
+        for (const order of matched) {
+          const items = latestItems.filter(i => i.order_id === order.id);
+          entry.append(buildOrderEntry(order, items, { nested: true }));
+        }
+      } else {
+        entry.append(orderElement('p', 'No order history found for this email yet — refresh Order history above once it syncs.', 'meta'));
+      }
+      list.append(entry);
+    }
   } catch (e) {
     list.innerHTML = `<div class="breakdown-item"><span class="tag">${escapeHtml(e.message || 'Customers unavailable')}</span></div>`;
   }
 }
 document.getElementById('customersRefresh').addEventListener('click', refreshCustomers);
-refreshCustomers();
-setInterval(refreshCustomers, 5000);
+(async () => { await refreshHistory(); await refreshCustomers(); })();
+setInterval(refreshCustomers, 20000);
 
 async function refreshProducts() {
   const list = document.getElementById('productsList');
