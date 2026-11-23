@@ -253,8 +253,14 @@ function renderOrder(order, isNew) {
   return el;
 }
 
+// Guarded so a burst of simultaneous 401s (several pollers firing at once)
+// triggers at most one reload instead of a reload-on-reload loop.
+let reloadingForAuth = false;
 function reloadIfUnauthorized(status) {
-  if (status === 401) { location.reload(); return true; }
+  if (status === 401) {
+    if (!reloadingForAuth) { reloadingForAuth = true; location.reload(); }
+    return true;
+  }
   return false;
 }
 
