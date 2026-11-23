@@ -35,25 +35,29 @@ export async function recordOrderHistory(db: D1Database, session: any): Promise<
   await db.batch(stmts)
 }
 
-// Lists every PAID Checkout Session from Stripe, newest first per page but
-// returned oldest-fetched-last (Stripe's list order), with line items and
-// their product expanded so recordOrderHistory has everything it needs.
+// Lists every PAID Checkout Session's ID from Stripe. Deliberately does NOT
+// try to expand line_items here: Stripe's own docs warn that deep nested
+// expansions (line_items -> its line items -> each one's price -> its
+// product, four levels across two list boundaries) are unreliable on LIST
+// endpoints specifically ("try to limit many nested expansions on list
+// requests" — https://docs.stripe.com/expand) — in practice it silently
+// comes back empty rather than erroring, which made every session fail
+// recordOrderHistory's "Incomplete checkout session" check with no visible
+// error. Fetching full details per-session (fetchFullCheckoutSession below)
+// uses the exact same expand already proven to work by the live webhook in
+// stripe-order-sync.ts, which only ever expands a single retrieved session.
 // Paginated via starting_after; capped at maxSessions as a safety valve so a
 // misbehaving account (or an infinite has_more loop) can't run away — in
 // practice this store has nowhere near that many orders.
-export async function fetchAllPaidCheckoutSessions(
+export async function listPaidCheckoutSessionIds(
   secretKey: string,
   maxSessions = 2000,
-): Promise<{ sessions: any[]; truncated: boolean }> {
-  const out: any[] = []
+): Promise<{ ids: string[]; truncated: boolean }> {
+  const out: string[] = []
   let startingAfter: string | undefined
   let truncated = false
   for (let page = 0; page < 50; page++) {
-    const params = new URLSearchParams({
-      limit: '100',
-      status: 'complete',
-      'expand[]': 'data.line_items.data.price.product',
-    })
+    const params = new URLSearchParams({ limit: '100', status: 'complete' })
     if (startingAfter) params.set('starting_after', startingAfter)
     const res = await fetch(`https://api.stripe.com/v1/checkout/sessions?${params.toString()}`, {
       headers: { Authorization: `Bearer ${secretKey}` },
@@ -61,10 +65,52 @@ export async function fetchAllPaidCheckoutSessions(
     if (!res.ok) throw new Error(`Stripe error ${res.status}: ${await res.text()}`)
     const json: any = await res.json()
     const data: any[] = json.data || []
-    out.push(...data.filter((s) => s.payment_status === 'paid'))
+    out.push(...data.filter((s) => s.payment_status === 'paid').map((s) => s.id))
     if (out.length >= maxSessions) { truncated = Boolean(json.has_more); break }
     if (!json.has_more || data.length === 0) break
     startingAfter = data[data.length - 1].id
   }
-  return { sessions: out, truncated }
+  return { ids: out, truncated }
+}
+
+// Fetches ONE Checkout Session with line_items + customer_details expanded —
+// the same shape, from the same kind of request, that stripe-order-sync.ts's
+// webhook already fetches successfully for every live order.
+export async function fetchFullCheckoutSession(secretKey: string, sessionId: string): Promise<any> {
+  const params = new URLSearchParams()
+  params.append('expand[]', 'line_items.data.price.product')
+  params.append('expand[]', 'customer_details')
+  const res = await fetch(`https://api.stripe.com/v1/checkout/sessions/${sessionId}?${params.toString()}`, {
+    headers: { Authorization: `Bearer ${secretKey}` },
+  })
+  if (!res.ok) throw new Error(`Stripe error ${res.status}: ${await res.text()}`)
+  return res.json()
+}
+
+// Combines the two above: lists every paid session ID, then fetches each
+// one's full details with limited concurrency (kind to Stripe's rate limits
+// and to the Worker's own request budget) so recordOrderHistory gets a
+// complete session object for every order, not just the ones on the first
+// list page.
+export async function fetchAllPaidCheckoutSessions(
+  secretKey: string,
+  maxSessions = 2000,
+  concurrency = 5,
+): Promise<{ sessions: any[]; truncated: boolean; fetchFailures: string[] }> {
+  const { ids, truncated } = await listPaidCheckoutSessionIds(secretKey, maxSessions)
+  const sessions: any[] = []
+  const fetchFailures: string[] = []
+  let cursor = 0
+  async function worker() {
+    while (cursor < ids.length) {
+      const id = ids[cursor++]
+      try {
+        sessions.push(await fetchFullCheckoutSession(secretKey, id))
+      } catch (error) {
+        fetchFailures.push(`${id}: ${(error as Error).message}`)
+      }
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(concurrency, ids.length) }, worker))
+  return { sessions, truncated, fetchFailures }
 }

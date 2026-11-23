@@ -32,28 +32,31 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
 
   let sessions: any[]
   let truncated = false
+  let fetchFailures: string[] = []
   try {
     const result = await fetchAllPaidCheckoutSessions(env.STRIPE_SECRET_KEY)
     sessions = result.sessions
     truncated = result.truncated
+    fetchFailures = result.fetchFailures
   } catch (error) {
     return reply({ error: (error as Error).message || 'Stripe request failed' }, 502)
   }
 
   let written = 0
-  const failures: string[] = []
+  const writeFailures: string[] = []
   for (const session of sessions) {
     try {
       await recordOrderHistory(env.ORDERS_DB, session)
       written++
     } catch (error) {
-      failures.push(`${session.id}: ${(error as Error).message}`)
+      writeFailures.push(`${session.id}: ${(error as Error).message}`)
     }
   }
 
+  const failures = [...fetchFailures, ...writeFailures]
   return reply({
     ok: failures.length === 0,
-    scanned: sessions.length,
+    scanned: sessions.length + fetchFailures.length, // total paid sessions Stripe reported
     written,
     truncated, // true if Stripe has more paid sessions than the safety cap fetched — re-run to continue
     failures: failures.slice(0, 20),
