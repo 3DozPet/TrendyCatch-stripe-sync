@@ -687,6 +687,161 @@
     }
   },
   {
+    "id": "vacuum-zipper-storage-bags",
+    "title": "BPA-Free Reusable Vacuum Zipper Storage Bags",
+    "hook": "Keep food fresh 3x longer without a single-use bag — these airtight zipper bags reseal by hand and wash out for hundreds of reuses.",
+    "images": [
+      "https://ae-pic-a1.aliexpress-media.com/kf/Sf208a22fe0eb4c31bc22fe7120c27187U.png",
+      "https://ae-pic-a1.aliexpress-media.com/kf/S5c7e7f7c6ed04cadb8f824963eb07914a.jpg",
+      "https://ae-pic-a1.aliexpress-media.com/kf/S54b9a633251f4964a94f2d549a9962b1z.jpg",
+      "https://ae-pic-a1.aliexpress-media.com/kf/Se8fe6cdbc7ea48d6b295f70fa14e42f5B.jpg",
+      "https://ae-pic-a1.aliexpress-media.com/kf/Se2c7dfdfb93743f3af733602127914c8W.jpg"
+    ],
+    "variant": "10Pcs 22 X 21cm",
+    "variants": [
+      {
+        "label": "10Pcs 22x21cm",
+        "sku": "10PC-22x21",
+        "prices": {
+          "AU": 22.95,
+          "CA": 22.95,
+          "NZ": 25.95,
+          "US": 19.95
+        },
+        "compareAt": {
+          "AU": 41.95,
+          "CA": 41.95,
+          "NZ": 46.95,
+          "US": 35.95
+        }
+      },
+      {
+        "label": "10Pcs 26x28cm",
+        "sku": "10PC-26x28",
+        "prices": {
+          "AU": 25.95,
+          "CA": 25.95,
+          "NZ": 28.95,
+          "US": 22.95
+        },
+        "compareAt": {
+          "AU": 51.95,
+          "CA": 51.95,
+          "NZ": 57.95,
+          "US": 42.95
+        }
+      },
+      {
+        "label": "10Pcs 30x34cm",
+        "sku": "10PC-30x34",
+        "prices": {
+          "AU": 29.95,
+          "CA": 29.95,
+          "NZ": 32.95,
+          "US": 25.95
+        },
+        "compareAt": {
+          "AU": 57.95,
+          "CA": 57.95,
+          "NZ": 63.95,
+          "US": 46.95
+        }
+      },
+      {
+        "label": "30Pcs (3 Sizes)",
+        "sku": "30PC-3SIZES",
+        "prices": {
+          "AU": 39.95,
+          "CA": 39.95,
+          "NZ": 43.95,
+          "US": 32.95
+        },
+        "compareAt": {
+          "AU": 79.95,
+          "CA": 79.95,
+          "NZ": 87.95,
+          "US": 65.95
+        }
+      }
+    ],
+    "prices": {
+      "AU": 22.95,
+      "CA": 22.95,
+      "NZ": 25.95,
+      "US": 19.95
+    },
+    "compareAt": {
+      "AU": 41.95,
+      "CA": 41.95,
+      "NZ": 46.95,
+      "US": 35.95
+    },
+    "detail": {
+      "eyebrow": "BPA-FREE · REUSABLE",
+      "bullets": [
+        "Airtight zipper seal keeps air and moisture out — no pump or machine needed",
+        "Reusable hundreds of times — wash, dry and refill instead of tossing single-use bags",
+        "BPA-free, food-safe material rated for both fridge and freezer",
+        "Stops freezer burn and keeps meat, fruit and leftovers fresh for longer",
+        "Available in 10-pack or a 30-pack covering 3 sizes for snacks through family meals"
+      ],
+      "features": [
+        {
+          "icon": "🔒",
+          "title": "Airtight by hand",
+          "text": "The double-zip seal locks out air without any pump, battery or machine."
+        },
+        {
+          "icon": "♻️",
+          "title": "Reuse, don't rebuy",
+          "text": "Wash and reuse the same bags hundreds of times instead of cling wrap or zip bags."
+        },
+        {
+          "icon": "🧊",
+          "title": "Fridge & freezer safe",
+          "text": "BPA-free material is rated safe for both fridge storage and deep freezing."
+        },
+        {
+          "icon": "📏",
+          "title": "A size for everything",
+          "text": "From snack-size to family-meal-size, with a 3-size variety pack available."
+        }
+      ],
+      "howItWorks": [
+        {
+          "title": "Fill",
+          "text": "Pack your food or items into the bag and line up the zipper track."
+        },
+        {
+          "title": "Seal",
+          "text": "Press the zipper shut from one end to the other to push out excess air."
+        },
+        {
+          "title": "Store",
+          "text": "Lay flat in the fridge, freezer or pantry — then wash and reuse once empty."
+        }
+      ],
+      "faq": [
+        {
+          "q": "Do I need a vacuum pump for these to work?",
+          "a": "No — the zipper track seals airtight by hand, no pump or machine required."
+        },
+        {
+          "q": "Can I reuse the bags?",
+          "a": "Yes — they're designed to be washed and reused hundreds of times."
+        },
+        {
+          "q": "What sizes are available?",
+          "a": "10-packs in 22x21cm, 26x28cm or 30x34cm, or a 30-pack covering all 3 sizes."
+        },
+        {
+          "q": "Are they safe for the freezer?",
+          "a": "Yes — the BPA-free material is rated safe for both fridge and freezer storage."
+        }
+      ]
+    }
+  },
+  {
     "id": "ergonomic-neck-pillow",
     "title": "Ergonomic 2-in-1 Memory Foam Travel Neck Pillow",
     "hook": "Plane, car or couch — this orthopedic pillow supports your neck everywhere you actually need it to.",
