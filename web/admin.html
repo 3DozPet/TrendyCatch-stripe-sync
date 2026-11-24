@@ -33,6 +33,7 @@
   .badge.tiktok { background:rgba(244,114,182,0.15); color:#f472b6; border-color:rgba(244,114,182,0.3); }
   .badge.google, .badge.youtube { background:rgba(251,191,36,0.15); color:#fbbf24; border-color:rgba(251,191,36,0.3); }
   .badge.direct, .badge.organic_search, .badge.referral { background:rgba(148,163,184,0.15); color:#94a3b8; border-color:rgba(148,163,184,0.3); }
+  .badge.account { background:rgba(167,139,250,0.15); color:#a78bfa; border-color:rgba(167,139,250,0.3); }
   .right { text-align:right; display:flex; flex-direction:column; gap:6px; align-items:flex-end; }
   .amount { font-size:18px; font-weight:800; }
   .enable-sound {
@@ -107,6 +108,10 @@
     <div class="breakdown">
       <h3>Orders by ad platform</h3>
       <div id="bySource"></div>
+    </div>
+    <div class="breakdown">
+      <h3>Orders by Stripe account</h3>
+      <div id="byAccount"></div>
     </div>
     <div class="breakdown">
       <h3>Live visitors by country</h3>
@@ -201,6 +206,9 @@ function renderOrder(order, isNew) {
   const el = document.createElement("div");
   el.className = "order" + (isNew ? " new" : "");
   const itemsText = (order.items || []).map((i) => `${i.quantity}× ${i.title}`).join(", ");
+  const accountBadge = order.accountLabel
+    ? `<span class="badge account">${escapeHtml(order.accountLabel)}</span>`
+    : "";
   el.innerHTML = `
     <div class="left">
       <div class="top-line">${order.orderName} — ${order.customerName}</div>
@@ -210,6 +218,7 @@ function renderOrder(order, isNew) {
     <div class="right">
       <div class="amount">${order.currency || ""} ${Number(order.total || 0).toFixed(2)}</div>
       <span class="badge ${sourceClass(order.source)}">${sourceLabel(order)}</span>
+      ${accountBadge}
     </div>
   `;
   return el;
@@ -276,6 +285,13 @@ async function pollStats() {
     renderBreakdown(
       "bySource",
       bySource.map(([key, val]) => [key.charAt(0).toUpperCase() + key.slice(1), val]),
+      (v) => `${v.orders} · $${v.revenue.toFixed(2)}`,
+    );
+
+    const byAccount = Object.entries(stats.byAccount || {}).sort((a, b) => b[1].orders - a[1].orders);
+    renderBreakdown(
+      "byAccount",
+      byAccount.map(([key, val]) => [val.label || key, val]),
       (v) => `${v.orders} · $${v.revenue.toFixed(2)}`,
     );
   } catch (e) {
