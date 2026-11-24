@@ -19,7 +19,11 @@
       "dishwashing-cloth-clip",
       "vacuum-sealer-pump",
       "mini-bag-sealer",
-      { "id": "vacuum-zipper-storage-bags", "variantSku": "10PC-30x34", "label": "10Pcs 30x34cm" }
+      {
+        "id": "vacuum-zipper-storage-bags",
+        "variantSku": "10PC-30x34",
+        "label": "10Pcs 30x34cm"
+      }
     ],
     "prices": {
       "AU": 79.95,
@@ -28,10 +32,10 @@
       "US": 53.95
     },
     "compareAt": {
-      "AU": 156.70,
-      "CA": 156.70,
-      "NZ": 174.70,
-      "US": 130.70
+      "AU": 156.7,
+      "CA": 156.7,
+      "NZ": 174.7,
+      "US": 130.7
     },
     "detail": {
       "eyebrow": "BUNDLE · SAVE BIG",
@@ -301,32 +305,32 @@
       "US": 37.95
     },
     "detail": {
-      "eyebrow": "NO-DRILL \u00b7 MAGNETIC MOUNT",
+      "eyebrow": "NO-DRILL · MAGNETIC MOUNT",
       "bullets": [
-        "Sticks to any wall, cabinet, or fridge in seconds \u2014 no drilling, no screws",
+        "Sticks to any wall, cabinet, or fridge in seconds — no drilling, no screws",
         "Strong magnetic grip holds remotes, phones, or small tools securely",
-        "3-piece set \u2014 one for the living room, bedroom, and kitchen",
+        "3-piece set — one for the living room, bedroom, and kitchen",
         "Removable and repositionable without damaging paint or surfaces",
         "Slim, low-profile design that blends into any room"
       ],
       "features": [
         {
-          "icon": "\ud83e\uddf2",
+          "icon": "🧲",
           "title": "Strong hold",
           "text": "Industrial-strength magnets keep your remote locked in place, even if the mount gets bumped."
         },
         {
-          "icon": "\ud83d\udee0\ufe0f",
+          "icon": "🛠️",
           "title": "Zero installation",
           "text": "Peel-and-stick adhesive backing means no drill, no screws, and no mess."
         },
         {
-          "icon": "\ud83d\udce6",
+          "icon": "📦",
           "title": "3-piece set",
-          "text": "Mount one in every room that needs it \u2014 living room, bedroom, home office."
+          "text": "Mount one in every room that needs it — living room, bedroom, home office."
         },
         {
-          "icon": "\ud83c\udfaf",
+          "icon": "🎯",
           "title": "Reposition anytime",
           "text": "Didn't get the spot right the first time? Pull it off and restick it somewhere better."
         }
@@ -342,17 +346,17 @@
         },
         {
           "title": "Snap on",
-          "text": "Snap your remote (or phone) onto the magnetic holder \u2014 done."
+          "text": "Snap your remote (or phone) onto the magnetic holder — done."
         }
       ],
       "faq": [
         {
           "q": "Will it damage my wall or paint?",
-          "a": "No \u2014 the adhesive backing is designed to be removed cleanly from most painted walls and cabinet surfaces."
+          "a": "No — the adhesive backing is designed to be removed cleanly from most painted walls and cabinet surfaces."
         },
         {
           "q": "How much weight can it hold?",
-          "a": "It's built to securely hold a standard remote control or similar lightweight item \u2014 not heavier tools or electronics."
+          "a": "It's built to securely hold a standard remote control or similar lightweight item — not heavier tools or electronics."
         },
         {
           "q": "Can I move it to a different spot later?",
@@ -472,9 +476,9 @@
       "US": 45.95
     },
     "detail": {
-      "eyebrow": "CORDLESS \u00b7 FOOD STORAGE",
+      "eyebrow": "CORDLESS · FOOD STORAGE",
       "bullets": [
-        "Removes air in seconds with one button press \u2014 no bulky machine needed",
+        "Removes air in seconds with one button press — no bulky machine needed",
         "USB-rechargeable pump, fully cordless and portable",
         "Reusable zipper bags from snack-size to family-meal-size",
         "Keeps fruit, meat, and leftovers fresh up to 5x longer",
@@ -483,24 +487,24 @@
       ],
       "features": [
         {
-          "icon": "\u26a1",
+          "icon": "⚡",
           "title": "Charges in no time",
           "text": "Built-in battery recharges fully via USB and lasts for dozens of seals before needing a top-up."
         },
         {
-          "icon": "\ud83e\uddca",
+          "icon": "🧊",
           "title": "Fridge & freezer friendly",
           "text": "Reusable bags are safe for both the fridge and freezer, so food stays fresh wherever you store it."
         },
         {
-          "icon": "\u267b\ufe0f",
+          "icon": "♻️",
           "title": "Reusable, not wasteful",
           "text": "Wash and reuse the same bags hundreds of times instead of throwing out cling wrap or single-use bags."
         },
         {
-          "icon": "\ud83d\udd07",
+          "icon": "🔇",
           "title": "Quiet, one-button operation",
-          "text": "Press once, the pump does the rest \u2014 no loud machine humming on your counter."
+          "text": "Press once, the pump does the rest — no loud machine humming on your counter."
         }
       ],
       "howItWorks": [
@@ -528,11 +532,11 @@
         },
         {
           "q": "Can I wash and reuse the bags?",
-          "a": "Yes \u2014 the bags are designed to be washed and reused many times."
+          "a": "Yes — the bags are designed to be washed and reused many times."
         },
         {
           "q": "Does it work for both wet and dry food?",
-          "a": "Yes, the bags are suitable for both \u2014 just make sure the top is dry before sealing for the best grip."
+          "a": "Yes, the bags are suitable for both — just make sure the top is dry before sealing for the best grip."
         }
       ]
     }
@@ -641,34 +645,34 @@
       "US": 57.95
     },
     "detail": {
-      "eyebrow": "HEAVY-DUTY \u00b7 NO STRAIN",
+      "eyebrow": "HEAVY-DUTY · NO STRAIN",
       "bullets": [
-        "Slide your washer, dryer, or fridge out solo \u2014 no lifting required",
-        "Adjustable 46.5\u201370cm fit, works with most standard appliances",
+        "Slide your washer, dryer, or fridge out solo — no lifting required",
+        "Adjustable 46.5–70cm fit, works with most standard appliances",
         "Non-slip rollers glide smoothly across tile, vinyl and hardwood",
         "Protects floors from scratches while you clean behind appliances",
         "Two-piece set supports both the front and back of the appliance"
       ],
       "features": [
         {
-          "icon": "\ud83d\udcaa",
+          "icon": "💪",
           "title": "No more straining",
           "text": "Slide the base under each side and roll heavy appliances without lifting or hurting your back."
         },
         {
-          "icon": "\ud83d\udccf",
+          "icon": "📏",
           "title": "Adjustable fit",
           "text": "Adjusts from 46.5cm to 70cm wide, fitting most washers, dryers, and fridges."
         },
         {
-          "icon": "\ud83d\udee1\ufe0f",
+          "icon": "🛡️",
           "title": "Floor-safe rollers",
           "text": "Smooth rollers glide across tile, vinyl, and hardwood without scratching."
         },
         {
-          "icon": "\ud83d\udd27",
+          "icon": "🔧",
           "title": "Simple to set up",
-          "text": "No tools or assembly \u2014 just slide the base into place and go."
+          "text": "No tools or assembly — just slide the base into place and go."
         }
       ],
       "howItWorks": [
@@ -678,11 +682,11 @@
         },
         {
           "title": "Adjust",
-          "text": "Extend the base to fit snugly against your appliance, 46.5\u201370cm."
+          "text": "Extend the base to fit snugly against your appliance, 46.5–70cm."
         },
         {
           "title": "Roll",
-          "text": "Roll the appliance out to clean behind it, then roll it back \u2014 solo, no straining."
+          "text": "Roll the appliance out to clean behind it, then roll it back — solo, no straining."
         }
       ],
       "faq": [
@@ -692,7 +696,7 @@
         },
         {
           "q": "Can one person use it alone?",
-          "a": "Yes \u2014 that's the main point. Slide the bases under each side and you can roll the appliance out solo."
+          "a": "Yes — that's the main point. Slide the bases under each side and you can roll the appliance out solo."
         },
         {
           "q": "Will it scratch my floors?",
@@ -700,7 +704,7 @@
         },
         {
           "q": "Does it come fully assembled?",
-          "a": "Yes, no tools or assembly required \u2014 just position it under the appliance."
+          "a": "Yes, no tools or assembly required — just position it under the appliance."
         }
       ]
     }
@@ -936,6 +940,162 @@
       "CA": 126.95,
       "NZ": 139.95,
       "US": 90.95
+    }
+  },
+  {
+    "id": "mini-vacuum-pump-sealer",
+    "title": "USB Rechargeable Mini Vacuum Pump for Food Storage",
+    "hook": "One button press pulls the air out and locks freshness in — this pocket-size, cordless pump works with reusable zipper bags to keep food fresh for days longer.",
+    "images": [
+      "https://ae-pic-a1.aliexpress-media.com/kf/S2efeec130ddf48feb72b0aba5158f895y.jpg",
+      "https://ae-pic-a1.aliexpress-media.com/kf/S829216b514934b0aa94f312aa8aea9bdf.png",
+      "https://ae-pic-a1.aliexpress-media.com/kf/Sb79ee4baadfa444bb12cf4ca88ad085bY.png",
+      "https://ae-pic-a1.aliexpress-media.com/kf/Sd1f72d54bed84f1f835ff485329e75fbA.png",
+      "https://ae-pic-a1.aliexpress-media.com/kf/S4ab95d944ed64804bcc495b3a82b884az.png"
+    ],
+    "variant": "Pump Only",
+    "variants": [
+      {
+        "label": "Pump Only (No Bags)",
+        "sku": "PUMP-ONLY",
+        "prices": {
+          "AU": 22.95,
+          "CA": 22.95,
+          "NZ": 25.95,
+          "US": 19.95
+        },
+        "compareAt": {
+          "AU": 40.95,
+          "CA": 40.95,
+          "NZ": 46.95,
+          "US": 35.95
+        }
+      },
+      {
+        "label": "30Pcs Bags (3 Sizes)",
+        "sku": "30PC-3SIZES",
+        "prices": {
+          "AU": 17.95,
+          "CA": 17.95,
+          "NZ": 20.95,
+          "US": 14.95
+        },
+        "compareAt": {
+          "AU": 31.95,
+          "CA": 31.95,
+          "NZ": 37.95,
+          "US": 26.95
+        }
+      },
+      {
+        "label": "10Pcs Bags 26x28cm",
+        "sku": "10PC-26x28",
+        "prices": {
+          "AU": 20.95,
+          "CA": 20.95,
+          "NZ": 23.95,
+          "US": 17.95
+        },
+        "compareAt": {
+          "AU": 37.95,
+          "CA": 37.95,
+          "NZ": 42.95,
+          "US": 31.95
+        }
+      },
+      {
+        "label": "10Pcs Bags 30x34cm",
+        "sku": "10PC-30x34",
+        "prices": {
+          "AU": 18.95,
+          "CA": 18.95,
+          "NZ": 21.95,
+          "US": 15.95
+        },
+        "compareAt": {
+          "AU": 33.95,
+          "CA": 33.95,
+          "NZ": 39.95,
+          "US": 28.95
+        }
+      }
+    ],
+    "prices": {
+      "AU": 22.95,
+      "CA": 22.95,
+      "NZ": 25.95,
+      "US": 19.95
+    },
+    "compareAt": {
+      "AU": 40.95,
+      "CA": 40.95,
+      "NZ": 46.95,
+      "US": 35.95
+    },
+    "detail": {
+      "eyebrow": "CORDLESS · FOOD STORAGE",
+      "bullets": [
+        "USB-rechargeable pump removes air in seconds at the press of one button",
+        "Pocket-size and fully cordless — no cables or bulky countertop machine",
+        "Works with reusable zipper storage bags, sold separately or as a bundle",
+        "Keeps fruit, meat, leftovers and snacks fresh for days longer",
+        "Helps stop freezer burn and fridge odours",
+        "Compact enough to store in a kitchen drawer"
+      ],
+      "features": [
+        {
+          "icon": "⚡",
+          "title": "Charges in no time",
+          "text": "Built-in battery recharges fully via USB and lasts for dozens of seals on a single charge."
+        },
+        {
+          "icon": "💪",
+          "title": "One-button vacuum",
+          "text": "Press the valve and the pump pulls the air out in seconds — no setup required."
+        },
+        {
+          "icon": "🧊",
+          "title": "Fresher, longer",
+          "text": "Removing air slows spoilage so food keeps its taste and texture for days longer."
+        },
+        {
+          "icon": "📏",
+          "title": "A size for everything",
+          "text": "Pair it with bags from snack-size to family-meal-size, sold in the same listing."
+        }
+      ],
+      "howItWorks": [
+        {
+          "title": "Fill",
+          "text": "Pack your food into a compatible zipper bag and seal the track most of the way."
+        },
+        {
+          "title": "Seal & pump",
+          "text": "Press the pump onto the bag’s valve and press the button to draw the air out."
+        },
+        {
+          "title": "Store",
+          "text": "Lay flat in the fridge, freezer or pantry — recharge the pump via USB when needed."
+        }
+      ],
+      "faq": [
+        {
+          "q": "Do I need special bags for this pump?",
+          "a": "It works with reusable zipper vacuum bags, available in several sizes in this listing."
+        },
+        {
+          "q": "How long does the battery last?",
+          "a": "A full USB charge is good for dozens of seals before it needs recharging."
+        },
+        {
+          "q": "Can I buy bags without the pump, or the pump alone?",
+          "a": "Yes — choose \"Pump Only\" for just the device, or a bag pack if you already have one."
+        },
+        {
+          "q": "Is it safe for the freezer?",
+          "a": "Yes — sealed bags are safe for fridge storage and deep freezing."
+        }
+      ]
     }
   }
 ]
