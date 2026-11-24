@@ -50,15 +50,37 @@
   .pdp-top { display: grid; grid-template-columns: 1fr 1fr; gap: 36px; align-items: start; }
   @media (max-width: 800px) { .pdp-top { grid-template-columns: 1fr; } }
 
+  .gallery { position: relative; }
   .gallery .main-img { position: relative; aspect-ratio: 1/1; background: #f1f1f1; border-radius: 16px; overflow: hidden; display: flex; align-items: center; justify-content: center; }
   .gallery .badges { position: absolute; top: 10px; left: 10px; display: flex; gap: 6px; z-index: 2; }
   .gallery .badge.sale { background: var(--price); color: #fff; font-size: 12px; font-weight: 800; padding: 5px 11px; border-radius: 999px; box-shadow: 0 1px 3px rgba(0,0,0,0.15); }
   .gallery .badge.bundle { background: var(--green); color: #fff; font-size: 12px; font-weight: 800; padding: 5px 11px; border-radius: 999px; box-shadow: 0 1px 3px rgba(0,0,0,0.15); }
   .buybox .compare-price { font-size: 15px; color: var(--muted); text-decoration: line-through; }
   .gallery .main-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
-  .gallery .thumbs { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
-  .gallery .thumbs img { width: 60px; height: 60px; object-fit: cover; border-radius: 8px; cursor: pointer; border: 2px solid transparent; opacity: 0.7; }
-  .gallery .thumbs img.active { opacity: 1; border-color: var(--accent); }
+
+  /* Small multi-photo grid, used instead of one big hero photo whenever a
+     product has more than one image (e.g. a 6-item bundle) — sized to stay
+     thumb-friendly on an iPhone/Android screen, 2-up on very narrow phones. */
+  .gallery .photo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .gallery .photo-grid img {
+    width: 100%; aspect-ratio: 1/1; object-fit: cover; border-radius: 12px; display: block;
+    cursor: zoom-in; -webkit-tap-highlight-color: transparent;
+  }
+  @media (max-width: 420px) {
+    .gallery .photo-grid { grid-template-columns: repeat(2, 1fr); gap: 6px; }
+  }
+
+  .lightbox {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.92); z-index: 50; padding: 24px;
+    display: none; align-items: center; justify-content: center;
+  }
+  .lightbox.show { display: flex; }
+  .lightbox img { max-width: 100%; max-height: 100%; border-radius: 10px; object-fit: contain; }
+  .lightbox .lightbox-close {
+    position: absolute; top: 14px; right: 16px; color: #fff; font-size: 32px; line-height: 1;
+    background: none; border: none; cursor: pointer; padding: 8px 12px; z-index: 1;
+  }
+  body.lightbox-open { overflow: hidden; }
 
   .buybox .eyebrow { font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--green); margin: 0 0 8px; }
   .buybox h1 { font-size: 28px; line-height: 1.2; margin: 0 0 10px; letter-spacing: -0.01em; font-weight: 800; }
@@ -100,9 +122,6 @@
   .step .num::before { content: counter(step); }
   .step .title { font-weight: 700; font-size: 15px; margin-bottom: 6px; }
   .step .text { font-size: 13px; color: var(--muted); line-height: 1.5; }
-
-  .pdp-gallery-grid { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
-  .pdp-gallery-grid img { width: 100%; aspect-ratio: 1/1; object-fit: cover; border-radius: 12px; cursor: zoom-in; }
 
   .faq-item { border-bottom: 1px solid var(--border); padding: 16px 0; }
   .faq-item summary { cursor: pointer; font-weight: 700; font-size: 15px; list-style: none; display: flex; justify-content: space-between; align-items: center; }
@@ -161,8 +180,9 @@
   <div class="pdp">
     <div class="pdp-top">
       <div class="gallery">
-        <div class="main-img"><div class="badges" id="badges"></div><img id="mainImg" src="" alt="" /></div>
-        <div class="thumbs" id="thumbs"></div>
+        <div class="badges" id="badges"></div>
+        <div class="main-img" id="mainImgWrap"><img id="mainImg" src="" alt="" /></div>
+        <div class="photo-grid" id="photoGrid" style="display:none;"></div>
       </div>
       <div class="buybox">
         <p class="eyebrow" id="eyebrow"></p>
@@ -201,11 +221,6 @@
     <div class="steps" id="stepsGrid"></div>
   </section>
 
-  <section class="block" id="galleryBlock" style="display:none;">
-    <h2>See it up close</h2>
-    <div class="pdp-gallery-grid" id="galleryGrid"></div>
-  </section>
-
   <section class="block" id="faqBlock" style="display:none;">
     <h2>Questions, answered</h2>
     <div id="faqList"></div>
@@ -237,7 +252,26 @@
 
 <div class="toast" id="toast"></div>
 
+<div class="lightbox" id="lightbox">
+  <button class="lightbox-close" id="lightboxClose" aria-label="Close">&times;</button>
+  <img id="lightboxImg" src="" alt="" />
+</div>
+
 <script>
+function openLightbox(src, alt) {
+  document.getElementById("lightboxImg").src = src;
+  document.getElementById("lightboxImg").alt = alt || "";
+  document.getElementById("lightbox").classList.add("show");
+  document.body.classList.add("lightbox-open");
+}
+function closeLightbox() {
+  document.getElementById("lightbox").classList.remove("show");
+  document.body.classList.remove("lightbox-open");
+}
+document.getElementById("lightbox").addEventListener("click", closeLightbox);
+document.getElementById("lightboxClose").addEventListener("click", (e) => { e.stopPropagation(); closeLightbox(); });
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeLightbox(); });
+
 document.getElementById("year").textContent = new Date().getFullYear();
 
 const COUNTRY_SYMBOL = { AU: "A$", NZ: "NZ$", US: "$", CA: "C$" };
@@ -380,18 +414,25 @@ function renderProduct() {
   const metaDesc = document.querySelector('meta[name="description"]');
   if (metaDesc) metaDesc.setAttribute("content", product.hook || product.title);
 
-  // Gallery
-  document.getElementById("mainImg").src = images[0] || "";
-  document.getElementById("mainImg").alt = product.title;
-  const thumbs = document.getElementById("thumbs");
-  thumbs.innerHTML = images.map((src, i) => `<img src="${src}" data-full="${src}" class="${i === 0 ? "active" : ""}" alt="${escapeHtml(product.title)} view ${i + 1}" />`).join("");
-  thumbs.querySelectorAll("img").forEach((img) => {
-    img.addEventListener("click", () => {
-      document.getElementById("mainImg").src = img.dataset.full;
-      thumbs.querySelectorAll("img").forEach((t) => t.classList.remove("active"));
-      img.classList.add("active");
+  // Gallery — one product photo keeps the single big hero image; more than
+  // one (e.g. a 6-item bundle) switches to a small grid showing every photo
+  // at once, sized to stay tap-friendly on an iPhone/Android screen. Tapping
+  // a tile opens it full-screen in the lightbox for a closer look.
+  const mainImgWrap = document.getElementById("mainImgWrap");
+  const photoGrid = document.getElementById("photoGrid");
+  if (images.length > 1) {
+    mainImgWrap.style.display = "none";
+    photoGrid.style.display = "";
+    photoGrid.innerHTML = images.map((src, i) => `<img src="${src}" alt="${escapeHtml(product.title)} photo ${i + 1}" loading="${i < 3 ? "eager" : "lazy"}" />`).join("");
+    photoGrid.querySelectorAll("img").forEach((img) => {
+      img.addEventListener("click", () => openLightbox(img.src, img.alt));
     });
-  });
+  } else {
+    mainImgWrap.style.display = "";
+    photoGrid.style.display = "none";
+    document.getElementById("mainImg").src = images[0] || "";
+    document.getElementById("mainImg").alt = product.title;
+  }
 
   // Bullets — product-specific list if we have one, otherwise fall back to
   // the hook + the plain variant description so the page never looks empty.
@@ -439,12 +480,6 @@ function renderProduct() {
         <div class="text">${escapeHtml(s.text)}</div>
       </div>
     `).join("");
-  }
-
-  // Bigger image gallery block (same images, larger grid)
-  if (images.length > 1) {
-    document.getElementById("galleryBlock").style.display = "";
-    document.getElementById("galleryGrid").innerHTML = images.map((src) => `<img src="${src}" alt="${escapeHtml(product.title)}" loading="lazy" />`).join("");
   }
 
   // FAQ
