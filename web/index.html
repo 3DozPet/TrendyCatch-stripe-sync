@@ -169,6 +169,7 @@
     box-shadow: 0 1px 3px rgba(0,0,0,0.15);
   }
   .card .badge.sale { background: var(--price); color: #fff; }
+  .card .badge.bundle { background: var(--green); color: #fff; }
   .card .thumb-strip { display: flex; gap: 6px; padding: 8px 10px 0; }
   .card .thumb-strip img {
     width: 36px; height: 36px; object-fit: cover; border-radius: 6px; cursor: pointer;
@@ -536,10 +537,10 @@ function priceRowHtml(symbol, productId, pricing) {
   `;
 }
 
-function badgesHtml(pricing) {
-  return pricing.pctOff > 0
-    ? `<div class="badges"><span class="badge sale">-${pricing.pctOff}%</span></div>`
-    : "";
+function badgesHtml(pricing, productId) {
+  const bundleBadge = productId === "home-gadget-bundle" ? `<span class="badge bundle">BUNDLE</span>` : "";
+  const saleBadge = pricing.pctOff > 0 ? `<span class="badge sale">-${pricing.pctOff}%</span>` : "";
+  return bundleBadge || saleBadge ? `<div class="badges">${bundleBadge}${saleBadge}</div>` : "";
 }
 
 function renderProducts() {
@@ -578,7 +579,7 @@ function renderProducts() {
     card.className = "card";
     card.innerHTML = `
       <div class="thumb">
-        ${badgesHtml(pricing)}
+        ${badgesHtml(pricing, product.id)}
         <img src="${primaryImage}" alt="${escapeHtml(product.title)}" loading="lazy"
              onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
         <div class="fallback" style="display:none;">📦</div>
@@ -624,7 +625,7 @@ function renderProducts() {
       const pricing = getPricing(product, sel.value);
       card.querySelector(".price-row").innerHTML = priceRowHtml(symbol, productId, pricing);
       const badges = card.querySelector(".badges");
-      const newBadges = badgesHtml(pricing);
+      const newBadges = badgesHtml(pricing, productId);
       if (badges) badges.outerHTML = newBadges;
       else if (newBadges) card.querySelector(".thumb").insertAdjacentHTML("afterbegin", newBadges);
     });
@@ -707,8 +708,16 @@ function renderBundleBanner() {
     return;
   }
   const symbol = COUNTRY_SYMBOL[currentCountry] || "$";
+  // Each bundleItems entry is either a plain product id (uses that product's
+  // default/base price) or { id, variantSku, label } to pin a specific
+  // variant (e.g. a particular bag size) instead of the product's default.
   const items = bundle.bundleItems
-    .map((id) => products.find((p) => p.id === id))
+    .map((entry) => {
+      const id = typeof entry === "string" ? entry : entry.id;
+      const variantSku = typeof entry === "string" ? undefined : entry.variantSku;
+      const product = products.find((p) => p.id === id);
+      return product ? { product, variantSku, label: typeof entry === "object" ? entry.label : undefined } : null;
+    })
     .filter(Boolean);
   if (!items.length) {
     banner.style.display = "none";
@@ -719,19 +728,20 @@ function renderBundleBanner() {
   document.getElementById("bundleHook").textContent = bundle.hook || "";
 
   document.getElementById("bundleItems").innerHTML = items
-    .map((p) => {
-      const pricing = getPricing(p, undefined);
+    .map(({ product: p, variantSku, label }) => {
+      const pricing = getPricing(p, variantSku);
       const img = (p.images && p.images[0]) || p.image || "";
+      const name = label ? `${p.title} (${label})` : p.title;
       return `<div class="bundle-item">
-        <img src="${img}" loading="lazy" alt="${escapeHtml(p.title)}" />
-        <div class="bi-name">${escapeHtml(p.title)}</div>
+        <img src="${img}" loading="lazy" alt="${escapeHtml(name)}" />
+        <div class="bi-name">${escapeHtml(name)}</div>
         <div class="bi-price">${symbol}${pricing.price.toFixed(2)}</div>
       </div>`;
     })
     .join("");
 
   const bundlePricing = getPricing(bundle, undefined);
-  const totalSeparate = items.reduce((sum, p) => sum + getPricing(p, undefined).price, 0);
+  const totalSeparate = items.reduce((sum, { product: p, variantSku }) => sum + getPricing(p, variantSku).price, 0);
   const savings = totalSeparate - bundlePricing.price;
   const pctOff = totalSeparate > 0 ? Math.round((savings / totalSeparate) * 100) : 0;
 

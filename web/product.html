@@ -53,6 +53,7 @@
   .gallery .main-img { position: relative; aspect-ratio: 1/1; background: #f1f1f1; border-radius: 16px; overflow: hidden; display: flex; align-items: center; justify-content: center; }
   .gallery .badges { position: absolute; top: 10px; left: 10px; display: flex; gap: 6px; z-index: 2; }
   .gallery .badge.sale { background: var(--price); color: #fff; font-size: 12px; font-weight: 800; padding: 5px 11px; border-radius: 999px; box-shadow: 0 1px 3px rgba(0,0,0,0.15); }
+  .gallery .badge.bundle { background: var(--green); color: #fff; font-size: 12px; font-weight: 800; padding: 5px 11px; border-radius: 999px; box-shadow: 0 1px 3px rgba(0,0,0,0.15); }
   .buybox .compare-price { font-size: 15px; color: var(--muted); text-decoration: line-through; }
   .gallery .main-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .gallery .thumbs { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
@@ -363,7 +364,9 @@ function updatePriceDisplay() {
   }
 
   const badgesEl = document.getElementById("badges");
-  badgesEl.innerHTML = pricing.pctOff > 0 ? `<span class="badge sale">-${pricing.pctOff}%</span>` : "";
+  const bundleBadge = product.id === "home-gadget-bundle" ? `<span class="badge bundle">BUNDLE</span>` : "";
+  const saleBadge = pricing.pctOff > 0 ? `<span class="badge sale">-${pricing.pctOff}%</span>` : "";
+  badgesEl.innerHTML = bundleBadge + saleBadge;
 }
 
 function renderProduct() {

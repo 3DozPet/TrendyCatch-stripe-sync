@@ -4,22 +4,22 @@
     "title": "Home Gadget Essentials Bundle (6-in-1)",
     "hook": "Six of our best-selling fixes, bundled at one low price — everything here costs more bought separately.",
     "images": [
-      "https://ae-pic-a1.aliexpress-media.com/kf/S51a4fb253a6144539471cc76b2d3ccc9x.jpeg",
-      "https://ae-pic-a1.aliexpress-media.com/kf/Sac2d286066b843919f2f67290e3e61c7k.png",
       "https://ae-pic-a1.aliexpress-media.com/kf/Sa51d755f9f6c41e1bf523229e3ae963fz.jpg",
-      "https://ae-pic-a1.aliexpress-media.com/kf/S4b8941cb093f42f7a96c769e613baac1v.jpg",
+      "https://ae-pic-a1.aliexpress-media.com/kf/S51a4fb253a6144539471cc76b2d3ccc9x.jpeg",
       "https://ae-pic-a1.aliexpress-media.com/kf/Sb9dd59c0b78348a487bb2d9ba7eaff31Y.jpg",
-      "https://ae-pic-a1.aliexpress-media.com/kf/S631d01852afa49c39ea6f4a3166d2437K.jpg"
+      "https://ae-pic-a1.aliexpress-media.com/kf/S338537c544a94a068e8781de75686e94U.jpg",
+      "https://ae-pic-a1.aliexpress-media.com/kf/Sad42db1beb3b4ea2b7ebf204caa4b949q.jpg",
+      "https://ae-pic-a1.aliexpress-media.com/kf/Se2c7dfdfb93743f3af733602127914c8W.jpg"
     ],
-    "variant": "Includes: Razor Holder, USB-C Charging Cable + Stand, Magnetic Remote Wall Holder, Washing Machine Drip Tray, Dishwashing Cloth Clip (3pc), Magnetic Cabinet Catches (6pc)",
+    "variant": "Includes: No-Drill Magnetic Remote Control Wall Holder (3pc), Stainless Steel Wall Razor Holder, No-Punch Dishwashing Cloth Storage Clip (3pc), Rechargeable Vacuum Sealer Pump + Bags, Mini Rechargeable Bag Heat Sealer, 10-Pack BPA-Free Vacuum Zipper Storage Bags (30x34cm)",
     "variants": [],
     "bundleItems": [
-      "razor-holder",
-      "usb-c-cable-stand",
       "magnetic-wall-holder",
-      "washing-machine-drip-tray",
+      "razor-holder",
       "dishwashing-cloth-clip",
-      "magnetic-cabinet-catches"
+      "vacuum-sealer-pump",
+      "mini-bag-sealer",
+      { "id": "vacuum-zipper-storage-bags", "variantSku": "10PC-30x34", "label": "10Pcs 30x34cm" }
     ],
     "prices": {
       "AU": 79.95,
@@ -28,10 +28,10 @@
       "US": 53.95
     },
     "compareAt": {
-      "AU": 152.70,
-      "CA": 152.70,
-      "NZ": 170.70,
-      "US": 127.70
+      "AU": 156.70,
+      "CA": 156.70,
+      "NZ": 174.70,
+      "US": 130.70
     },
     "detail": {
       "eyebrow": "BUNDLE · SAVE BIG",
@@ -39,7 +39,7 @@
         "6 of our most popular problem-solvers in one order",
         "Priced well below buying each item separately",
         "One checkout, one delivery, free shipping included",
-        "Covers razors, cables, remotes, laundry, dishes and cabinets — a fix for every room"
+        "Covers razors, remotes, dishwashing, and food storage/vacuum sealing — a fix for bathroom and kitchen alike"
       ],
       "features": [
         {
