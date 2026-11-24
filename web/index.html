@@ -83,6 +83,53 @@
     .hero-side .shot .tag { font-size: 10px; }
     .hero-inner { max-width: 230px; }
   }
+  .bundle-banner {
+    background: var(--card); border-bottom: 1px solid var(--border);
+    padding: 24px 20px;
+  }
+  .bundle-wrap { max-width: 1180px; margin: 0 auto; }
+  .bundle-head { text-align: center; margin: 0 0 16px; }
+  .bundle-head .eyebrow {
+    font-size: 11px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--price); margin: 0 0 4px;
+  }
+  .bundle-head h2 { font-size: 20px; margin: 0 0 4px; letter-spacing: -0.01em; }
+  .bundle-head p { color: var(--muted); font-size: 13px; margin: 0; }
+  .bundle-layout {
+    display: flex; gap: 20px; align-items: stretch; flex-wrap: wrap;
+  }
+  .bundle-items {
+    flex: 1 1 520px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+  }
+  .bundle-item {
+    border: 1px solid var(--border); border-radius: 12px; padding: 8px; text-align: center;
+    background: var(--bg);
+  }
+  .bundle-item img { width: 100%; aspect-ratio: 1/1; object-fit: cover; border-radius: 8px; display: block; }
+  .bundle-item .bi-name { font-size: 11px; font-weight: 650; margin: 6px 0 2px; line-height: 1.25; }
+  .bundle-item .bi-price { font-size: 12px; color: var(--muted); text-decoration: line-through; }
+  .bundle-summary {
+    flex: 0 0 260px; background: var(--green); background-image: linear-gradient(180deg, var(--green) 0%, var(--green-dark) 100%);
+    border-radius: 14px; padding: 18px; color: #fff; display: flex; flex-direction: column; justify-content: center; gap: 8px;
+    text-align: center;
+  }
+  .bundle-summary .bs-total { font-size: 13px; color: rgba(255,255,255,0.8); text-decoration: line-through; }
+  .bundle-summary .bs-price { font-size: 30px; font-weight: 800; color: var(--accent); line-height: 1.1; }
+  .bundle-summary .bs-save {
+    font-size: 13px; font-weight: 700; background: rgba(255,255,255,0.15); border-radius: 999px;
+    padding: 4px 10px; display: inline-block; margin: 0 auto;
+  }
+  .bundle-summary .bs-buy {
+    margin-top: 8px; display: block; text-decoration: none; text-align: center;
+    background: var(--accent); color: var(--ink); font-weight: 800; font-size: 14px;
+    border-radius: 999px; padding: 12px 14px;
+  }
+  .bundle-summary .bs-buy:hover { background: var(--accent-dark); }
+  @media (max-width: 680px) {
+    .bundle-items { grid-template-columns: repeat(3, 1fr); }
+    .bundle-item .bi-name { font-size: 10px; }
+    .bundle-summary { flex: 1 1 100%; }
+  }
   .trust-strip {
     background: #fff; border-bottom: 1px solid var(--border);
     display: grid; grid-template-columns: repeat(4, 1fr);
@@ -225,6 +272,25 @@
       </div>
     </div>
     <div class="hero-side" id="heroPhotosRight"></div>
+  </div>
+</section>
+
+<section class="bundle-banner" id="bundleBanner" style="display:none;">
+  <div class="bundle-wrap">
+    <div class="bundle-head">
+      <p class="eyebrow">Bundle &amp; Save</p>
+      <h2 id="bundleTitle">Home Gadget Essentials Bundle</h2>
+      <p id="bundleHook"></p>
+    </div>
+    <div class="bundle-layout">
+      <div class="bundle-items" id="bundleItems"></div>
+      <div class="bundle-summary">
+        <div class="bs-total" id="bundleTotal"></div>
+        <div class="bs-price" id="bundlePrice"></div>
+        <div class="bs-save" id="bundleSave"></div>
+        <a class="bs-buy" id="bundleBuyBtn" href="#">Get the Bundle</a>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -631,6 +697,54 @@ function renderHeroPhotos() {
   right.innerHTML = picks.slice(3, 6).map(shotHtml).join("");
 }
 
+const BUNDLE_PRODUCT_ID = "home-gadget-bundle";
+
+function renderBundleBanner() {
+  const bundle = products.find((p) => p.id === BUNDLE_PRODUCT_ID);
+  const banner = document.getElementById("bundleBanner");
+  if (!bundle || !Array.isArray(bundle.bundleItems) || !bundle.bundleItems.length) {
+    if (banner) banner.style.display = "none";
+    return;
+  }
+  const symbol = COUNTRY_SYMBOL[currentCountry] || "$";
+  const items = bundle.bundleItems
+    .map((id) => products.find((p) => p.id === id))
+    .filter(Boolean);
+  if (!items.length) {
+    banner.style.display = "none";
+    return;
+  }
+
+  document.getElementById("bundleTitle").textContent = bundle.title;
+  document.getElementById("bundleHook").textContent = bundle.hook || "";
+
+  document.getElementById("bundleItems").innerHTML = items
+    .map((p) => {
+      const pricing = getPricing(p, undefined);
+      const img = (p.images && p.images[0]) || p.image || "";
+      return `<div class="bundle-item">
+        <img src="${img}" loading="lazy" alt="${escapeHtml(p.title)}" />
+        <div class="bi-name">${escapeHtml(p.title)}</div>
+        <div class="bi-price">${symbol}${pricing.price.toFixed(2)}</div>
+      </div>`;
+    })
+    .join("");
+
+  const bundlePricing = getPricing(bundle, undefined);
+  const totalSeparate = items.reduce((sum, p) => sum + getPricing(p, undefined).price, 0);
+  const savings = totalSeparate - bundlePricing.price;
+  const pctOff = totalSeparate > 0 ? Math.round((savings / totalSeparate) * 100) : 0;
+
+  document.getElementById("bundleTotal").textContent = `Buy separately: ${symbol}${totalSeparate.toFixed(2)}`;
+  document.getElementById("bundlePrice").textContent = `${symbol}${bundlePricing.price.toFixed(2)}`;
+  document.getElementById("bundleSave").textContent = savings > 0
+    ? `You save ${symbol}${savings.toFixed(2)} (${pctOff}% off)`
+    : "";
+  document.getElementById("bundleBuyBtn").href = `/product.html?id=${BUNDLE_PRODUCT_ID}`;
+
+  banner.style.display = "";
+}
+
 async function init() {
   const [country, productsRes] = await Promise.all([detectCountry(), fetch("/products.json")]);
   currentCountry = country;
@@ -639,6 +753,7 @@ async function init() {
   document.getElementById("geoPill").textContent = `Shipping to ${COUNTRY_LABEL[currentCountry] || currentCountry}`;
   renderProducts();
   renderHeroPhotos();
+  renderBundleBanner();
 
   if (new URLSearchParams(location.search).get("cancelled")) {
     showToast("Checkout cancelled — no charge was made.");

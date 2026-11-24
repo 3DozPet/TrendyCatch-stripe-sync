@@ -1,5 +1,76 @@
 [
   {
+    "id": "home-gadget-bundle",
+    "title": "Home Gadget Essentials Bundle (6-in-1)",
+    "hook": "Six of our best-selling fixes, bundled at one low price — everything here costs more bought separately.",
+    "images": [
+      "https://ae-pic-a1.aliexpress-media.com/kf/S51a4fb253a6144539471cc76b2d3ccc9x.jpeg",
+      "https://ae-pic-a1.aliexpress-media.com/kf/Sac2d286066b843919f2f67290e3e61c7k.png",
+      "https://ae-pic-a1.aliexpress-media.com/kf/Sa51d755f9f6c41e1bf523229e3ae963fz.jpg",
+      "https://ae-pic-a1.aliexpress-media.com/kf/S4b8941cb093f42f7a96c769e613baac1v.jpg",
+      "https://ae-pic-a1.aliexpress-media.com/kf/Sb9dd59c0b78348a487bb2d9ba7eaff31Y.jpg",
+      "https://ae-pic-a1.aliexpress-media.com/kf/S631d01852afa49c39ea6f4a3166d2437K.jpg"
+    ],
+    "variant": "Includes: Razor Holder, USB-C Charging Cable + Stand, Magnetic Remote Wall Holder, Washing Machine Drip Tray, Dishwashing Cloth Clip (3pc), Magnetic Cabinet Catches (6pc)",
+    "variants": [],
+    "bundleItems": [
+      "razor-holder",
+      "usb-c-cable-stand",
+      "magnetic-wall-holder",
+      "washing-machine-drip-tray",
+      "dishwashing-cloth-clip",
+      "magnetic-cabinet-catches"
+    ],
+    "prices": {
+      "AU": 79.95,
+      "CA": 75.95,
+      "NZ": 96.95,
+      "US": 53.95
+    },
+    "compareAt": {
+      "AU": 152.70,
+      "CA": 152.70,
+      "NZ": 170.70,
+      "US": 127.70
+    },
+    "detail": {
+      "eyebrow": "BUNDLE · SAVE BIG",
+      "bullets": [
+        "6 of our most popular problem-solvers in one order",
+        "Priced well below buying each item separately",
+        "One checkout, one delivery, free shipping included",
+        "Covers razors, cables, remotes, laundry, dishes and cabinets — a fix for every room"
+      ],
+      "features": [
+        {
+          "icon": "📦",
+          "title": "6 products, 1 order",
+          "text": "Everything ships together — no need to check out six separate times."
+        },
+        {
+          "icon": "💰",
+          "title": "Real savings",
+          "text": "The bundle price is well under what these six items cost bought one at a time."
+        },
+        {
+          "icon": "🏠",
+          "title": "A fix for every room",
+          "text": "Bathroom, kitchen, laundry and living room — covered in one go."
+        }
+      ],
+      "faq": [
+        {
+          "q": "Can I swap an item in the bundle?",
+          "a": "The bundle ships as the fixed 6-item set shown here — to pick different items, order them individually instead."
+        },
+        {
+          "q": "Does the bundle ship as one package?",
+          "a": "Yes — all 6 items are sent together as a single order with free shipping."
+        }
+      ]
+    }
+  },
+  {
     "id": "razor-holder",
     "title": "Stainless Steel Wall Razor Holder",
     "hook": "No more rusty razors cluttering your sink — this punch-free steel holder keeps your shaver dry and off the counter in seconds.",
