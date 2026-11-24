@@ -272,11 +272,12 @@ export async function handleStripeOrderSync(
 
     const result = await shopifyGraphql(env.SHOPIFY_STORE_DOMAIN!, env.SHOPIFY_ADMIN_TOKEN!, mutation, {
       order: orderInput,
-      // Matches the rest of this dashboard: no automatic Shopify receipt.
-      // Order confirmation to the customer is the dashboard's own
+      // Automatic Shopify order-confirmation email to the customer, for
+      // orders from both Stripe accounts. The dashboard's manual
       // "Send order confirmation" action (admin-send-confirmation.ts, via
-      // Resend), which applies the same way to orders from both accounts.
-      options: { sendReceipt: false, sendFulfillmentReceipt: false },
+      // Resend) still exists as a fallback/resend tool, but is no longer
+      // required for the first email.
+      options: { sendReceipt: true, sendFulfillmentReceipt: false },
     })
 
     const userErrors = result?.data?.orderCreate?.userErrors ?? []
