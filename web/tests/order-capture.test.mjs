@@ -1,0 +1,9 @@
+import {stripTypeScriptTypes} from 'node:module'; import {readFileSync} from 'node:fs'; import {DatabaseSync} from 'node:sqlite'; import assert from 'node:assert/strict';
+const db = new DatabaseSync(':memory:'); db.exec('PRAGMA foreign_keys=ON'); db.exec(readFileSync('migrations/0001_orders.sql','utf8'));
+const d1={prepare(sql){return {bind(...args){return {sql,args}}}},async batch(stmts){ db.exec('BEGIN'); try { for (const s of stmts) db.prepare(s.sql).run(...s.args); db.exec('COMMIT') } catch(e){ db.exec('ROLLBACK'); throw e } }};
+const source=readFileSync('functions/stripe-order-sync.ts','utf8').replaceAll('export const ','const '); const capture=new Function(stripTypeScriptTypes(source)+'; return recordOrderHistory')();
+const sample={id:'cs_test_123',created:1700000000,payment_status:'paid',currency:'aud',amount_total:2295,customer_details:{name:'Test',email:'test@example.com',address:{country:'AU'}},collected_information:{shipping_details:{name:'Test',address:{line1:'Test St',country:'AU'}}},metadata:{product_id:'razor-holder',variant:'1 Pack'},line_items:{data:[{id:'li_test_1',quantity:1,description:'Holder',price:{unit_amount:2295,product:{name:'Holder'}}}]}};
+await capture(d1,sample); await capture(d1,sample);
+assert.equal(db.prepare('select count(*) as n from orders').get().n,1); assert.equal(db.prepare('select count(*) as n from order_items').get().n,1); assert.equal(JSON.parse(db.prepare('select shipping_address_json from orders').get().shipping_address_json).line1,'Test St');
+await assert.rejects(()=>capture(d1,{...sample,id:'bad',line_items:{data:[{quantity:1}]}})); assert.equal(db.prepare("select count(*) as n from orders where id='bad'").get().n,0);
+console.log('Paid order capture, shipping address, replay and invalid item checks passed.');

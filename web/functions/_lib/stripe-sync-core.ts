@@ -3,16 +3,19 @@
 // Originally this all lived directly inside stripe-order-sync.ts, written
 // against one Stripe account. To support a second Stripe account feeding the
 // same TrendyCatch dashboard (customer + order sync, Shopify order creation,
-// ad-platform purchase events), the Stripe-account-specific bits (which
-// secret key / webhook secret / label to use) were pulled out into an
-// AccountConfig, and everything else stays exactly as it was. Each account's
-// own thin endpoint file (stripe-order-sync.ts, stripe-order-sync-2.ts, ...)
-// just supplies its AccountConfig and calls handleStripeOrderSync.
+// D1 order history, ad-platform purchase events), the Stripe-account-specific
+// bits (which secret key / webhook secret / label to use) were pulled out
+// into an AccountConfig, and everything else stays exactly as it was. Each
+// account's own thin endpoint file (stripe-order-sync.ts,
+// stripe-order-sync-2.ts, ...) just supplies its AccountConfig and calls
+// handleStripeOrderSync.
 //
 // Stripe requires one webhook *endpoint* per account anyway (an account's
 // webhook secret only verifies that account's own events), so this keeps
 // each account's secrets fully separate while sharing every other line of
-// code and writing into the same KV-backed dashboard feed.
+// code and writing into the same D1/KV-backed dashboard.
+
+import { recordOrderHistory } from "./stripe-orders"
 
 export interface AccountConfig {
   // Short machine key distinguishing this account in KV/tags, e.g. "1", "2".
@@ -36,6 +39,7 @@ export interface CoreEnv {
   GA4_MEASUREMENT_ID?: string
   GA4_API_SECRET?: string
   ORDERS_KV?: KVNamespace
+  ORDERS_DB?: D1Database
 }
 
 const SHOPIFY_API_VERSION = "2025-01"
@@ -47,6 +51,19 @@ const COUNTRY_NAMES: Record<string, string> = {
   CA: "Canada",
   GB: "United Kingdom",
 }
+
+// Stripe's exact per-transaction fee lives on the charge's balance
+// transaction, which the restricted read-only key this project uses is
+// deliberately not scoped to read. Net revenue instead uses a
+// published-rate ESTIMATE (2.9% + 0.30 per order, in the order's own
+// currency) and is labelled as an estimate everywhere it's shown.
+const ESTIMATED_STRIPE_FEE_PERCENT = 0.029
+const ESTIMATED_STRIPE_FEE_FLAT = 0.3
+
+// GST applies only to Australia (10%) and New Zealand (15%) orders — the two
+// jurisdictions this store collects consumption tax for and needs to lodge
+// with (the ATO and NZ Inland Revenue respectively).
+const GST_RATE: Record<string, number> = { AU: 0.1, NZ: 0.15 }
 
 export async function handleStripeOrderSync(
   request: Request,
@@ -90,6 +107,19 @@ export async function handleStripeOrderSync(
     `/v1/checkout/sessions/${sessionSummary.id}`,
     "expand[]=line_items.data.price.product&expand[]=customer_details",
   )
+
+  // Durable history is written before the alert feed and Shopify sync. A batch
+  // and unique Stripe IDs make retrying an event safe for these records.
+  // Stripe session IDs are globally unique across accounts, so both Stripe
+  // accounts can safely write into the same orders/order_items tables.
+  if (env.ORDERS_DB) {
+    try {
+      await recordOrderHistory(env.ORDERS_DB, session)
+    } catch (error) {
+      console.error(`[${account.accountLabel}] Order history write failed`, (error as Error).message)
+      return new Response("Order storage unavailable", { status: 503 })
+    }
+  }
 
   const sessionIdHash = await sha256Hex(session.id)
   // Tag includes the account key so orders from both Stripe accounts never
@@ -213,7 +243,7 @@ export async function handleStripeOrderSync(
   })
 
   const orderCurrency = (session.currency ?? "aud").toUpperCase()
-  const orderEmail = env.ORDER_EMAIL ?? "support@trendycatch.us"
+  const orderEmail = env.ORDER_EMAIL ?? "orders@trendycatch.us"
 
   let createdOrder: { id?: string; name?: string } | undefined
 
@@ -242,12 +272,11 @@ export async function handleStripeOrderSync(
 
     const result = await shopifyGraphql(env.SHOPIFY_STORE_DOMAIN!, env.SHOPIFY_ADMIN_TOKEN!, mutation, {
       order: orderInput,
-      // sendReceipt: true — Shopify sends its own "order confirmation" email
-      // (your order has been placed / is processing) straight to the
-      // customer, from the store's configured notification sender
-      // (support@trendycatch.us for TrendyCatch orders). Set this to false
-      // again if that email should stay off for this account.
-      options: { sendReceipt: true, sendFulfillmentReceipt: false },
+      // Matches the rest of this dashboard: no automatic Shopify receipt.
+      // Order confirmation to the customer is the dashboard's own
+      // "Send order confirmation" action (admin-send-confirmation.ts, via
+      // Resend), which applies the same way to orders from both accounts.
+      options: { sendReceipt: false, sendFulfillmentReceipt: false },
     })
 
     const userErrors = result?.data?.orderCreate?.userErrors ?? []
@@ -310,15 +339,17 @@ export async function handleStripeOrderSync(
 
     // ---- Running revenue/orders totals (never expire) for the dashboard's
     // "home screen" summary — total revenue, revenue by country, orders by
-    // ad platform, orders by Stripe account — the same kind of numbers
-    // Shopify's own Home shows.
+    // ad platform, orders by Stripe account, estimated fees and GST — the
+    // same kind of numbers Shopify's own Home/Taxes reports show.
     try {
+      const taxCollected = (session.total_details?.amount_tax ?? 0) / 100
       await updateStatsSummary(env.ORDERS_KV, {
         country: addr?.country ?? "UNKNOWN",
         source: rawSource.toLowerCase(),
         account: account.accountKey,
         accountLabel: account.accountLabel,
         total: orderTotal,
+        taxCollected,
       })
     } catch (err) {
       console.error(`[${account.accountLabel}] Stats summary update failed (order was still created):`, (err as Error).message)
@@ -435,15 +466,16 @@ function labelForSource(code: string): string {
 }
 
 // Keeps one small, permanent JSON summary in KV — total revenue/orders, plus
-// broken down by country, by ad-platform source and by Stripe account — so
-// the admin dashboard can show a Shopify-Home-style "how's business doing"
-// snapshot instead of only the rolling 48h new-order feed. Read-modify-write
-// against a single key; fine at this order volume (a lost increment under a
-// rare simultaneous webhook pair just means the next poll is one order
-// behind, never wrong for long).
+// broken down by country, by ad-platform source and by Stripe account, an
+// estimated Stripe-fee total (for net revenue) and GST collected per country
+// (for AU/NZ tax lodgement) — so the admin dashboard can show a
+// Shopify-Home-style "how's business doing" snapshot instead of only the
+// rolling 48h new-order feed. Read-modify-write against a single key; fine at
+// this order volume (a lost increment under a rare simultaneous webhook pair
+// just means the next poll is one order behind, never wrong for long).
 async function updateStatsSummary(
   kv: KVNamespace,
-  order: { country: string; source: string; account: string; accountLabel: string; total: number },
+  order: { country: string; source: string; account: string; accountLabel: string; total: number; taxCollected: number },
 ): Promise<void> {
   const key = "stats:summary"
   const raw = await kv.get(key)
@@ -452,15 +484,20 @@ async function updateStatsSummary(
     : {
         totalRevenue: 0,
         totalOrders: 0,
+        totalFeesEstimated: 0,
         byCountry: {} as Record<string, { revenue: number; orders: number }>,
         bySource: {} as Record<string, { revenue: number; orders: number }>,
         byAccount: {} as Record<string, { label: string; revenue: number; orders: number }>,
+        gstByCountry: {} as Record<string, { collected: number; orders: number; rate: number }>,
       }
   // Backfill for stats written before byAccount existed.
   stats.byAccount = stats.byAccount ?? {}
 
   stats.totalRevenue = (stats.totalRevenue ?? 0) + order.total
   stats.totalOrders = (stats.totalOrders ?? 0) + 1
+
+  const feeEstimate = order.total * ESTIMATED_STRIPE_FEE_PERCENT + ESTIMATED_STRIPE_FEE_FLAT
+  stats.totalFeesEstimated = (stats.totalFeesEstimated ?? 0) + feeEstimate
 
   const country = order.country || "UNKNOWN"
   stats.byCountry[country] = stats.byCountry[country] ?? { revenue: 0, orders: 0 }
@@ -479,6 +516,14 @@ async function updateStatsSummary(
   }
   stats.byAccount[order.account].revenue += order.total
   stats.byAccount[order.account].orders += 1
+
+  const gstRate = GST_RATE[country]
+  if (gstRate && order.taxCollected > 0) {
+    stats.gstByCountry = stats.gstByCountry ?? {}
+    stats.gstByCountry[country] = stats.gstByCountry[country] ?? { collected: 0, orders: 0, rate: gstRate }
+    stats.gstByCountry[country].collected += order.taxCollected
+    stats.gstByCountry[country].orders += 1
+  }
 
   stats.updatedAt = new Date().toISOString()
 

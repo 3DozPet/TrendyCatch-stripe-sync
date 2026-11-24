@@ -9,3 +9,13 @@ compatibility_date = "2025-01-01"
 [[kv_namespaces]]
 binding = "ORDERS_KV"
 id = "e6123766f08c4294b43572031ae7ba82"
+
+# D1 database for durable order history (order detail, fulfilment status,
+# tracking) shown on the admin dashboard's Order history / Customers panels.
+# Created via the Cloudflare dashboard (Storage & databases -> D1 ->
+# trendycatch-orders) and bound here as ORDERS_DB so the Git-connected Pages
+# build picks it up automatically, the same way ORDERS_KV is above.
+[[d1_databases]]
+binding = "ORDERS_DB"
+database_name = "trendycatch-orders"
+database_id = "963c61ba-571d-4403-b3ac-211894f20c1d"

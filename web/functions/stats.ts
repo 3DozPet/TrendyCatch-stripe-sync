@@ -20,15 +20,17 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
     return json({ error: "unauthorized" }, 401)
   }
 
+  const empty = { totalRevenue: 0, totalOrders: 0, totalFeesEstimated: 0, byCountry: {}, bySource: {}, gstByCountry: {} }
+
   const raw = await env.ORDERS_KV.get("stats:summary")
   if (!raw) {
-    return json({ totalRevenue: 0, totalOrders: 0, byCountry: {}, bySource: {} })
+    return json(empty)
   }
 
   try {
-    return json(JSON.parse(raw))
+    return json({ ...empty, ...JSON.parse(raw) })
   } catch {
-    return json({ totalRevenue: 0, totalOrders: 0, byCountry: {}, bySource: {}, error: "corrupt stats, ignored" })
+    return json({ ...empty, error: "corrupt stats, ignored" })
   }
 }
 
