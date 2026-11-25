@@ -74,10 +74,10 @@ export async function listPaidCheckoutSessionIds(
     const res = await fetch(`https://api.stripe.com/v1/checkout/sessions?${params.toString()}`, {
       headers: { Authorization: `Bearer ${secretKey}` },
     })
-    if (!res.ok) throw new Error(`Stripe error ${res.status}: ${await res.text()}`)
+    if (!res.ok) throw new Error(`Stripe request failed (${res.status})`)
     const json: any = await res.json()
     const data: any[] = json.data || []
-    out.push(...data.filter((s) => s.payment_status === 'paid').map((s) => s.id))
+    out.push(...data.filter((s) => s.livemode === true && s.payment_status === 'paid').map((s) => s.id))
     if (out.length >= maxSessions) { truncated = Boolean(json.has_more); break }
     if (!json.has_more || data.length === 0) break
     startingAfter = data[data.length - 1].id
@@ -95,7 +95,7 @@ export async function fetchFullCheckoutSession(secretKey: string, sessionId: str
   const res = await fetch(`https://api.stripe.com/v1/checkout/sessions/${sessionId}?${params.toString()}`, {
     headers: { Authorization: `Bearer ${secretKey}` },
   })
-  if (!res.ok) throw new Error(`Stripe error ${res.status}: ${await res.text()}`)
+  if (!res.ok) throw new Error(`Stripe request failed (${res.status})`)
   return res.json()
 }
 
@@ -117,7 +117,8 @@ export async function fetchAllPaidCheckoutSessions(
     while (cursor < ids.length) {
       const id = ids[cursor++]
       try {
-        sessions.push(await fetchFullCheckoutSession(secretKey, id))
+        const session = await fetchFullCheckoutSession(secretKey, id)
+        if (session.livemode === true && session.payment_status === 'paid') sessions.push(session)
       } catch (error) {
         fetchFailures.push(`${id}: ${(error as Error).message}`)
       }
@@ -125,4 +126,22 @@ export async function fetchAllPaidCheckoutSessions(
   }
   await Promise.all(Array.from({ length: Math.min(concurrency, ids.length) }, worker))
   return { sessions, truncated, fetchFailures }
+}
+// Stripe signs the timestamp and unmodified request body for each delivery.
+export async function verifyStripeSignature(payload: string, header: string, secret: string): Promise<any> {
+  const signatures = header.split(',').map(part => part.trim().split('=', 2))
+  const timestamp = signatures.find(([version]) => version === 't')?.[1]
+  if (!timestamp || !/^\d+$/.test(timestamp) || Math.abs(Date.now() / 1000 - Number(timestamp)) > 300) {
+    throw new Error('Invalid Stripe signature timestamp')
+  }
+
+  const encoder = new TextEncoder()
+  const key = await crypto.subtle.importKey('raw', encoder.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['verify'])
+  const signedPayload = encoder.encode(`${timestamp}.${payload}`)
+  for (const [version, signature] of signatures) {
+    if (version !== 'v1' || !/^[a-f0-9]{64}$/.test(signature ?? '')) continue
+    const bytes = Uint8Array.from(signature.match(/../g)!, pair => parseInt(pair, 16))
+    if (await crypto.subtle.verify('HMAC', key, bytes, signedPayload)) return JSON.parse(payload)
+  }
+  throw new Error('Invalid Stripe signature')
 }

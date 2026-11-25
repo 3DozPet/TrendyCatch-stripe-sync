@@ -17,7 +17,7 @@
 // and independently try/caught, so one platform failing can never block the
 // Shopify order or any other platform.
 
-import { recordOrderHistory } from "./_lib/stripe-orders"
+import { recordOrderHistory, verifyStripeSignature } from "./_lib/stripe-orders"
 
 interface Env {
   STRIPE_SECRET_KEY: string
@@ -499,36 +499,6 @@ async function sha256Hex(input: string): Promise<string> {
   const data = new TextEncoder().encode(input)
   const digest = await crypto.subtle.digest("SHA-256", data)
   return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("")
-}
-
-// Verifies a Stripe webhook signature using Web Crypto (HMAC-SHA256), since the
-// Stripe Node SDK's webhooks.constructEvent relies on Node's `crypto` module,
-// which isn't available the same way in the Workers runtime unless
-// nodejs_compat is on. This avoids that dependency entirely.
-async function verifyStripeSignature(payload: string, sigHeader: string, secret: string): Promise<any> {
-  const parts = Object.fromEntries(sigHeader.split(",").map((p) => p.split("=")) as [string, string][])
-  const timestamp = parts["t"]
-  const signature = parts["v1"]
-  if (!timestamp || !signature) throw new Error("Malformed stripe-signature header")
-
-  const signedPayload = `${timestamp}.${payload}`
-  const key = await crypto.subtle.importKey(
-    "raw",
-    new TextEncoder().encode(secret),
-    { name: "HMAC", hash: "SHA-256" },
-    false,
-    ["sign"],
-  )
-  const mac = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(signedPayload))
-  const expected = [...new Uint8Array(mac)].map((b) => b.toString(16).padStart(2, "0")).join("")
-
-  if (expected !== signature) throw new Error("Signature mismatch")
-
-  // 5 minute tolerance, same default Stripe's own SDK uses.
-  const age = Math.abs(Date.now() / 1000 - Number(timestamp))
-  if (age > 300) throw new Error("Timestamp outside tolerance")
-
-  return JSON.parse(payload)
 }
 
 async function stripeGet(env: Env, path: string, query: string) {

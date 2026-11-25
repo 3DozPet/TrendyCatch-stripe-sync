@@ -165,3 +165,22 @@ Shopify will send it from your store's own configured sender address.
 exist yet — add the AI-polished product photos to a `web/images/` folder
 with matching filenames before going live; until then the page shows a
 simple 📦 placeholder for any image that fails to load.
+
+## Second Stripe account for the admin
+
+Use a Cloudflare secret named `STRIPE_SECONDARY_SECRET_KEY` for the second
+live account's restricted API key with Checkout Sessions read access. The
+**Sync from Stripe** button imports paid live Checkout Sessions from both
+configured keys into `ORDERS_DB`.
+
+For new orders, add a snapshot webhook in the second account for
+`checkout.session.completed` and `checkout.session.async_payment_succeeded`.
+Use `/stripe-order-sync-secondary` on the intended TrendyCatch admin
+deployment. Save its endpoint signing secret as
+`STRIPE_SECONDARY_WEBHOOK_SECRET` on that deployment. This endpoint writes to
+order history. Shopify, ad conversion events and email stay with the second
+account's existing integrations.
+
+Before enabling a live destination, apply the migrations in `web/migrations`
+to the target D1 database and verify the admin can read its order history.
+Use an isolated database for preview testing with synthetic checkout data.

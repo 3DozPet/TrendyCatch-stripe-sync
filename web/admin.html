@@ -549,9 +549,11 @@ document.getElementById('historySyncStripe').addEventListener('click', async () 
     if (reloadIfUnauthorized(res.status)) return;
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Sync failed');
-    status.textContent = `Synced: checked ${data.scanned} Stripe orders, ${data.written} written/already present` + (data.truncated ? ' — more remain, click Sync again to continue' : '') + (data.failures && data.failures.length ? ` (${data.failures.length} failed)` : '');
     await refreshHistory();
     await refreshCustomers();
+    status.textContent = `Stripe sync checked ${data.scanned} orders and saved or matched ${data.written}.`
+      + (data.failures?.length ? ` ${data.failures.join(' | ')}` : '')
+      + (data.truncated ? ' The sync reached its order limit.' : '');
   } catch (error) {
     status.textContent = error.message || 'Sync failed';
   } finally {
