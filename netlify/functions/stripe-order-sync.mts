@@ -1,6 +1,7 @@
 import type { Config, Context } from "@netlify/functions"
 import Stripe from "stripe"
 import { createHash } from "node:crypto"
+import { readPureGlowAttribution } from "../lib/pureglow-attribution"
 
 // Stripe payment -> Shopify order, straight away, no manual draft step.
 // Listens for checkout.session.completed, pulls the real customer/shipping/line-item
@@ -267,8 +268,12 @@ export default async (req: Request, context: Context) => {
 
   const purchaseValue = (session.amount_total ?? 0) / 100
   const landingUrl = "https://pureglow-clearance.netlify.app"
-  const clientIp = req.headers.get("x-forwarded-for") ?? undefined
-  const clientUserAgent = req.headers.get("user-agent") ?? undefined
+  const attribution = await readPureGlowAttribution(session.client_reference_id).catch(() => {
+    console.error("Could not load PureGlow checkout attribution")
+    return undefined
+  })
+  const clientIp = attribution?.ip ?? req.headers.get("x-forwarded-for") ?? undefined
+  const clientUserAgent = attribution?.userAgent ?? req.headers.get("user-agent") ?? undefined
 
   // content_id/content_type per line item, built from the same Stripe line
   // items used for the Shopify order above. TikTok's "Content ID is missing"
@@ -312,6 +317,7 @@ export default async (req: Request, context: Context) => {
       url: landingUrl,
       ip: clientIp,
       userAgent: clientUserAgent,
+      ttclid: attribution?.ttclid,
       contents: tiktokContents,
     })
   } else {
@@ -326,6 +332,8 @@ export default async (req: Request, context: Context) => {
   const metaPixelId = Netlify.env.get("META_PIXEL_ID")
   if (metaAccessToken && metaPixelId) {
     await fireMetaPurchaseEvent({
+      fbc: attribution?.fbc,
+      fbp: attribution?.fbp,
       pixelId: metaPixelId,
       accessToken: metaAccessToken,
       eventId: tagSessionId,
@@ -400,6 +408,7 @@ async function fireTikTokPurchaseEvent(opts: {
   url: string
   ip?: string
   userAgent?: string
+  ttclid?: string
   contents?: Array<{
     content_id: string
     content_type: string
@@ -420,6 +429,7 @@ async function fireTikTokPurchaseEvent(opts: {
         event_time: Math.floor(Date.now() / 1000),
         event_id: opts.eventId,
         user: {
+          ttclid: opts.ttclid,
           email: hash(opts.email),
           phone: hash(opts.phone),
           ip: opts.ip,
@@ -459,6 +469,8 @@ async function fireTikTokPurchaseEvent(opts: {
 
 async function fireMetaPurchaseEvent(opts: {
   pixelId: string
+  fbc?: string
+  fbp?: string
   accessToken: string
   eventId: string
   email?: string
@@ -481,6 +493,8 @@ async function fireMetaPurchaseEvent(opts: {
         action_source: "website",
         event_source_url: opts.url,
         user_data: {
+          fbc: opts.fbc,
+          fbp: opts.fbp,
           em: opts.email ? [hash(opts.email)] : undefined,
           ph: opts.phone ? [hash(opts.phone)] : undefined,
           client_ip_address: opts.ip,
