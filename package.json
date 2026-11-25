@@ -1,8 +1,9 @@
 {
-    "name": "doz-stripe-order-sync",
-    "private": true,
-    "type": "module",
-    "dependencies": {
-          "stripe": "^17.4.0"
-    }
+  "name": "doz-stripe-order-sync",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "stripe": "^17.4.0",
+    "@netlify/blobs": "^10.0.0"
+  }
 }
