@@ -31,6 +31,14 @@ const COUNTRY_NAMES: Record<string, string> = {
   GB: "United Kingdom",
 }
 
+const PUREGLOW_LINKS = new Set([
+  "plink_1UeO0KJZyoWnWjYgk1lewwP5",
+  "plink_1UdRbeJZyoWnWjYgZ0ACNRv4",
+  "plink_1UdRbeJZyoWnWjYgamZYlw2o",
+  "plink_1UdRbeJZyoWnWjYgymRHFFEg",
+])
+const PUREGLOW_META_DATASET_ID = "1132252676368437"
+
 export default async (req: Request, context: Context) => {
   if (req.method !== "POST") {
     return new Response("Method not allowed", { status: 405 })
@@ -337,19 +345,18 @@ export default async (req: Request, context: Context) => {
     console.log("TikTok Events API not configured (missing TIKTOK_ACCESS_TOKEN/TIKTOK_PIXEL_CODE) - skipped")
   }
 
-  // Meta Conversions API - Purchase. Covers Facebook AND Instagram ads, since
-  // both run on the same Meta Pixel. META_CAPI_ACCESS_TOKEN already exists in
-  // this site's env vars; META_PIXEL_ID needs to be added alongside it (the
-  // Pixel ID shown in Meta Events Manager) for this to activate.
-  const metaAccessToken = Netlify.env.get("META_CAPI_ACCESS_TOKEN")
-  const metaPixelId = Netlify.env.get("META_PIXEL_ID")
+  // Route PureGlow Payment Links to the dataset selected by its live Meta ad set.
+  const paymentLinkId = typeof session.payment_link === "string" ? session.payment_link : session.payment_link?.id
+  const isPureGlow = !!paymentLinkId && PUREGLOW_LINKS.has(paymentLinkId)
+  const metaAccessToken = Netlify.env.get(isPureGlow ? "PUREGLOW_META_CAPI_ACCESS_TOKEN" : "META_CAPI_ACCESS_TOKEN")
+  const metaPixelId = isPureGlow ? PUREGLOW_META_DATASET_ID : Netlify.env.get("META_PIXEL_ID")
   if (metaAccessToken && metaPixelId) {
     await fireMetaPurchaseEvent({
       fbc: attribution?.fbc,
       fbp: attribution?.fbp,
       pixelId: metaPixelId,
       accessToken: metaAccessToken,
-      eventId: tagSessionId,
+      eventId: isPureGlow ? session.id : tagSessionId,
       email: customerDetails?.email,
       phone: customerDetails?.phone ?? undefined,
       value: purchaseValue,
@@ -359,7 +366,7 @@ export default async (req: Request, context: Context) => {
       userAgent: clientUserAgent,
     })
   } else {
-    console.log("Meta Conversions API not configured (missing META_CAPI_ACCESS_TOKEN/META_PIXEL_ID) - skipped")
+    console.log("Meta Conversions API not configured for this checkout - skipped")
   }
 
   // Google - GA4 Measurement Protocol "purchase" event. Covers Google Ads
