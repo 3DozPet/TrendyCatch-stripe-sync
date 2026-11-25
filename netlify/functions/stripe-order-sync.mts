@@ -36,30 +36,43 @@ export default async (req: Request, context: Context) => {
     return new Response("Method not allowed", { status: 405 })
   }
 
-  const stripeSecretKey = Netlify.env.get("STRIPE_SECRET_KEY")
-  const stripeWebhookSecret = Netlify.env.get("STRIPE_WEBHOOK_SECRET")
-  const shopDomain = Netlify.env.get("SHOPIFY_STORE_DOMAIN") // e.g. 3doz.myshopify.com
+  const shopDomain = Netlify.env.get("SHOPIFY_STORE_DOMAIN")
   const shopifyToken = Netlify.env.get("SHOPIFY_ADMIN_TOKEN")
   const orderEmail = Netlify.env.get("ORDER_EMAIL") ?? "support@3doz.pet"
+  const signature = req.headers.get("stripe-signature")
+  const rawBody = await req.text()
+  if (!signature) return new Response("Invalid signature", { status: 400 })
 
-  if (!stripeSecretKey || !stripeWebhookSecret || !shopDomain || !shopifyToken) {
-    console.error("Missing required environment variable(s)")
+  const accounts = [
+    {
+      webhookSecret: Netlify.env.get("PUREGLOW_STRIPE_WEBHOOK_SECRET"),
+      apiKey: Netlify.env.get("PUREGLOW_STRIPE_SECRET_KEY"),
+    },
+    {
+      webhookSecret: Netlify.env.get("STRIPE_WEBHOOK_SECRET"),
+      apiKey: Netlify.env.get("STRIPE_SECRET_KEY"),
+    },
+  ]
+
+  let verified: { event: Stripe.Event; apiKey?: string } | undefined
+  for (const account of accounts) {
+    if (!account.webhookSecret) continue
+    try {
+      const event = Stripe.webhooks.constructEvent(rawBody, signature, account.webhookSecret)
+      verified = { event, apiKey: account.apiKey }
+      break
+    } catch {
+      // Try the next configured account signature.
+    }
+  }
+  if (!verified) return new Response("Invalid signature", { status: 400 })
+  if (!verified.apiKey || !shopDomain || !shopifyToken) {
+    console.error("Missing configuration for verified Stripe account")
     return new Response("Server misconfigured", { status: 500 })
   }
 
-  const stripe = new Stripe(stripeSecretKey)
-
-  const signature = req.headers.get("stripe-signature")
-  const rawBody = await req.text()
-
-  let event: Stripe.Event
-  try {
-    if (!signature) throw new Error("Missing stripe-signature header")
-    event = stripe.webhooks.constructEvent(rawBody, signature, stripeWebhookSecret)
-  } catch (err) {
-    console.error("Stripe signature verification failed:", (err as Error).message)
-    return new Response("Invalid signature", { status: 400 })
-  }
+  const { event, apiKey } = verified
+  const stripe = new Stripe(apiKey)
 
   if (event.type !== "checkout.session.completed") {
     // Not an event we act on; acknowledge so Stripe stops retrying it.
@@ -578,3 +591,4 @@ export const config: Config = {
   path: "/stripe-order-sync",
   method: ["POST"],
 }
+
