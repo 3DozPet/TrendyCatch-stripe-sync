@@ -737,28 +737,97 @@
   },
   {
     "id": "nose-pore-patch",
-    "title": "Deep Cleansing Nose Pore & Blackhead Patches",
-    "hook": "Blackheads, gone in one peel — these cleansing patches pull out buildup without the breakouts a scrub leaves behind.",
+    "title": "Nose Pore Patch",
+    "hook": "Wet, stick, peel — watch blackheads lift out in 15 minutes. 50 bamboo charcoal patches for about 46¢ each.",
     "images": [
-      "https://ae-pic-a1.aliexpress-media.com/kf/S1824d241abe04a69b04195b66dd25a04y.jpg",
-      "https://ae-pic-a1.aliexpress-media.com/kf/S4af00fe91b1a4ec5ad0b2f07e2f7a96fH.png",
-      "https://ae-pic-a1.aliexpress-media.com/kf/Sa63e48ab1fb742349de1d466719bd492V.jpg",
-      "https://ae-pic-a1.aliexpress-media.com/kf/Sd8b037cf86464b4c81c4de91be8e7313A.jpg",
-      "https://ae-pic-a1.aliexpress-media.com/kf/Seb63d9c5c91a4be4a97fd47fafdd937em.jpg"
+      "/images/nose-pore-patch-1.jpg",
+      "/images/nose-pore-patch-2.jpg",
+      "/images/nose-pore-patch-3.jpg",
+      "https://ae-pic-a1.aliexpress-media.com/kf/S9b902fbb0bb14044b84b7c88e0b2ea452.jpg",
+      "https://ae-pic-a1.aliexpress-media.com/kf/Sc37cb8b9d3a6497aba31b93896d7b852p.jpg",
+      "https://ae-pic-a1.aliexpress-media.com/kf/S75e2ae83d7e74317abb64751b7bdb28cg.jpg",
+      "https://ae-pic-a1.aliexpress-media.com/kf/S99bb71204d294a069fa2f209976f01389.jpg",
+      "https://ae-pic-a1.aliexpress-media.com/kf/Sbb07f24b99d54a6e95a1002678a1fda5J.jpg",
+      "https://ae-pic-a1.aliexpress-media.com/kf/S430c9729f875495bbceb4909b137a317k.jpg"
     ],
-    "variant": "20-count pack, alcohol-free, fragrance-free",
+    "variant": "50-patch pack, bamboo charcoal",
     "variants": [],
     "prices": {
-      "AU": 20.95,
-      "CA": 20.95,
-      "NZ": 22.95,
-      "US": 19.95
+      "AU": 22.95,
+      "CA": 22.95,
+      "NZ": 25.95,
+      "US": 22.95
     },
     "compareAt": {
-      "AU": 41.95,
-      "CA": 41.95,
+      "AU": 39.95,
+      "CA": 39.95,
       "NZ": 45.95,
       "US": 39.95
+    },
+    "detail": {
+      "eyebrow": "BAMBOO CHARCOAL · 50 PATCHES",
+      "bullets": [
+        "See blackheads and buildup lift out on the patch when you peel",
+        "One patch, about 15 minutes — wet, stick, wait, peel, no tools",
+        "Bamboo charcoal, aloe vera and green tea leaf extract",
+        "Gentle enough for weekly use on the nose",
+        "50 patches per pack — about 46¢ each vs ~$1.67 for chemist strips",
+        "Free shipping and secure checkout"
+      ],
+      "features": [
+        {
+          "icon": "👃",
+          "title": "See it lift out",
+          "text": "Peel the patch and see the blackheads and debris it pulled from your pores."
+        },
+        {
+          "icon": "⏱️",
+          "title": "One patch, 15 minutes",
+          "text": "Wet, stick, wait and peel — no extractors, steamers or extra tools."
+        },
+        {
+          "icon": "🎋",
+          "title": "Bamboo charcoal formula",
+          "text": "Charcoal absorbs excess oil, while aloe vera and green tea extract soothe the skin around the nose."
+        },
+        {
+          "icon": "✨",
+          "title": "Smoother-looking pores",
+          "text": "Pores look cleaner and flatter, and skin feels smoother right after you peel."
+        }
+      ],
+      "howItWorks": [
+        {
+          "title": "Wet",
+          "text": "Cleanse and wet your nose area with warm water."
+        },
+        {
+          "title": "Apply",
+          "text": "Press the patch on smoothly and leave it 10–15 minutes until fully dry."
+        },
+        {
+          "title": "Peel",
+          "text": "Peel slowly from the edges, then rinse with cool water."
+        }
+      ],
+      "faq": [
+        {
+          "q": "How many patches are in a pack?",
+          "a": "50 patches — enough for nearly a year of weekly use."
+        },
+        {
+          "q": "How often can I use them?",
+          "a": "About once a week. Avoid using on broken, sunburnt or irritated skin."
+        },
+        {
+          "q": "Do they work on sensitive skin?",
+          "a": "The formula includes soothing aloe vera and green tea extract. If you have sensitive skin, try a patch for a shorter time first."
+        },
+        {
+          "q": "How long does shipping take?",
+          "a": "Shipping is free. You'll get a tracking link by email once your order ships."
+        }
+      ]
     }
   },
   {
