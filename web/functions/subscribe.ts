@@ -59,9 +59,13 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
 
   // Email the code once. If sending fails the signup is still saved, and the
   // next signup attempt with the same address tries the email again.
+  // emailStatus says why an email did or didn't go (no secrets in it), so a
+  // failed send can be diagnosed from the response instead of guessing.
   let emailed = Boolean(record.couponEmailedAt)
+  let emailStatus = emailed ? "already_sent" : "not_configured"
   if (!emailed && env.RESEND_API_KEY) {
-    emailed = await sendCouponEmail(env.RESEND_API_KEY, email, couponCode)
+    emailStatus = await sendCouponEmail(env.RESEND_API_KEY, email, couponCode)
+    emailed = emailStatus === "sent"
     if (emailed) record.couponEmailedAt = new Date().toISOString()
   }
 
@@ -90,7 +94,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     console.error("subscribers:all index update failed (signup was still recorded):", (err as Error).message)
   }
 
-  return json({ ok: true, alreadySubscribed: alreadyHadCode, emailed })
+  return json({ ok: true, alreadySubscribed: alreadyHadCode, emailed, emailStatus })
 }
 
 // Unambiguous characters only (no 0/O, 1/I/L) so a code is easy to type.
@@ -100,7 +104,7 @@ function newCouponCode(): string {
   return "TC-" + [...bytes].map((b) => alphabet[b % alphabet.length]).join("")
 }
 
-async function sendCouponEmail(apiKey: string, to: string, code: string): Promise<boolean> {
+async function sendCouponEmail(apiKey: string, to: string, code: string): Promise<string> {
   const html = `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;max-width:520px;margin:0 auto;color:#2b2230;">
     <h2 style="font-size:22px;margin:0 0 12px;">Welcome to TrendyCatch</h2>
     <p style="font-size:15px;line-height:1.6;">Thanks for signing up. Here is your welcome code:</p>
@@ -120,9 +124,9 @@ async function sendCouponEmail(apiKey: string, to: string, code: string): Promis
         html,
       }),
     })
-    return res.ok
+    return res.ok ? "sent" : `provider_rejected_${res.status}`
   } catch {
-    return false
+    return "provider_unreachable"
   }
 }
 
