@@ -1174,9 +1174,11 @@
     "images": [
       "https://ae-pic-a1.aliexpress-media.com/kf/S8b3e7fdfc45743408438479637d36ef2x.jpg",
       "https://ae-pic-a1.aliexpress-media.com/kf/S5f192bd8c9d84fcd9da7649fa060a98dJ.jpg",
+      "https://ae-pic-a1.aliexpress-media.com/kf/S27cd4d4b5c1b44dba1ad91b48848e7b2N.jpg",
+      "https://ae-pic-a1.aliexpress-media.com/kf/S00c593eb545d44b4be6bc9ed6c5b21a4K.jpg",
       "https://ae-pic-a1.aliexpress-media.com/kf/S19e6f89d0ff0431380ec8fa07f40e593M.jpg"
     ],
-    "variant": "Warm white, 3M(W) x 1M(H), 100 LEDs, USB powered, remote included",
+    "variant": "3M(W) x 1M(H), 100 LEDs, warm white, cool white or multicolour, USB powered, remote included",
     "variants": [
       {
         "label": "100 LEDs (3M x 1M) · Warm White",
@@ -1219,6 +1221,90 @@
           "CA": 53.95,
           "US": 44.95
         }
+      },
+      {
+        "label": "100 LEDs (3M x 1M) · Cool White",
+        "sku": "100LED-3x1-CW",
+        "prices": {
+          "AU": 24.95,
+          "CA": 24.95,
+          "US": 19.95
+        },
+        "compareAt": {
+          "AU": 44.95,
+          "CA": 44.95,
+          "US": 35.95
+        }
+      },
+      {
+        "label": "200 LEDs (3M x 2M) · Cool White",
+        "sku": "200LED-3x2-CW",
+        "prices": {
+          "AU": 27.95,
+          "CA": 27.95,
+          "US": 22.95
+        },
+        "compareAt": {
+          "AU": 49.95,
+          "CA": 49.95,
+          "US": 41.95
+        }
+      },
+      {
+        "label": "300 LEDs (3M x 3M) · Cool White",
+        "sku": "300LED-3x3-CW",
+        "prices": {
+          "AU": 29.95,
+          "CA": 29.95,
+          "US": 24.95
+        },
+        "compareAt": {
+          "AU": 53.95,
+          "CA": 53.95,
+          "US": 44.95
+        }
+      },
+      {
+        "label": "100 LEDs (3M x 1M) · Multicolour",
+        "sku": "100LED-3x1-MC",
+        "prices": {
+          "AU": 24.95,
+          "CA": 24.95,
+          "US": 19.95
+        },
+        "compareAt": {
+          "AU": 44.95,
+          "CA": 44.95,
+          "US": 35.95
+        }
+      },
+      {
+        "label": "200 LEDs (3M x 2M) · Multicolour",
+        "sku": "200LED-3x2-MC",
+        "prices": {
+          "AU": 27.95,
+          "CA": 27.95,
+          "US": 22.95
+        },
+        "compareAt": {
+          "AU": 49.95,
+          "CA": 49.95,
+          "US": 41.95
+        }
+      },
+      {
+        "label": "300 LEDs (3M x 3M) · Multicolour",
+        "sku": "300LED-3x3-MC",
+        "prices": {
+          "AU": 29.95,
+          "CA": 29.95,
+          "US": 24.95
+        },
+        "compareAt": {
+          "AU": 53.95,
+          "CA": 53.95,
+          "US": 44.95
+        }
       }
     ],
     "prices": {
@@ -1235,7 +1321,7 @@
       "eyebrow": "8 MODES · REMOTE CONTROLLED",
       "bullets": [
         "8 remote-controlled lighting modes for any mood or occasion",
-        "Dimmable warm white glow for a cosy, golden look",
+        "Choose warm white, cool white or multicolour — dimmable",
         "USB powered (5V) — no bulky plug pack needed",
         "Simple hook-and-drape install, no drilling or tools",
         "Available in 100, 200 or 300 LEDs to match your space",
@@ -1283,8 +1369,8 @@
           "a": "Yes — a remote control and its battery are included."
         },
         {
-          "q": "What colour is it?",
-          "a": "Warm white — a soft golden glow. The remote switches between 8 modes, including steady, fade and twinkle."
+          "q": "What colours are available?",
+          "a": "Warm white, cool white or multicolour — choose yours from the options before you buy."
         },
         {
           "q": "Can I leave it on overnight?",
