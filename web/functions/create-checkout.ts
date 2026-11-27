@@ -127,28 +127,49 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
   params.set("metadata[source]", source)
   if (landingUrl) params.set("metadata[landing_url]", landingUrl)
 
-  // Wrapped in try/catch so a bad key, network hiccup, or malformed header
-  // never crashes the function with a raw Cloudflare 502 — the client always
-  // gets back a readable JSON error instead.
-  let stripeRes: Response
-  try {
-    stripeRes = await fetch("https://api.stripe.com/v1/checkout/sessions", {
+  // Checkout page colours, matching the storefront's pastel theme (violet
+  // button on a pale lilac page, pill-shaped controls). Sent per session so
+  // only trendycatch.us checkouts change — other pages that share this Stripe
+  // account keep the account's own branding. branding_settings needs Stripe
+  // API version 2025-09-30 or later; if the account's version rejects it, the
+  // session is created again without it so checkout never breaks over colours.
+  const brandedParams = new URLSearchParams(params)
+  brandedParams.set("branding_settings[background_color]", "#f7f3ff")
+  brandedParams.set("branding_settings[button_color]", "#5a3ec8")
+  brandedParams.set("branding_settings[border_style]", "pill")
+  brandedParams.set("branding_settings[font_family]", "inter")
+
+  const createSession = (p: URLSearchParams) =>
+    fetch("https://api.stripe.com/v1/checkout/sessions", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${stripeSecretKey}`,
         "Content-Type": "application/x-www-form-urlencoded",
       },
-      body: params.toString(),
+      body: p.toString(),
     })
+
+  // Wrapped in try/catch so a bad key, network hiccup, or malformed header
+  // never crashes the function with a raw Cloudflare 502 — the client always
+  // gets back a readable JSON error instead.
+  let stripeRes: Response
+  let session: any
+  try {
+    stripeRes = await createSession(brandedParams)
+    session = await stripeRes.json().catch(() => null)
+    const brandingRejected =
+      !stripeRes.ok && JSON.stringify(session?.error ?? "").includes("branding_settings")
+    if (brandingRejected) {
+      console.warn("Stripe rejected branding_settings; retrying without it:", session?.error?.message)
+      stripeRes = await createSession(params)
+      session = await stripeRes.json().catch(() => null)
+    }
   } catch (err) {
     console.error("Stripe request failed:", err instanceof Error ? err.message : err)
     return json({ error: "Could not reach Stripe" }, 502)
   }
 
-  let session: any
-  try {
-    session = await stripeRes.json()
-  } catch {
+  if (!session) {
     return json({ error: "Stripe returned an unreadable response" }, 502)
   }
 
