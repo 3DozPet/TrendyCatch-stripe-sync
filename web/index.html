@@ -549,6 +549,8 @@ function renderProducts() {
   const symbol = COUNTRY_SYMBOL[currentCountry] || "$";
 
   products.forEach((product) => {
+    // Hide products that can't be delivered to the visitor's country.
+    if (product.shipsTo && !product.shipsTo.includes(currentCountry)) return;
     const images = (product.images && product.images.length ? product.images : [product.image]).filter(Boolean);
     const primaryImage = images[0] || "";
     const variants = product.variants || [];

@@ -381,7 +381,25 @@ function fireInitiateCheckout(prod) {
   if (window.__tcGtag) window.__tcGtag("event", "begin_checkout", { currency, value, items: [{ item_id: prod.id, item_name: prod.title }] });
 }
 
+function shipsHere(prod) {
+  return !prod.shipsTo || prod.shipsTo.includes(currentCountry);
+}
+
 function updatePriceDisplay() {
+  if (!shipsHere(product)) {
+    const msg = `Not available in ${COUNTRY_LABEL[currentCountry] || currentCountry}`;
+    ["price", "priceClosing", "stickyPrice"].forEach((id) => { document.getElementById(id).textContent = msg; });
+    document.getElementById("comparePrice").style.display = "none";
+    ["buyBtnMain", "buyBtnClosing", "buyBtnSticky"].forEach((id) => {
+      const b = document.getElementById(id);
+      b.disabled = true;
+      b.textContent = "Not available in your country";
+    });
+    const names = { AU: "AU", NZ: "NZ", US: "US", CA: "Canada" };
+    const g = document.querySelector(".guarantee");
+    if (g) g.textContent = `🔒 Secure checkout via Stripe · 🚚 Free shipping to ${product.shipsTo.map((c) => names[c] || c).join(", ")}`;
+    return;
+  }
   const symbol = COUNTRY_SYMBOL[currentCountry] || "$";
   const pricing = getPricing(product, selectedVariantSku);
   const text = `${symbol}${pricing.price.toFixed(2)}`;

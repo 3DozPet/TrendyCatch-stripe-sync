@@ -70,11 +70,20 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     image?: string
     images?: string[]
     prices: Record<CountryCode, number>
+    shipsTo?: CountryCode[]
   }> = await productsRes.json()
 
   const product = products.find((p) => p.id === productId)
   if (!product) {
     return json({ error: "Unknown product" }, 404)
+  }
+
+  // Some products can't be delivered everywhere (e.g. not to NZ). Such a
+  // product lists the countries it ships to; checkout is refused elsewhere,
+  // and Stripe only accepts a shipping address in one of those countries.
+  const shipTo = product.shipsTo && product.shipsTo.length ? product.shipsTo : SHIP_TO_COUNTRIES
+  if (!shipTo.includes(country)) {
+    return json({ error: "This product isn't available for delivery to your country" }, 400)
   }
 
   // If this product has real selectable options, the chosen one must be one
@@ -104,7 +113,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
   params.set("cancel_url", `${siteUrl}/?cancelled=1`)
   params.set("phone_number_collection[enabled]", "true")
   params.set("billing_address_collection", "required")
-  SHIP_TO_COUNTRIES.forEach((c, i) => params.append(`shipping_address_collection[allowed_countries][${i}]`, c))
+  shipTo.forEach((c, i) => params.append(`shipping_address_collection[allowed_countries][${i}]`, c))
   params.set("line_items[0][quantity]", "1")
   params.set("line_items[0][price_data][currency]", currency)
   params.set("line_items[0][price_data][unit_amount]", String(Math.round(unitPrice * 100)))

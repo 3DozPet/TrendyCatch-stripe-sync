@@ -1184,13 +1184,11 @@
         "prices": {
           "AU": 24.95,
           "CA": 24.95,
-          "NZ": 27.95,
           "US": 19.95
         },
         "compareAt": {
           "AU": 44.95,
           "CA": 44.95,
-          "NZ": 50.95,
           "US": 35.95
         }
       },
@@ -1200,13 +1198,11 @@
         "prices": {
           "AU": 27.95,
           "CA": 27.95,
-          "NZ": 30.95,
           "US": 22.95
         },
         "compareAt": {
           "AU": 49.95,
           "CA": 49.95,
-          "NZ": 55.95,
           "US": 41.95
         }
       },
@@ -1216,13 +1212,11 @@
         "prices": {
           "AU": 29.95,
           "CA": 29.95,
-          "NZ": 32.95,
           "US": 24.95
         },
         "compareAt": {
           "AU": 53.95,
           "CA": 53.95,
-          "NZ": 59.95,
           "US": 44.95
         }
       }
@@ -1230,13 +1224,11 @@
     "prices": {
       "AU": 24.95,
       "CA": 24.95,
-      "NZ": 27.95,
       "US": 19.95
     },
     "compareAt": {
       "AU": 44.95,
       "CA": 44.95,
-      "NZ": 50.95,
       "US": 35.95
     },
     "detail": {
@@ -1303,6 +1295,11 @@
           "a": "It's designed for indoor use; keep it dry and away from direct weather exposure."
         }
       ]
-    }
+    },
+    "shipsTo": [
+      "AU",
+      "CA",
+      "US"
+    ]
   }
 ]
