@@ -339,6 +339,61 @@ function detectSource() {
 }
 const visitorSource = detectSource();
 
+// ---------------------------------------------------------------------------
+// Pixels: Meta (Facebook + Instagram), TikTok and Google gtag.js (GA4 +
+// Google Ads/YouTube via linked conversions). Same loader as index.html — the
+// product detail page needs it too, since this is where ViewContent and
+// InitiateCheckout actually fire. IDs are served from /config so they can be
+// changed without a redeploy, and nothing fires if an ID is missing for a
+// given platform.
+async function loadPixels() {
+  let config = {};
+  try {
+    config = await fetch("/config").then((r) => r.json());
+  } catch (e) {
+    console.warn("Could not load /config for pixel IDs", e);
+    return;
+  }
+
+  if (config.metaPixelId) {
+    /* eslint-disable */
+    !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+    n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
+    n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
+    t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,
+    document,'script','https://connect.facebook.net/en_US/fbevents.js');
+    fbq('init', config.metaPixelId);
+    fbq('track', 'PageView');
+    /* eslint-enable */
+    window.__tcFbq = window.fbq;
+  }
+
+  if (config.tiktokPixelCode) {
+    /* eslint-disable */
+    !function (w, d, t) {
+      w.TiktokAnalyticsObject=t;var ttq=w[t]=w[t]||[];ttq.methods=["page","track","identify","instances","debug","on","off","once","ready","alias","group","enableCookie","disableCookie"],ttq.setAndDefer=function(t,e){t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}};for(var i=0;i<ttq.methods.length;i++)ttq.setAndDefer(ttq,ttq.methods[i]);ttq.instance=function(t){for(var e=ttq._i[t]||[],n=0;n<e.length;n++)ttq.setAndDefer(e,e[n]);return e},ttq.load=function(e,n){var r="https://analytics.tiktok.com/i18n/pixel/events.js",o=n&&n.partner;ttq._i=ttq._i||{},ttq._i[e]=[],ttq._i[e]._u=r,ttq._t=ttq._t||{},ttq._t[e]=+new Date,ttq._o=ttq._o||{},ttq._o[e]=n||{};var a=document.createElement("script");a.type="text/javascript",a.async=!0,a.src=r+"?sdkid="+e+"&lib="+t;var s=document.getElementsByTagName("script")[0];s.parentNode.insertBefore(a,s)};
+      ttq.load(config.tiktokPixelCode);
+      ttq.page();
+    }(window, document, 'ttq');
+    /* eslint-enable */
+    window.__tcTtq = window.ttq;
+  }
+
+  if (config.ga4MeasurementId) {
+    const s = document.createElement("script");
+    s.async = true;
+    s.src = `https://www.googletagmanager.com/gtag/js?id=${config.ga4MeasurementId}`;
+    document.head.appendChild(s);
+    window.dataLayer = window.dataLayer || [];
+    window.gtag = function () { window.dataLayer.push(arguments); };
+    gtag("js", new Date());
+    gtag("config", config.ga4MeasurementId);
+    if (config.googleAdsConversionId) gtag("config", config.googleAdsConversionId);
+    window.__tcGtag = window.gtag;
+  }
+}
+loadPixels();
+
 async function detectCountry() {
   try {
     const res = await fetch("/geo");
