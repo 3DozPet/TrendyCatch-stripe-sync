@@ -280,6 +280,14 @@
   .sticky-bar .buy-btn { box-shadow: none; }
   .sticky-bar .price { color: var(--price); }
   .buy-btn, .swatch-row .swatch, .colour-card { font-family: inherit; }
+  .swatch-row .variant-dropdown {
+    width: 100%; max-width: 420px; font: inherit; font-size: 16px; font-weight: 600; color: var(--ink);
+    padding: 13px 44px 13px 16px; border: 1.5px solid var(--border); border-radius: 14px; background-color: #fff; cursor: pointer;
+    appearance: none; -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='9' viewBox='0 0 14 9'%3E%3Cpath d='M1 1l6 6 6-6' fill='none' stroke='%235a3ec8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 16px center;
+  }
+  .swatch-row .variant-dropdown:focus { outline: 2px solid var(--green); border-color: var(--green); }
   @media (min-width: 800px) { .features-grid { grid-template-columns: repeat(3, 1fr); } }
 
   .loading-state, .not-found { max-width: 600px; margin: 80px auto; text-align: center; padding: 0 20px; color: var(--muted); }
@@ -736,6 +744,18 @@ function renderProduct() {
     selectedVariantSku = variants[0].sku;
 
     function renderSwatches() {
+      // Non-colour options (pack sizes, bag sizes…) use a dropdown that shows
+      // each option's price; colours keep the tappable swatches.
+      if (!isColourSet) {
+        const symbol = COUNTRY_SYMBOL[currentCountry] || "$";
+        picker.innerHTML = `<select class="variant-dropdown" aria-label="Option">${variants.map((v) => {
+          const price = getPriceForVariant(product, v.sku);
+          const priceText = typeof price === "number" ? ` — ${symbol}${price.toFixed(2)}` : "";
+          return `<option value="${escapeHtml(v.sku)}"${v.sku === selectedVariantSku ? " selected" : ""}>${escapeHtml(v.label)}${priceText}</option>`;
+        }).join("")}</select>`;
+        picker.querySelector("select").addEventListener("change", (e) => selectVariant(e.target.value));
+        return;
+      }
       picker.innerHTML = variants.map((v) => {
         const colour = colourFromLabel(v.label);
         const dot = colour ? `<span class="dot" style="background:${colour};"></span>` : "";
