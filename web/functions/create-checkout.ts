@@ -7,7 +7,13 @@
 interface Env {
   STRIPE_SECRET_KEY: string
   SITE_URL?: string
+  ORDERS_KV?: KVNamespace
 }
+
+// Welcome coupon (issued by /subscribe): 10% off the first 30.00 of the item
+// price, so never more than 3.00 off, in the checkout's own currency.
+const COUPON_PERCENT = 10
+const COUPON_SPEND_CAP = 30
 
 type CountryCode = "AU" | "NZ" | "US" | "CA"
 
@@ -32,7 +38,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     return json({ error: "Server misconfigured: missing STRIPE_SECRET_KEY" }, 500)
   }
 
-  let body: { productId?: string; variantSku?: string; country?: string; source?: string; landingUrl?: string }
+  let body: { productId?: string; variantSku?: string; country?: string; source?: string; landingUrl?: string; couponCode?: string }
   try {
     body = await request.json()
   } catch {
@@ -107,6 +113,54 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
 
   const currency = CURRENCY_BY_COUNTRY[country]
 
+  // Welcome coupon. A code is single-use: "unused" can be redeemed; "pending"
+  // means an earlier checkout was started with it, so that session is looked
+  // up — if it was paid the code is spent, otherwise the old session is
+  // expired (so it can't also be paid) and the code is free to use again.
+  const couponCode = (body.couponCode || "").trim().toUpperCase().slice(0, 40)
+  const couponKey = couponCode ? `coupon:${couponCode}` : ""
+  let couponRecord: any = null
+  let stripeCouponId = ""
+  const stripeHeaders = {
+    Authorization: `Bearer ${stripeSecretKey}`,
+    "Content-Type": "application/x-www-form-urlencoded",
+  }
+  if (couponCode) {
+    const invalid = () => json({ error: "That code isn't valid or has already been used. Remove it to check out without a discount." }, 400)
+    if (!env.ORDERS_KV || !/^TC-[A-Z0-9]{8}$/.test(couponCode)) return invalid()
+    const raw = await env.ORDERS_KV.get(couponKey)
+    if (!raw) return invalid()
+    couponRecord = JSON.parse(raw)
+    if (couponRecord.status === "used") return invalid()
+    try {
+      if (couponRecord.status === "pending" && couponRecord.sessionId) {
+        const prev: any = await fetch(`https://api.stripe.com/v1/checkout/sessions/${couponRecord.sessionId}`, { headers: stripeHeaders }).then((r) => r.json())
+        if (prev?.payment_status === "paid" || prev?.status === "complete") {
+          await env.ORDERS_KV.put(couponKey, JSON.stringify({ ...couponRecord, status: "used", usedAt: new Date().toISOString() }))
+          return invalid()
+        }
+        if (prev?.status === "open") {
+          await fetch(`https://api.stripe.com/v1/checkout/sessions/${couponRecord.sessionId}/expire`, { method: "POST", headers: stripeHeaders })
+        }
+      }
+      const discountMinor = Math.round(Math.min(unitPrice, COUPON_SPEND_CAP) * COUPON_PERCENT)
+      const couponParams = new URLSearchParams()
+      couponParams.set("amount_off", String(discountMinor))
+      couponParams.set("currency", currency)
+      couponParams.set("duration", "once")
+      couponParams.set("max_redemptions", "1")
+      couponParams.set("name", "Welcome code")
+      couponParams.set("metadata[welcome_code]", couponCode)
+      const couponRes = await fetch("https://api.stripe.com/v1/coupons", { method: "POST", headers: stripeHeaders, body: couponParams.toString() })
+      const created: any = await couponRes.json()
+      if (!couponRes.ok || !created?.id) throw new Error(created?.error?.message || "coupon create failed")
+      stripeCouponId = created.id
+    } catch (err) {
+      console.error("Welcome code could not be applied:", err instanceof Error ? err.message : err)
+      return json({ error: "We couldn't apply that code just now. Please try again, or remove it to check out." }, 502)
+    }
+  }
+
   const params = new URLSearchParams()
   params.set("mode", "payment")
   params.set("success_url", `${siteUrl}/thank-you.html?session_id={CHECKOUT_SESSION_ID}`)
@@ -126,6 +180,10 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
   params.set("metadata[country]", country)
   params.set("metadata[source]", source)
   if (landingUrl) params.set("metadata[landing_url]", landingUrl)
+  if (stripeCouponId) {
+    params.set("discounts[0][coupon]", stripeCouponId)
+    params.set("metadata[welcome_code]", couponCode)
+  }
 
   // Checkout page colours, matching the storefront's pastel theme (violet
   // button on a pale lilac page, pill-shaped controls). Sent per session so
@@ -142,10 +200,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
   const createSession = (p: URLSearchParams) =>
     fetch("https://api.stripe.com/v1/checkout/sessions", {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${stripeSecretKey}`,
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
+      headers: stripeHeaders,
       body: p.toString(),
     })
 
@@ -176,6 +231,11 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
   if (!stripeRes.ok) {
     console.error("Stripe session create failed:", JSON.stringify(session))
     return json({ error: session?.error?.message ?? "Stripe error" }, 502)
+  }
+
+  // Remember which checkout the code is tied to, so it can't be used twice.
+  if (stripeCouponId && env.ORDERS_KV) {
+    await env.ORDERS_KV.put(couponKey, JSON.stringify({ ...couponRecord, status: "pending", sessionId: session.id, pendingAt: new Date().toISOString() }))
   }
 
   return json({ url: session.url })
