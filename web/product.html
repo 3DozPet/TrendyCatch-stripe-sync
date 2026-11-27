@@ -7,22 +7,30 @@
 <meta name="description" content="Clever everyday gadgets that actually solve a problem. Fast shipping to Australia, New Zealand, the US and Canada." />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 <style>
   :root {
-    --ink: #1a1a1a;
-    --muted: #6b7280;
-    --bg: #fff8e7;
+    /* Pastel palette: violet (primary), pink (accent), light blue (surfaces).
+       Role names are kept from the old green/amber theme so existing rules
+       still apply: --green = primary, --accent = highlight. */
+    --ink: #2b2230;
+    --muted: #6e6480;
+    --bg: #f7f3ff;
     --card: #ffffff;
-    --green: #1b5e20;
-    --green-dark: #0f3d14;
-    --accent: #ffb703;
-    --accent-dark: #e4a300;
-    --price: #d62828;
-    --border: #e7e7e7;
+    --green: #5a3ec8;
+    --green-dark: #43299e;
+    --accent: #ff8fb8;
+    --accent-dark: #f56fa3;
+    --price: #d6336c;
+    --border: #e8e0f5;
+    --pink-soft: #ffeaf4;
+    --lilac-soft: #f1eaff;
+    --blue-soft: #e6f1ff;
+    --blue: #7fb2ff;
+    --heading-font: "Fraunces", Georgia, "Times New Roman", serif;
   }
   * { box-sizing: border-box; }
-  body { margin: 0; font-family: "Montserrat", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: var(--bg); color: var(--ink); }
+  body { margin: 0; font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: var(--bg); color: var(--ink); }
   a { color: inherit; }
   header.site {
     position: sticky; top: 0; z-index: 10;
@@ -178,10 +186,106 @@
   }
   .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
+
+  /* ===== Pastel redesign (draft) ===== */
+  body { background: var(--bg) linear-gradient(180deg, var(--pink-soft) 0, var(--lilac-soft) 340px, var(--blue-soft) 760px, var(--bg) 1180px) no-repeat; }
+  h1, h2, .story h2, .closing-cta h2 { font-family: var(--heading-font); font-weight: 700; letter-spacing: -0.01em; }
+  .announce { background: var(--ink); color: #fff; text-align: center; font-size: 12.5px; font-weight: 600; padding: 9px 14px; line-height: 1.4; }
+  .announce b { color: var(--accent); font-weight: 700; }
+  header.site { background: linear-gradient(90deg, var(--green-dark) 0%, var(--green) 55%, #7d5ce0 100%); }
+  .back-link { color: var(--green); }
+
+  .gallery .main-img { background: #fff; border-radius: 22px; box-shadow: 0 18px 44px rgba(90, 62, 200, 0.14); cursor: zoom-in; }
+  .gallery .thumbs { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-top: 10px; }
+  .gallery .thumbs button { padding: 0; border: 2px solid transparent; border-radius: 12px; overflow: hidden; background: #fff; cursor: pointer; aspect-ratio: 1/1; }
+  .gallery .thumbs button.selected { border-color: var(--green); }
+  .gallery .thumbs img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .gallery .badge.sale { background: var(--price); font-size: 13px; padding: 6px 12px; }
+  .gallery .badge.bundle { background: var(--green); }
+
+  .buybox .eyebrow { color: var(--green); }
+  .buybox h1 { font-size: 34px; line-height: 1.12; }
+  @media (max-width: 800px) { .buybox h1 { font-size: 28px; } }
+  .buybox .subhead { font-size: 16px; }
+  .buybox .bullets li::before { content: "✓"; color: #fff; background: var(--green); width: 18px; height: 18px; border-radius: 50%; font-size: 11px; display: inline-flex; align-items: center; justify-content: center; margin-top: 1px; }
+  .swatch-row .swatch.selected { border-color: var(--green); background: var(--lilac-soft); }
+  .swatch-row .swatch:hover { border-color: var(--green); }
+  .buybox .price-row { flex-wrap: wrap; align-items: baseline; gap: 10px 12px; }
+  .buybox .price { font-family: var(--heading-font); font-size: 36px; font-weight: 700; color: var(--price); background: none; padding: 0; border-radius: 0; }
+  .buybox .compare-price { font-size: 17px; }
+  .buybox .save-pill { font-size: 12px; font-weight: 800; color: var(--price); background: var(--pink-soft); border: 1px solid #ffc9de; padding: 4px 10px; border-radius: 999px; }
+  .buybox .price-note { flex-basis: 100%; font-size: 13px; font-weight: 600; color: var(--muted); }
+  .buy-btn { background: linear-gradient(90deg, var(--green) 0%, #b8479f 100%); color: #fff; box-shadow: 0 10px 24px rgba(120, 70, 190, 0.3); max-width: 420px; font-size: 17px; }
+  .buy-btn:hover { background: linear-gradient(90deg, var(--green-dark) 0%, #a23a8b 100%); }
+  .buybox .guarantee { font-size: 12.5px; }
+
+  .trust-strip { border: 1px solid var(--border); border-radius: 18px; max-width: 1000px; margin: 32px auto 0; overflow: hidden; background: rgba(255,255,255,0.85); }
+  .trust-strip .item { border-right: 1px solid var(--border); }
+  @media (max-width: 1040px) { .trust-strip { margin-left: 20px; margin-right: 20px; } }
+
+  section.block h2 { font-size: 30px; margin-bottom: 10px; }
+  section.block .section-intro { text-align: center; color: var(--muted); font-size: 15px; line-height: 1.6; max-width: 620px; margin: 0 auto 28px; }
+  section.block h2 + .features-grid, section.block h2 + .steps, section.block h2 + #faqList { margin-top: 28px; }
+  .feature-card { border-radius: 18px; padding: 22px; border-color: var(--border); }
+  .feature-card:nth-child(3n+1) { background: var(--pink-soft); border-color: #ffd4e5; }
+  .feature-card:nth-child(3n+2) { background: var(--lilac-soft); border-color: #dccdfb; }
+  .feature-card:nth-child(3n+3) { background: var(--blue-soft); border-color: #c9dfff; }
+  .feature-card .icon { width: 46px; height: 46px; border-radius: 14px; background: #fff; display: flex; align-items: center; justify-content: center; font-size: 22px; }
+  .feature-card .text { color: #554a66; }
+  .step .num { background: linear-gradient(135deg, var(--green) 0%, var(--accent-dark) 100%); width: 46px; height: 46px; font-family: var(--heading-font); font-size: 18px; }
+
+  .story { max-width: 1040px; margin: 64px auto 0; padding: 0 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: center; }
+  .story.flip .story-media { order: 2; }
+  .story .story-media img { width: 100%; border-radius: 24px; display: block; box-shadow: 0 18px 44px rgba(90, 62, 200, 0.14); }
+  .story h2 { font-size: 30px; margin: 0 0 14px; line-height: 1.15; }
+  .story p { font-size: 15.5px; line-height: 1.65; color: #554a66; margin: 0 0 12px; }
+  .story .stats { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
+  .story .stat { flex: 1 1 100px; background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 14px 12px; text-align: center; }
+  .story .stat b { display: block; font-family: var(--heading-font); font-size: 22px; color: var(--green); }
+  .story .stat span { font-size: 12px; color: var(--muted); font-weight: 600; }
+  .story .buy-btn { margin-top: 18px; max-width: 320px; }
+  @media (max-width: 800px) { .story { grid-template-columns: 1fr; gap: 22px; margin-top: 48px; } .story.flip .story-media { order: 0; } .story h2 { font-size: 26px; } }
+
+  .table-wrap { overflow-x: auto; background: #fff; border: 1px solid var(--border); border-radius: 18px; }
+  table.compare, table.specs { width: 100%; border-collapse: collapse; font-size: 14px; }
+  table.compare th, table.compare td { padding: 13px 14px; text-align: center; border-bottom: 1px solid var(--border); }
+  table.compare th:first-child, table.compare td:first-child { text-align: left; font-weight: 600; }
+  table.compare thead th { font-size: 13px; font-weight: 700; background: var(--lilac-soft); }
+  table.compare thead th.ours, table.compare td.ours { background: var(--pink-soft); color: var(--ink); font-weight: 700; }
+  table.compare td.yes { color: #1f8a4c; font-weight: 700; }
+  table.compare td.no { color: #b42346; font-weight: 700; }
+  table.compare tr:last-child td, table.specs tr:last-child td { border-bottom: none; }
+  table.specs td { padding: 12px 16px; border-bottom: 1px solid var(--border); vertical-align: top; line-height: 1.5; }
+  table.specs td:first-child { width: 36%; font-weight: 700; background: var(--blue-soft); }
+
+  .colour-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 18px; max-width: 720px; margin: 0 auto; }
+  .colour-card { background: #fff; border: 2px solid var(--border); border-radius: 20px; overflow: hidden; cursor: pointer; padding: 0; text-align: center; font: inherit; color: inherit; }
+  .colour-card.selected { border-color: var(--green); box-shadow: 0 10px 28px rgba(90, 62, 200, 0.16); }
+  .colour-card img { width: 100%; aspect-ratio: 4/3; object-fit: cover; display: block; }
+  .colour-card .name { font-family: var(--heading-font); font-size: 18px; font-weight: 700; padding: 14px 10px 4px; }
+  .colour-card .pick { font-size: 12px; font-weight: 700; color: var(--green); padding: 0 10px 14px; }
+  .centre-cta { text-align: center; margin-top: 26px; }
+  .centre-cta .buy-btn { margin: 0 auto; }
+
+  .faq-item { background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 16px 18px; margin-bottom: 10px; }
+  #faqBlock { max-width: 800px; }
+
+  .closing-cta { background: linear-gradient(120deg, var(--green-dark) 0%, var(--green) 45%, #c95aa8 100%); border-radius: 26px; max-width: 1000px; margin: 64px auto 0; }
+  @media (max-width: 1040px) { .closing-cta { margin-left: 20px; margin-right: 20px; } }
+  .closing-cta h2 { font-size: 30px; margin: 0 0 8px; }
+  .closing-cta .closing-sub { color: rgba(255,255,255,0.88); font-size: 15px; margin: 0 0 20px; }
+  .closing-cta .price { background: none; color: #fff; font-family: var(--heading-font); font-size: 32px; padding: 0; }
+  .closing-cta .buy-btn { background: #fff; color: var(--green-dark); box-shadow: 0 10px 24px rgba(0,0,0,0.18); }
+  .closing-cta .buy-btn:hover { background: var(--pink-soft); }
+  .sticky-bar .buy-btn { box-shadow: none; }
+  .sticky-bar .price { color: var(--price); }
+
   .loading-state, .not-found { max-width: 600px; margin: 80px auto; text-align: center; padding: 0 20px; color: var(--muted); }
 </style>
 </head>
 <body>
+
+<div class="announce">🚚 <b>Free delivery</b> to Australia, NZ, US &amp; Canada · <b>30-day</b> money-back guarantee</div>
 
 <header class="site">
   <a href="/" class="brand">Trendy<span>Catch</span></a>
@@ -202,6 +306,7 @@
       <div class="gallery">
         <div class="badges" id="badges"></div>
         <div class="main-img" id="mainImgWrap"><img id="mainImg" src="" alt="" /></div>
+        <div class="thumbs" id="thumbs" style="display:none;"></div>
         <div class="photo-grid" id="photoGrid" style="display:none;"></div>
       </div>
       <div class="buybox">
@@ -216,7 +321,8 @@
         <div class="price-row">
           <div class="price" id="price"></div>
           <div class="compare-price" id="comparePrice" style="display:none;"></div>
-          <div class="price-note">free shipping</div>
+          <div class="save-pill" id="savePill" style="display:none;"></div>
+          <div class="price-note" id="priceNote">Free delivery</div>
         </div>
         <button class="buy-btn" id="buyBtnMain">Add to cart</button>
         <p class="guarantee">🔒 Secure checkout with Stripe · 🚚 Free shipping to AU, NZ, US &amp; Canada</p>
@@ -241,13 +347,35 @@
   </div>
 
   <section class="block" id="featuresBlock" style="display:none;">
-    <h2>Why you'll love it</h2>
+    <h2 id="featuresTitle">Why you'll love it</h2>
+    <p class="section-intro" id="featuresIntro" style="display:none;"></p>
     <div class="features-grid" id="featuresGrid"></div>
   </section>
+
+  <div id="storyBlocks"></div>
 
   <section class="block" id="howBlock" style="display:none;">
     <h2>How it works</h2>
     <div class="steps" id="stepsGrid"></div>
+  </section>
+
+  <section class="block" id="compareBlock" style="display:none;">
+    <h2 id="compareTitle"></h2>
+    <p class="section-intro" id="compareIntro"></p>
+    <div class="table-wrap"><table class="compare" id="compareTable"></table></div>
+  </section>
+
+  <section class="block" id="coloursBlock" style="display:none;">
+    <h2 id="coloursTitle"></h2>
+    <p class="section-intro" id="coloursIntro"></p>
+    <div class="colour-grid" id="colourGrid"></div>
+    <div class="centre-cta"><button class="buy-btn" id="buyBtnColours">Add to cart</button></div>
+  </section>
+
+  <section class="block" id="specsBlock" style="display:none;">
+    <h2>Specifications</h2>
+    <p class="section-intro">Everything you need to know.</p>
+    <div class="table-wrap"><table class="specs" id="specsTable"></table></div>
   </section>
 
   <section class="block" id="faqBlock" style="display:none;">
@@ -256,7 +384,8 @@
   </section>
 
   <section class="closing-cta">
-    <h2>Ready to grab yours?</h2>
+    <h2 id="closingTitle">Ready to grab yours?</h2>
+    <p class="closing-sub" id="closingSub" style="display:none;"></p>
     <div class="price-row" style="justify-content:center; margin-bottom:20px;">
       <div class="price" id="priceClosing"></div>
     </div>
@@ -309,6 +438,7 @@ const COUNTRY_LABEL = { AU: "Australia", NZ: "New Zealand", US: "United States",
 let currentCountry = "AU";
 let product = null;
 let selectedVariantSku = null;
+let selectVariant = () => {};
 
 function showToast(msg) {
   const t = document.getElementById("toast");
@@ -485,6 +615,10 @@ function fireInitiateCheckout(prod) {
   if (window.__tcGtag) window.__tcGtag("event", "begin_checkout", { currency, value, items: [{ item_id: prod.id, item_name: prod.title }] });
 }
 
+function allBuyButtons() {
+  return Array.from(document.querySelectorAll(".buy-btn"));
+}
+
 function shipsHere(prod) {
   return !prod.shipsTo || prod.shipsTo.includes(currentCountry);
 }
@@ -494,8 +628,8 @@ function updatePriceDisplay() {
     const msg = `Not available in ${COUNTRY_LABEL[currentCountry] || currentCountry}`;
     ["price", "priceClosing", "stickyPrice"].forEach((id) => { document.getElementById(id).textContent = msg; });
     document.getElementById("comparePrice").style.display = "none";
-    ["buyBtnMain", "buyBtnClosing", "buyBtnSticky"].forEach((id) => {
-      const b = document.getElementById(id);
+    document.getElementById("savePill").style.display = "none";
+    allBuyButtons().forEach((b) => {
       b.disabled = true;
       b.textContent = "Not available in your country";
     });
@@ -512,12 +646,23 @@ function updatePriceDisplay() {
   document.getElementById("stickyPrice").textContent = text;
 
   const compareEl = document.getElementById("comparePrice");
+  const savePill = document.getElementById("savePill");
   if (pricing.was) {
     compareEl.textContent = `${symbol}${pricing.was.toFixed(2)}`;
     compareEl.style.display = "";
   } else {
     compareEl.style.display = "none";
   }
+  if (pricing.pctOff > 0) {
+    savePill.textContent = `Save ${pricing.pctOff}%`;
+    savePill.style.display = "";
+  } else {
+    savePill.style.display = "none";
+  }
+  // GST only applies to (and is only mentioned for) Australia and New Zealand.
+  document.getElementById("priceNote").textContent =
+    currentCountry === "AU" || currentCountry === "NZ" ? "Free delivery · GST included" : "Free delivery";
+  document.querySelectorAll("[data-cta-price]").forEach((b) => { if (!b.disabled) b.textContent = `Add to cart · ${text}`; });
 
   const badgesEl = document.getElementById("badges");
   const bundleBadge = product.id === "home-gadget-bundle" ? `<span class="badge bundle">BUNDLE</span>` : "";
@@ -542,7 +687,22 @@ function renderProduct() {
   // a tile opens it full-screen in the lightbox for a closer look.
   const mainImgWrap = document.getElementById("mainImgWrap");
   const photoGrid = document.getElementById("photoGrid");
-  if (images.length > 1) {
+  const thumbs = document.getElementById("thumbs");
+  if (images.length > 1 && detail.galleryStyle === "hero") {
+    const mainImg = document.getElementById("mainImg");
+    const showImage = (i) => {
+      mainImg.src = images[i];
+      mainImg.alt = `${product.title} photo ${i + 1}`;
+      thumbs.querySelectorAll("button").forEach((b, j) => b.classList.toggle("selected", j === i));
+    };
+    mainImgWrap.style.display = "";
+    photoGrid.style.display = "none";
+    thumbs.style.display = "";
+    thumbs.innerHTML = images.map((src, i) => `<button type="button" aria-label="Show photo ${i + 1}"><img src="${src}" alt="" loading="lazy" /></button>`).join("");
+    thumbs.querySelectorAll("button").forEach((b, i) => b.addEventListener("click", () => showImage(i)));
+    mainImgWrap.addEventListener("click", () => openLightbox(mainImg.src, mainImg.alt));
+    showImage(0);
+  } else if (images.length > 1) {
     mainImgWrap.style.display = "none";
     photoGrid.style.display = "";
     photoGrid.innerHTML = images.map((src, i) => `<img src="${src}" alt="${escapeHtml(product.title)} photo ${i + 1}" loading="${i < 3 ? "eager" : "lazy"}" />`).join("");
@@ -581,13 +741,15 @@ function renderProduct() {
         return `<button type="button" class="swatch${selected}" data-sku="${escapeHtml(v.sku)}">${dot}${escapeHtml(v.label)}</button>`;
       }).join("");
       picker.querySelectorAll(".swatch").forEach((btn) => {
-        btn.addEventListener("click", () => {
-          selectedVariantSku = btn.dataset.sku;
-          renderSwatches();
-          updatePriceDisplay();
-        });
+        btn.addEventListener("click", () => selectVariant(btn.dataset.sku));
       });
     }
+    selectVariant = (sku) => {
+      selectedVariantSku = sku;
+      renderSwatches();
+      document.querySelectorAll(".colour-card").forEach((c) => c.classList.toggle("selected", c.dataset.sku === sku));
+      updatePriceDisplay();
+    };
     renderSwatches();
   } else {
     selectedVariantSku = undefined;
@@ -607,9 +769,77 @@ function renderProduct() {
     `).join("");
   }
 
+  if (detail.featuresTitle) document.getElementById("featuresTitle").textContent = detail.featuresTitle;
+  if (detail.featuresIntro) {
+    const fi = document.getElementById("featuresIntro");
+    fi.textContent = detail.featuresIntro;
+    fi.style.display = "";
+  }
+
+  // Story blocks — alternating photo + copy sections (optional).
+  if (detail.story && detail.story.length) {
+    document.getElementById("storyBlocks").innerHTML = detail.story.map((b, i) => `
+      <section class="story${i % 2 ? " flip" : ""}">
+        <div class="story-media"><img src="${b.image}" alt="${escapeHtml(b.alt || b.title)}" loading="lazy" /></div>
+        <div>
+          <h2>${escapeHtml(b.title)}</h2>
+          ${(b.paragraphs || []).map((t) => `<p>${escapeHtml(t)}</p>`).join("")}
+          ${b.stats ? `<div class="stats">${b.stats.map((st) => `<div class="stat"><b>${escapeHtml(st.value)}</b><span>${escapeHtml(st.label)}</span></div>`).join("")}</div>` : ""}
+          ${b.cta ? `<button class="buy-btn" data-cta-price>Add to cart</button>` : ""}
+        </div>
+      </section>
+    `).join("");
+  }
+
+  // Comparison table (optional). First data column is this product.
+  if (detail.compare && detail.compare.rows && detail.compare.rows.length) {
+    const c = detail.compare;
+    document.getElementById("compareBlock").style.display = "";
+    document.getElementById("compareTitle").textContent = c.title || "How it compares";
+    document.getElementById("compareIntro").textContent = c.intro || "";
+    const cell = (v, i) => {
+      const cls = [i === 0 ? "ours" : "", /^✓/.test(v) ? "yes" : /^✗/.test(v) ? "no" : ""].filter(Boolean).join(" ");
+      return `<td class="${cls}">${escapeHtml(v)}</td>`;
+    };
+    document.getElementById("compareTable").innerHTML =
+      `<thead><tr><th></th>${c.columns.map((h, i) => `<th class="${i === 0 ? "ours" : ""}">${escapeHtml(h)}</th>`).join("")}</tr></thead>` +
+      `<tbody>${c.rows.map((r) => `<tr><td>${escapeHtml(r[0])}</td>${r.slice(1).map(cell).join("")}</tr>`).join("")}</tbody>`;
+  }
+
+  // Colour cards (optional) — tapping one selects that variant everywhere.
+  if (detail.colours && detail.colours.items && detail.colours.items.length) {
+    const c = detail.colours;
+    document.getElementById("coloursBlock").style.display = "";
+    document.getElementById("coloursTitle").textContent = c.title || "Pick your colour";
+    document.getElementById("coloursIntro").textContent = c.intro || "";
+    document.getElementById("colourGrid").innerHTML = c.items.map((it) => `
+      <button type="button" class="colour-card${it.sku === selectedVariantSku ? " selected" : ""}" data-sku="${escapeHtml(it.sku)}">
+        <img src="${it.image}" alt="${escapeHtml(it.label)}" loading="lazy" />
+        <div class="name">${escapeHtml(it.label)}</div>
+        <div class="pick">Tap to choose</div>
+      </button>
+    `).join("");
+    document.querySelectorAll(".colour-card").forEach((card) => card.addEventListener("click", () => selectVariant(card.dataset.sku)));
+    document.getElementById("buyBtnColours").setAttribute("data-cta-price", "");
+  }
+
+  // Specifications table (optional).
+  if (detail.specs && detail.specs.length) {
+    document.getElementById("specsBlock").style.display = "";
+    document.getElementById("specsTable").innerHTML = detail.specs.map((r) => `<tr><td>${escapeHtml(r[0])}</td><td>${escapeHtml(r[1])}</td></tr>`).join("");
+  }
+
+  if (detail.closingTitle) document.getElementById("closingTitle").textContent = detail.closingTitle;
+  if (detail.closingSub) {
+    const cs = document.getElementById("closingSub");
+    cs.textContent = detail.closingSub;
+    cs.style.display = "";
+  }
+
   // How it works
   if (detail.howItWorks && detail.howItWorks.length) {
     document.getElementById("howBlock").style.display = "";
+    if (detail.howTitle) document.querySelector("#howBlock h2").textContent = detail.howTitle;
     document.getElementById("stepsGrid").innerHTML = detail.howItWorks.map((s) => `
       <div class="step">
         <div class="num"></div>
@@ -632,9 +862,10 @@ function renderProduct() {
 
   document.getElementById("stickyTitle").textContent = product.title;
 
-  [document.getElementById("buyBtnMain"), document.getElementById("buyBtnClosing"), document.getElementById("buyBtnSticky")].forEach((btn) => {
+  allBuyButtons().forEach((btn) => {
     btn.addEventListener("click", () => handleBuy(btn));
   });
+  updatePriceDisplay();
 
   fireViewContent(product);
 
@@ -644,7 +875,7 @@ function renderProduct() {
 
 async function handleBuy(btn) {
   const originalText = btn.textContent;
-  [document.getElementById("buyBtnMain"), document.getElementById("buyBtnClosing"), document.getElementById("buyBtnSticky")].forEach((b) => {
+  allBuyButtons().forEach((b) => {
     b.disabled = true;
     b.textContent = "Loading…";
   });
@@ -678,12 +909,11 @@ async function handleBuy(btn) {
 }
 
 function resetButtons() {
-  document.getElementById("buyBtnMain").disabled = false;
-  document.getElementById("buyBtnMain").textContent = "Add to cart";
-  document.getElementById("buyBtnClosing").disabled = false;
-  document.getElementById("buyBtnClosing").textContent = "Add to cart";
-  document.getElementById("buyBtnSticky").disabled = false;
-  document.getElementById("buyBtnSticky").textContent = "Add to cart";
+  allBuyButtons().forEach((b) => {
+    b.disabled = false;
+    b.textContent = "Add to cart";
+  });
+  updatePriceDisplay();
 }
 
 window.addEventListener("scroll", () => {
