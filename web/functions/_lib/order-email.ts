@@ -56,7 +56,7 @@ function buildEmailHtml(order: Record<string, unknown>, items: Array<Record<stri
 
   return `<div style="font-family:Arial,Helvetica,sans-serif;max-width:480px;margin:0 auto;color:#222;">
     <h2 style="margin-bottom:4px;">${heading}</h2>
-    <p style="color:#666;margin-top:0;">Order ${escapeHtml(String(order.id))}${order.created_at ? ' · ' + escapeHtml(String(order.created_at)) : ''}</p>
+    <p style="color:#666;margin-top:0;">Order ${escapeHtml(shortOrderNumber(order.id))}${order.created_at ? ' · ' + escapeHtml(String(order.created_at)) : ''}</p>
     <ul style="padding-left:18px;">${itemRows}</ul>
     <p><strong>Total: ${currency} ${total}</strong></p>
     ${addressHtml ? `<p><strong>Shipping to:</strong><br>${addressHtml}</p>` : ''}
@@ -71,6 +71,14 @@ function buildEmailHtml(order: Record<string, unknown>, items: Array<Record<stri
 // comes back as { ok: false, error }, so callers that trigger this
 // automatically (e.g. saving a tracking number) can treat it as best-effort
 // and still report success on the underlying save.
+// Customers see a short order number (#TC-4F7K2Q) rather than the long
+// internal payment ID. Derived from the ID, so the dashboard shows the same
+// number and a customer quoting it can be matched to their order.
+export function shortOrderNumber(id: unknown): string {
+  const clean = String(id ?? "").replace(/[^a-zA-Z0-9]/g, "").toUpperCase()
+  return "#TC-" + (clean.slice(-6) || "ORDER")
+}
+
 export async function sendOrderEmail(env: OrderEmailEnv, orderId: string, kind: OrderEmailKind): Promise<OrderEmailResult> {
   if (!env.ORDERS_DB) return { ok: false, skipped: true, error: 'Order storage is not configured' }
   if (!env.RESEND_API_KEY) {
@@ -90,8 +98,8 @@ export async function sendOrderEmail(env: OrderEmailEnv, orderId: string, kind: 
 
   const html = buildEmailHtml(order as Record<string, unknown>, items, kind)
   const subject = kind === 'shipped'
-    ? `Your TrendyCatch order ${order.id} has shipped`
-    : `Your TrendyCatch order ${order.id} confirmation`
+    ? `Your TrendyCatch order ${shortOrderNumber(order.id)} has shipped`
+    : `Your TrendyCatch order ${shortOrderNumber(order.id)} confirmation`
 
   let resendResponse: Response
   try {

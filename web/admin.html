@@ -127,6 +127,26 @@ header .status { font-size:13px; color:var(--muted); display:flex; align-items:c
 .subscribers-panel .sub-row:last-child { border-bottom:none; }
 .subscribers-panel .sub-email { color:var(--ink); font-weight:600; }
 .inbox-panel .sub-row { cursor:pointer; }
+.inbox-panel .sub-row.unread .sub-email::before { content:""; display:inline-block; width:8px; height:8px; border-radius:50%; background:#e0245e; margin-right:8px; vertical-align:middle; }
+.nav-badge { display:none; margin-left:auto; min-width:18px; padding:1px 6px; border-radius:999px; background:#e0245e; color:#fff; font-size:11px; font-weight:700; text-align:center; }
+.nav-badge.show { display:inline-block; }
+.mail-win-back { position:fixed; inset:0; background:rgba(20,16,30,.45); z-index:1000; display:none; align-items:center; justify-content:center; padding:16px; }
+.mail-win-back.open { display:flex; }
+.mail-win { background:var(--surface,#fff); color:var(--ink); width:min(880px,100%); max-height:90vh; border-radius:14px; box-shadow:0 20px 60px rgba(0,0,0,.3); display:flex; flex-direction:column; overflow:hidden; }
+.mail-win-head { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; padding:16px 18px; border-bottom:1px solid var(--surface-2); }
+.mail-win-head h3 { margin:0 0 4px; font-size:16px; }
+.mail-win-head p { margin:0; font-size:12.5px; color:var(--muted); }
+.mail-win-body { display:grid; grid-template-columns:1.15fr 1fr; gap:0; overflow:auto; }
+.mail-win-col { padding:16px 18px; min-width:0; }
+.mail-win-col + .mail-win-col { border-left:1px solid var(--surface-2); }
+.mail-win-col h4 { margin:0 0 8px; font-size:12px; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); }
+.mail-win-text { white-space:pre-wrap; word-break:break-word; font-size:14px; line-height:1.55; background:var(--surface-2); border-radius:10px; padding:12px; max-height:260px; overflow:auto; }
+.mail-win textarea { width:100%; min-height:110px; margin-top:12px; padding:10px; border:1px solid var(--surface-2); border-radius:10px; font:inherit; font-size:14px; resize:vertical; box-sizing:border-box; }
+.mail-win-actions { display:flex; align-items:center; gap:10px; margin-top:8px; }
+.mail-win-actions span { font-size:13px; color:var(--muted); }
+.mail-cust { font-size:13.5px; line-height:1.6; margin-bottom:10px; }
+.mail-cust strong { font-size:15px; }
+@media (max-width:720px) { .mail-win-body { grid-template-columns:1fr; } .mail-win-col + .mail-win-col { border-left:none; border-top:1px solid var(--surface-2); } }
 .inbox-panel .sub-row:hover .sub-email { text-decoration:underline; }
 .inbox-panel .sub-subject { color:var(--muted); font-weight:400; }
 .inbox-panel .inbox-body { white-space:pre-wrap; word-break:break-word; font-size:13.5px; background:var(--surface-2); border-radius:8px; padding:12px; margin:4px 0 10px; }
@@ -266,7 +286,7 @@ main#orderList { display:flex; flex-direction:column; gap:12px; }
 <a href="#products"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/></svg></span>Products</a>
 <a href="#analytics"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M12 20V4M20 20v-7"/></svg></span>Analytics</a>
 <a href="#signups"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg></span>Email signups</a>
-<a href="#inbox"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 13l3-8h12l3 8v6H3z"/><path d="M3 13h5l1 3h6l1-3h5"/></svg></span>Inbox</a>
+<a href="#inbox"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 13l3-8h12l3 8v6H3z"/><path d="M3 13h5l1 3h6l1-3h5"/></svg></span>Inbox<span class="nav-badge" id="inboxBadge"></span></a>
 <div class="side-title">STORE</div>
 <a href="/" target="_blank" rel="noopener"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6"/><path d="M10 14L20 4"/><path d="M19 13v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg></span>Online store</a>
 </div></nav><div class="content"><header id="home" class="anchor">
@@ -333,6 +353,29 @@ main#orderList { display:flex; flex-direction:column; gap:12px; }
     <div id="inboxList"></div>
   </div>
 </section>
+
+<div class="mail-win-back" id="mailWin" role="dialog" aria-modal="true" aria-labelledby="mailWinSubject">
+  <div class="mail-win">
+    <div class="mail-win-head">
+      <div><h3 id="mailWinSubject"></h3><p id="mailWinMeta"></p></div>
+      <button type="button" class="header-btn" id="mailWinClose">Close</button>
+    </div>
+    <div class="mail-win-body">
+      <div class="mail-win-col">
+        <h4>Message</h4>
+        <div class="mail-win-text" id="mailWinText"></div>
+        <textarea id="mailWinReply" placeholder="Write your reply…"></textarea>
+        <div class="mail-win-actions"><button type="button" class="header-btn" id="mailWinSend">Send reply</button><span id="mailWinStatus" role="status"></span></div>
+      </div>
+      <div class="mail-win-col">
+        <h4>Customer</h4>
+        <div class="mail-cust" id="mailWinCustomer"></div>
+        <h4>Orders &amp; fulfilment</h4>
+        <div id="mailWinOrders"></div>
+      </div>
+    </div>
+  </div>
+</div>
 
 <section class="history-panel anchor" id="history"><div class="history-head"><div><h2>Order history</h2><p>View customer details and update fulfilment</p></div><button id="historySyncStripe" type="button" class="header-btn" title="Pull in any Stripe orders missing from this list (e.g. ones placed before this dashboard existed)">Sync from Stripe</button><button id="historyRefresh" type="button">Refresh</button></div><p id="historyStatus" role="status">Loading orders…</p><div id="historyList"></div></section>
 <div class="section-heading anchor" id="custpanel"><div><h2>Customers</h2><p>Order history and lifetime spend per customer</p></div><button id="customersRefresh" type="button" class="header-btn">Refresh</button></div>
@@ -578,50 +621,136 @@ function timeAgo(iso) {
   return `${Math.round(hours / 24)}d ago`;
 }
 
-let inboxOpenId = "";
+// ---- Customer inbox: list, unread badge, and the email window ----
+function shortOrderNumber(id) {
+  const clean = String(id || "").replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
+  return "#TC-" + (clean.slice(-6) || "ORDER");
+}
+function senderAddress(from) {
+  const m = String(from || "").match(/<([^<>]+)>/);
+  return (m ? m[1] : String(from || "")).trim().toLowerCase();
+}
+function senderName(from) {
+  return String(from || "").replace(/<[^<>]+>/, "").replace(/"/g, "").trim();
+}
+function inboxSeen() {
+  try { return new Set(JSON.parse(localStorage.getItem("tcInboxSeen") || "[]")); } catch (e) { return new Set(); }
+}
+function markInboxSeen(id) {
+  try { const seen = inboxSeen(); seen.add(id); localStorage.setItem("tcInboxSeen", JSON.stringify([...seen].slice(-300))); } catch (e) {}
+}
+let inboxEmails = [];
+function renderInbox() {
+  const el = document.getElementById("inboxList");
+  const seen = inboxSeen();
+  const unread = inboxEmails.filter((m) => !seen.has(m.id)).length;
+  const badge = document.getElementById("inboxBadge");
+  badge.textContent = unread;
+  badge.classList.toggle("show", unread > 0);
+  el.innerHTML = inboxEmails
+    .map(
+      (m) =>
+        `<div class="sub-row${seen.has(m.id) ? "" : " unread"}" data-inbox-id="${escapeHtml(m.id)}"><span class="sub-email">${escapeHtml(senderName(m.from) || senderAddress(m.from))} <span class="sub-subject">— ${escapeHtml(m.subject)}</span></span><span class="sub-meta">to ${escapeHtml(m.to)} · ${timeAgo(m.createdAt)}</span></div>`,
+    )
+    .join("");
+}
 async function pollInbox() {
   try {
     const res = await fetch("/admin-inbox", { cache: "no-store" });
     if (reloadIfUnauthorized(res.status)) return;
     const data = await res.json();
     const el = document.getElementById("inboxList");
-    const emails = data.emails || [];
-    if (data.error && !emails.length) {
-      el.innerHTML = `<div class="sub-row" style="cursor:default"><span class="sub-email">${escapeHtml(data.error)}</span></div>`;
+    inboxEmails = data.emails || [];
+    if (!inboxEmails.length) {
+      document.getElementById("inboxBadge").classList.remove("show");
+      el.innerHTML = `<div class="sub-row" style="cursor:default"><span class="sub-email">${escapeHtml(data.error || "No emails received yet")}</span></div>`;
       return;
     }
-    if (!emails.length) {
-      el.innerHTML = `<div class="sub-row" style="cursor:default"><span class="sub-email">No emails received yet</span></div>`;
-      return;
-    }
-    if (inboxOpenId) return; // don't redraw while one is being read
-    el.innerHTML = emails
-      .map(
-        (m) =>
-          `<div class="sub-row" data-inbox-id="${escapeHtml(m.id)}"><span class="sub-email">${escapeHtml(m.from)} <span class="sub-subject">— ${escapeHtml(m.subject)}</span></span><span class="sub-meta">to ${escapeHtml(m.to)} · ${timeAgo(m.createdAt)}</span></div>`,
-      )
-      .join("");
+    renderInbox();
   } catch (e) {
     // transient — leave the last known list showing
   }
 }
-document.addEventListener("click", async (ev) => {
-  const row = ev.target.closest && ev.target.closest("[data-inbox-id]");
-  if (!row) return;
-  const next = row.nextElementSibling;
-  if (next && next.classList.contains("inbox-body")) { next.remove(); inboxOpenId = ""; return; }
-  document.querySelectorAll(".inbox-body").forEach((n) => n.remove());
-  const box = document.createElement("div");
-  box.className = "inbox-body";
-  box.textContent = "Loading…";
-  row.after(box);
-  inboxOpenId = row.dataset.inboxId;
+
+let mailWinCurrent = null;
+function closeMailWin() { document.getElementById("mailWin").classList.remove("open"); mailWinCurrent = null; }
+document.getElementById("mailWinClose").addEventListener("click", closeMailWin);
+document.getElementById("mailWin").addEventListener("click", (ev) => { if (ev.target.id === "mailWin") closeMailWin(); });
+document.addEventListener("keydown", (ev) => { if (ev.key === "Escape") closeMailWin(); });
+
+async function openMailWin(id) {
+  const summary = inboxEmails.find((m) => m.id === id);
+  if (!summary) return;
+  mailWinCurrent = summary;
+  const address = senderAddress(summary.from);
+  document.getElementById("mailWinSubject").textContent = summary.subject;
+  document.getElementById("mailWinMeta").textContent = `From ${summary.from} · to ${summary.to} · ${timeAgo(summary.createdAt)}${summary.attachments ? " · " + summary.attachments + " attachment(s) — open in Resend to view" : ""}`;
+  const text = document.getElementById("mailWinText"); text.textContent = "Loading…";
+  const cust = document.getElementById("mailWinCustomer"); cust.textContent = "Loading…";
+  const orders = document.getElementById("mailWinOrders"); orders.textContent = "";
+  document.getElementById("mailWinReply").value = "";
+  document.getElementById("mailWinStatus").textContent = "";
+  document.getElementById("mailWin").classList.add("open");
+  markInboxSeen(id); renderInbox();
+
+  fetch(`/admin-inbox?id=${encodeURIComponent(id)}`, { cache: "no-store" })
+    .then((r) => r.json())
+    .then((d) => {
+      if (!mailWinCurrent || mailWinCurrent.id !== id) return;
+      text.textContent = d.email ? d.email.text || "(no text in this email)" : d.error || "Couldn't load this email.";
+      if (d.email && d.email.messageId) mailWinCurrent.messageId = d.email.messageId;
+    })
+    .catch(() => { text.textContent = "Couldn't load this email."; });
+
   try {
-    const res = await fetch(`/admin-inbox?id=${encodeURIComponent(inboxOpenId)}`, { cache: "no-store" });
+    const res = await fetch("/admin-order-history", { cache: "no-store" });
     const data = await res.json();
-    box.textContent = data.email ? data.email.text || "(no text in this email)" : data.error || "Couldn't load this email.";
+    if (!mailWinCurrent || mailWinCurrent.id !== id) return;
+    const mine = (data.orders || []).filter((o) => String(o.customer_email || "").toLowerCase() === address);
+    cust.textContent = "";
+    const name = orderElement("strong", (mine[0] && mine[0].customer_name) || senderName(summary.from) || "Unknown sender");
+    cust.append(name, document.createElement("br"), document.createTextNode(address));
+    if (mine[0] && mine[0].customer_phone) cust.append(document.createElement("br"), document.createTextNode(mine[0].customer_phone));
+    const spent = mine.reduce((sum, o) => sum + Number(o.total_minor || 0), 0) / 100;
+    cust.append(document.createElement("br"), document.createTextNode(mine.length ? `${mine.length} order${mine.length > 1 ? "s" : ""} · ${mine[0].currency} ${spent.toFixed(2)} total` : "No orders found under this email address"));
+    if (!mine.length) { orders.textContent = "If they ordered with a different email, find the order under Orders."; return; }
+    mine.forEach((o, i) => {
+      const entry = buildOrderEntry(o, (data.items || []).filter((it) => it.order_id === o.id), { nested: true });
+      if (i === 0) entry.open = true;
+      orders.append(entry);
+    });
   } catch (e) {
-    box.textContent = "Couldn't load this email.";
+    cust.textContent = address;
+    orders.textContent = "Couldn't load orders for this customer.";
+  }
+}
+
+document.addEventListener("click", (ev) => {
+  const row = ev.target.closest && ev.target.closest("[data-inbox-id]");
+  if (row) openMailWin(row.dataset.inboxId);
+});
+
+document.getElementById("mailWinSend").addEventListener("click", async () => {
+  if (!mailWinCurrent) return;
+  const status = document.getElementById("mailWinStatus");
+  const box = document.getElementById("mailWinReply");
+  const btn = document.getElementById("mailWinSend");
+  if (!box.value.trim()) { status.textContent = "Write a reply first."; return; }
+  btn.disabled = true; status.textContent = "Sending…";
+  try {
+    const subject = /^re:/i.test(mailWinCurrent.subject) ? mailWinCurrent.subject : "Re: " + mailWinCurrent.subject;
+    const res = await fetch("/admin-inbox-reply", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ to: senderAddress(mailWinCurrent.from), subject, text: box.value, messageId: mailWinCurrent.messageId || "" }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw Error(data.error || "Unable to send");
+    status.textContent = "Reply sent from orders@trendycatch.us"; box.value = "";
+  } catch (e) {
+    status.textContent = e.message || "Unable to send";
+  } finally {
+    btn.disabled = false;
   }
 });
 
@@ -725,7 +854,7 @@ function buildOrderEntry(order, items, opts) {
   const total=Number(order.total_minor || 0)/100;
   entry.append(orderElement('summary',`${order.customer_name || 'Customer'} · ${order.currency} ${total.toFixed(2)} · ${order.fulfillment_status}`));
   const fields=orderElement('div',null,'history-fields');
-  orderField(fields,'Order ID',order.id); orderField(fields,'Date',order.created_at); orderField(fields,'Email',order.customer_email); orderField(fields,'Phone',order.customer_phone);
+  orderField(fields,'Order number',shortOrderNumber(order.id)); orderField(fields,'Order ID',order.id); orderField(fields,'Date',order.created_at); orderField(fields,'Email',order.customer_email); orderField(fields,'Phone',order.customer_phone);
   orderField(fields,'Shipping name',order.shipping_name); orderField(fields,'Shipping address',printableAddress(order.shipping_address_json)); orderField(fields,'Billing address',printableAddress(order.billing_address_json));
   orderField(fields,'Payment',order.payment_status); entry.append(fields);
   entry.append(buildItemsRow(items));
