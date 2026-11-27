@@ -40,10 +40,14 @@ function buildEmailHtml(order: Record<string, unknown>, items: Array<Record<stri
     // Malformed/legacy address JSON — leave the address block out rather than fail the send.
   }
 
+  // Deliberately plain text, no link and no carrier name: the 17TRACK page
+  // (or the carrier's own tracking page) shows the full checkpoint history,
+  // which for a dropshipped order includes the overseas origin — exactly
+  // what this email must not expose to the customer. Just the number itself,
+  // so a customer who wants to track it has to go look it up themselves.
   let trackingHtml = ''
   if (order.fulfillment_status === 'fulfilled' && order.tracking_number) {
-    const link = (order.tracking_url as string) || `https://t.17track.net/en#nums=${encodeURIComponent(String(order.tracking_number))}`
-    trackingHtml = `<p>Tracking: <a href="${escapeHtml(link)}">${escapeHtml(String(order.tracking_number))}</a>${order.tracking_carrier ? ' via ' + escapeHtml(String(order.tracking_carrier)) : ''}</p>`
+    trackingHtml = `<p>Tracking number: <strong>${escapeHtml(String(order.tracking_number))}</strong></p>`
   }
 
   const heading = kind === 'shipped'
