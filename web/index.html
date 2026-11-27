@@ -7,22 +7,28 @@
 <meta name="description" content="Clever everyday gadgets that actually solve a problem. Fast shipping to Australia, New Zealand, the US and Canada." />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 <style>
   :root {
-    --ink: #1a1a1a;
-    --muted: #6b7280;
-    --bg: #fff8e7;
+    /* Pastel palette shared with product.html: violet (primary), pink
+       (accent), light blue (surfaces). Role names kept from the old theme. */
+    --ink: #2b2230;
+    --muted: #6e6480;
+    --bg: #f7f3ff;
     --card: #ffffff;
-    --green: #1b5e20;
-    --green-dark: #0f3d14;
-    --accent: #ffb703;
-    --accent-dark: #e4a300;
-    --price: #d62828;
-    --border: #e7e7e7;
+    --green: #5a3ec8;
+    --green-dark: #43299e;
+    --accent: #ff8fb8;
+    --accent-dark: #f56fa3;
+    --price: #d6336c;
+    --border: #e8e0f5;
+    --pink-soft: #ffeaf4;
+    --lilac-soft: #f1eaff;
+    --blue-soft: #e6f1ff;
+    --heading-font: "Fraunces", Georgia, "Times New Roman", serif;
   }
   * { box-sizing: border-box; }
-  body { margin: 0; font-family: "Montserrat", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: var(--bg); color: var(--ink); }
+  body { margin: 0; font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: var(--bg); color: var(--ink); }
   a { color: inherit; }
   header.site {
     position: sticky; top: 0; z-index: 10;
@@ -250,6 +256,36 @@
     .hero h1 { font-size: 17px; }
     .grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
   }
+
+  /* ===== Pastel redesign (draft) — matches product.html ===== */
+  body { background: var(--bg) linear-gradient(180deg, var(--pink-soft) 0, var(--lilac-soft) 420px, var(--blue-soft) 900px, var(--bg) 1400px) no-repeat; }
+  h1, h2 { font-family: var(--heading-font); font-weight: 700; }
+  header.site { background: linear-gradient(90deg, var(--green-dark) 0%, var(--green) 55%, #7d5ce0 100%); }
+  .hero { background: linear-gradient(120deg, var(--green-dark) 0%, var(--green) 45%, #c95aa8 100%); padding: 34px 20px; }
+  .hero h1 { font-size: 28px; font-weight: 700; }
+  .hero-ctas a.primary { background: #fff; color: var(--green-dark); }
+  .hero-ctas a.primary:hover { background: var(--pink-soft); }
+  .bundle-banner { background: rgba(255,255,255,0.75); }
+  .bundle-head h2 { font-size: 24px; }
+  .bundle-item { background: var(--lilac-soft); border-radius: 14px; }
+  .bundle-summary { background: linear-gradient(160deg, var(--green) 0%, var(--green-dark) 100%); border-radius: 18px; }
+  .bundle-summary .bs-price { font-family: var(--heading-font); color: #fff; }
+  .bundle-summary .bs-buy { background: #fff; color: var(--green-dark); }
+  .bundle-summary .bs-buy:hover { background: var(--pink-soft); }
+  .trust-strip { background: rgba(255,255,255,0.85); }
+  .card { border-radius: 18px; border-color: var(--border); box-shadow: 0 8px 22px rgba(90, 62, 200, 0.07); }
+  .card .thumb { background: var(--lilac-soft); }
+  .card .thumb-strip img.active { border-color: var(--green); }
+  .card .title { font-weight: 700; }
+  .card .price { font-family: var(--heading-font); font-size: 19px; font-weight: 700; color: var(--price); background: none; padding: 0; }
+  .buy-btn { background: linear-gradient(90deg, var(--green) 0%, #b8479f 100%); color: #fff; font-family: inherit; }
+  .buy-btn:hover { background: linear-gradient(90deg, var(--green-dark) 0%, #a23a8b 100%); }
+  .signup h2 { font-size: 26px; }
+  .signup-form input:focus { outline: 2px solid var(--green); border-color: var(--green); }
+  .signup-form button { background: var(--green); font-family: inherit; }
+  .signup-msg.success { color: var(--green); }
+  .tracking-box input { color: var(--ink); border-radius: 999px; padding: 8px 14px; }
+  .tracking-box button { background: var(--accent); color: var(--ink); border-radius: 999px; font-family: inherit; }
 </style>
 </head>
 <body>
