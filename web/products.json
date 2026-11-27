@@ -1097,5 +1097,145 @@
         }
       ]
     }
+  },
+  {
+    "id": "led-curtain-string-lights",
+    "title": "LED Fairy String Curtain Lights with Remote (8 Modes)",
+    "hook": "Turn any wall into a warm, glowing backdrop in minutes — 8 remote-controlled light modes, no tools, no mess.",
+    "images": [
+      "https://ae-pic-a1.aliexpress-media.com/kf/S19e6f89d0ff0431380ec8fa07f40e593M.jpg",
+      "https://ae-pic-a1.aliexpress-media.com/kf/S8b3e7fdfc45743408438479637d36ef2x.jpg",
+      "https://ae-pic-a1.aliexpress-media.com/kf/S5f192bd8c9d84fcd9da7649fa060a98dJ.jpg",
+      "https://ae-pic-a1.aliexpress-media.com/kf/S27cd4d4b5c1b44dba1ad91b48848e7b2N.jpg",
+      "https://ae-pic-a1.aliexpress-media.com/kf/S00c593eb545d44b4be6bc9ed6c5b21a4K.jpg"
+    ],
+    "variant": "3M(W) x 1M(H), 100 LEDs, USB powered, remote included",
+    "variants": [
+      {
+        "label": "100 LEDs (3M x 1M)",
+        "sku": "100LED-3x1",
+        "prices": {
+          "AU": 24.95,
+          "CA": 24.95,
+          "NZ": 27.95,
+          "US": 19.95
+        },
+        "compareAt": {
+          "AU": 44.95,
+          "CA": 44.95,
+          "NZ": 50.95,
+          "US": 35.95
+        }
+      },
+      {
+        "label": "200 LEDs (3M x 2M)",
+        "sku": "200LED-3x2",
+        "prices": {
+          "AU": 27.95,
+          "CA": 27.95,
+          "NZ": 30.95,
+          "US": 22.95
+        },
+        "compareAt": {
+          "AU": 49.95,
+          "CA": 49.95,
+          "NZ": 55.95,
+          "US": 41.95
+        }
+      },
+      {
+        "label": "300 LEDs (3M x 3M)",
+        "sku": "300LED-3x3",
+        "prices": {
+          "AU": 29.95,
+          "CA": 29.95,
+          "NZ": 32.95,
+          "US": 24.95
+        },
+        "compareAt": {
+          "AU": 53.95,
+          "CA": 53.95,
+          "NZ": 59.95,
+          "US": 44.95
+        }
+      }
+    ],
+    "prices": {
+      "AU": 24.95,
+      "CA": 24.95,
+      "NZ": 27.95,
+      "US": 19.95
+    },
+    "compareAt": {
+      "AU": 44.95,
+      "CA": 44.95,
+      "NZ": 50.95,
+      "US": 35.95
+    },
+    "detail": {
+      "eyebrow": "8 MODES · REMOTE CONTROLLED",
+      "bullets": [
+        "8 remote-controlled lighting modes for any mood or occasion",
+        "Dimmable, with warm, white and multicolor options",
+        "USB powered (5V) — no bulky plug pack needed",
+        "Simple hook-and-drape install, no drilling or tools",
+        "Available in 100, 200 or 300 LEDs to match your space",
+        "Remote control and battery included"
+      ],
+      "features": [
+        {
+          "icon": "🎛️",
+          "title": "8 lighting modes",
+          "text": "Flip between steady glow, fade, twinkle and flash modes from the included remote."
+        },
+        {
+          "icon": "🔆",
+          "title": "Dimmable brightness",
+          "text": "Dial the glow up for a party or down low for a cosy night in."
+        },
+        {
+          "icon": "🔌",
+          "title": "USB powered",
+          "text": "Plug into any USB port, power bank or wall adapter — no special wiring."
+        },
+        {
+          "icon": "📐",
+          "title": "A size for every wall",
+          "text": "Choose 100, 200 or 300 LEDs to cover anything from a headboard to a full curtain wall."
+        }
+      ],
+      "howItWorks": [
+        {
+          "title": "Drape",
+          "text": "Hang the curtain of lights along a wall, window or headboard using the built-in hooks."
+        },
+        {
+          "title": "Plug in",
+          "text": "Connect the USB cable to any USB power source."
+        },
+        {
+          "title": "Set the mode",
+          "text": "Use the remote to pick your brightness and lighting mode."
+        }
+      ],
+      "faq": [
+        {
+          "q": "Does it come with a remote?",
+          "a": "Yes — a remote control and its battery are included."
+        },
+        {
+          "q": "What colours are available?",
+          "a": "Warm white, cool white and multicolor options."
+        },
+        {
+          "q": "Can I leave it on overnight?",
+          "a": "Yes, it's USB powered and safe for extended use — the dimmer lets you turn it down low for overnight use."
+        },
+        {
+          "q": "Is it suitable for outdoor use?",
+          "a": "It's designed for indoor use; keep it dry and away from direct weather exposure."
+        }
+      ]
+    }
   }
 ]
