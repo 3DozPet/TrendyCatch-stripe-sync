@@ -363,73 +363,44 @@ document.getElementById("soundBtn").addEventListener("click", async () => {
   }
 });
 
-// A synthesized cash-register "cha-ching", in the spirit of the classic
-// new-order chime on Shopify: a coin-jingle burst, a second lighter jingle as
-// the bell notes land, then two struck bell notes (the second higher and
-// ringing longer, each with slightly detuned partials for a metallic
-// "register bell" timbre rather than a plain sine).
+// A continuous metallic bicycle-bell ring, lasting half a second — three
+// overlapping bell tones with a tremolo wobble layered on top for a
+// "ring-ring" register-bell feel rather than a plain struck note.
 function playChime() {
   if (!audioCtx || audioCtx.state !== "running") return;
   const now = audioCtx.currentTime;
-  const master = audioCtx.createGain();
-  master.gain.setValueAtTime(0.8, now);
-  master.connect(audioCtx.destination);
+  const duration = 0.5;
+  const tremolo = audioCtx.createGain();
+  tremolo.gain.setValueAtTime(0.65, now);
+  tremolo.connect(audioCtx.destination);
 
-  function coinJingle(startOffset, duration, peakGain, centerFreq) {
-    const t0 = now + startOffset;
-    const bufferSize = Math.floor(audioCtx.sampleRate * duration);
-    const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-    const data = buffer.getChannelData(0);
-    for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
-    const noise = audioCtx.createBufferSource();
-    noise.buffer = buffer;
-    const noiseFilter = audioCtx.createBiquadFilter();
-    noiseFilter.type = "bandpass";
-    noiseFilter.frequency.value = centerFreq;
-    noiseFilter.Q.value = 1.4;
-    const noiseGain = audioCtx.createGain();
-    noiseGain.gain.setValueAtTime(0.0001, t0);
-    noiseGain.gain.exponentialRampToValueAtTime(peakGain, t0 + 0.01);
-    noiseGain.gain.exponentialRampToValueAtTime(0.0001, t0 + duration);
-    noise.connect(noiseFilter);
-    noiseFilter.connect(noiseGain);
-    noiseGain.connect(master);
-    noise.start(t0);
-    noise.stop(t0 + duration + 0.02);
-  }
+  const lfo = audioCtx.createOscillator();
+  const depth = audioCtx.createGain();
+  lfo.type = "sine";
+  lfo.frequency.setValueAtTime(25, now);
+  lfo.frequency.exponentialRampToValueAtTime(15, now + duration);
+  depth.gain.value = 0.35;
+  lfo.connect(depth);
+  depth.connect(tremolo.gain);
+  lfo.start(now);
+  lfo.stop(now + duration);
 
-  // First jingle right at the start; a second, lighter one as the "ching"
-  // bell lands, like coins settling after the register drawer pops open.
-  coinJingle(0, 0.18, 0.5, 4200);
-  coinJingle(0.15, 0.1, 0.22, 5200);
-
-  // "Cha" then "Ching": two struck bell notes, the second higher and ringing longer.
-  const notes = [
-    { start: 0.0, freq: 1568, ringTime: 0.28, level: 0.3 },   // cha
-    { start: 0.14, freq: 2349, ringTime: 0.6, level: 0.32 },  // ching
-  ];
-  notes.forEach(({ start, freq, ringTime, level }) => {
-    const t0 = now + start;
-    // Slightly detuned partials (not exact harmonics) give the strike a
-    // metallic "bell" character instead of a clean, flute-like sine tone.
-    [
-      [freq, level],
-      [freq * 2.01, level * 0.35],
-      [freq * 2.98, level * 0.18],
-      [freq * 4.02, level * 0.08],
-    ].forEach(([frequency, lvl]) => {
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.type = "sine";
-      osc.frequency.setValueAtTime(frequency, t0);
-      gain.gain.setValueAtTime(0.0001, t0);
-      gain.gain.exponentialRampToValueAtTime(lvl, t0 + 0.006);
-      gain.gain.exponentialRampToValueAtTime(0.0001, t0 + ringTime);
-      osc.connect(gain);
-      gain.connect(master);
-      osc.start(t0);
-      osc.stop(t0 + ringTime + 0.02);
-    });
+  // Three overlapping bells, each with metallic overtones, ring together.
+  [2637, 2793, 3136].flatMap((base) =>
+    [[base, 0.05], [base * 2.76, 0.02], [base * 4.1, 0.01]]
+  ).forEach(([frequency, level]) => {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(frequency, now);
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.exponentialRampToValueAtTime(level, now + 0.005);
+    gain.gain.setValueAtTime(level, now + duration - 0.2);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+    osc.connect(gain);
+    gain.connect(tremolo);
+    osc.start(now);
+    osc.stop(now + duration + 0.02);
   });
 }
 
