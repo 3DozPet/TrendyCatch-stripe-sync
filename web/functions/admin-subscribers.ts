@@ -2,6 +2,12 @@
 // written by /subscribe. Gated exactly like /stats, /admin-orders and
 // /live-visitors: customer info is for the store owner's eyes only, never
 // public.
+//
+// Reads the "subscribers:all" KV key (maintained by subscribe.ts on every
+// signup) instead of list()-ing every subscriber: key. Workers KV's free
+// plan caps list() at 1,000 calls/day account-wide, shared with every other
+// endpoint — this used to be polled every 15s, which was most of the way to
+// blowing that budget on its own. Must stay a single get(), never list().
 import { hasValidSession } from "./_lib/auth"
 
 interface Env {
@@ -17,16 +23,14 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
     return json({ error: "unauthorized" }, 401)
   }
 
-  const list = await env.ORDERS_KV.list({ prefix: "subscriber:", limit: 1000 })
-  const subscribers: any[] = []
-
-  for (const k of list.keys) {
-    const raw = await env.ORDERS_KV.get(k.name)
-    if (!raw) continue
+  const raw = await env.ORDERS_KV.get("subscribers:all")
+  let subscribers: any[] = []
+  if (raw) {
     try {
-      subscribers.push(JSON.parse(raw))
+      const parsed = JSON.parse(raw)
+      if (Array.isArray(parsed)) subscribers = parsed
     } catch {
-      // skip malformed entry
+      subscribers = []
     }
   }
 

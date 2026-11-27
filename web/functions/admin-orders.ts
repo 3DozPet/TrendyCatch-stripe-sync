@@ -1,8 +1,15 @@
 // GET /admin-orders?since=<timestamp>
-// Feeds the /admin.html order-alert dashboard. Lists recent "new order"
-// notifications written by stripe-order-sync.ts into KV, newest first.
-// Polled every few seconds by admin.html, which plays a chime for anything
-// newer than the last order it already showed.
+// Feeds the /admin.html order-alert dashboard. Reads the "orders:feed" KV
+// key — a single rolling JSON array (newest 50, newest first) maintained by
+// pushToOrderFeed() in _lib/stripe-sync-core.ts whenever a new order lands.
+//
+// This used to be env.ORDERS_KV.list({ prefix: "order:" }) with one KV key
+// per order, but list() is capped at 1,000 calls/day on Workers KV's free
+// plan account-wide, and this endpoint alone is polled every 5s — that blew
+// through the daily cap within minutes of the dashboard being open, after
+// which every list() call failed and the dashboard showed "Reconnecting…"
+// all day. A single get() has no such cap, so this endpoint must never go
+// back to list().
 
 import { hasValidSession } from "./_lib/auth"
 
@@ -22,24 +29,18 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
   const url = new URL(request.url)
   const since = Number(url.searchParams.get("since") ?? "0")
 
-  const list = await env.ORDERS_KV.list({ prefix: "order:", limit: 50 })
-  const keys = list.keys.map((k) => k.name).sort().reverse() // newest first (timestamp is in the key)
-
-  const orders: any[] = []
-  for (const key of keys) {
-    // key format: order:<timestampMs>:<sessionHash>
-    const ts = Number(key.split(":")[1] ?? "0")
-    if (ts <= since) continue
-    const raw = await env.ORDERS_KV.get(key)
-    if (raw) {
-      try {
-        orders.push({ ...JSON.parse(raw), ts })
-      } catch {
-        // skip malformed entry
-      }
+  const raw = await env.ORDERS_KV.get("orders:feed")
+  let feed: any[] = []
+  if (raw) {
+    try {
+      const parsed = JSON.parse(raw)
+      if (Array.isArray(parsed)) feed = parsed
+    } catch {
+      feed = []
     }
-    if (orders.length >= 20) break
   }
+
+  const orders = feed.filter((o) => Number(o?.ts ?? 0) > since).slice(0, 20)
 
   return json({ orders, serverNow: Date.now() })
 }

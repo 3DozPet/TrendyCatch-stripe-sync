@@ -330,10 +330,17 @@ export async function handleStripeOrderSync(
         landingUrl: session.metadata?.landing_url ?? null,
         createdAt: new Date().toISOString(),
       }
-      // Key sortable by time, auto-expires after 2 days so the feed never grows unbounded.
-      await env.ORDERS_KV.put(`order:${Date.now()}:${tagSessionId}`, JSON.stringify(notification), {
-        expirationTtl: 60 * 60 * 48,
-      })
+      // Pushed onto a single rolling "orders:feed" key (newest 50, newest
+      // first) instead of one KV key per order. admin-orders.ts can then
+      // serve the live-order dashboard with a single KV get() on every poll
+      // instead of a list() — Workers KV's free plan caps list() at 1,000/day
+      // account-wide, and the dashboard polling every 5s blew through that
+      // within minutes, which is what caused the "Reconnecting…" status.
+      // Best-effort read-modify-write: if two orders land in the same
+      // instant across the two Stripe accounts, the rarer race just drops
+      // one from the feed (the order itself is still recorded in D1/Shopify
+      // either way) — an acceptable trade-off for never calling list() here.
+      await pushToOrderFeed(env.ORDERS_KV, { ...notification, ts: Date.now() })
     } catch (err) {
       console.error(`[${account.accountLabel}] Order notification KV write failed (order was still created):`, (err as Error).message)
     }
@@ -529,6 +536,29 @@ async function updateStatsSummary(
   stats.updatedAt = new Date().toISOString()
 
   await kv.put(key, JSON.stringify(stats))
+}
+
+// The live "new order" feed admin.html polls every 5s, kept as a single
+// rolling JSON array (newest first, capped at ORDER_FEED_MAX) under one KV
+// key instead of one key per order. Read-modify-write, same trade-off as
+// updateStatsSummary above: fine at this order volume.
+const ORDER_FEED_KEY = "orders:feed"
+const ORDER_FEED_MAX = 50
+
+async function pushToOrderFeed(kv: KVNamespace, entry: Record<string, unknown>): Promise<void> {
+  const raw = await kv.get(ORDER_FEED_KEY)
+  let feed: unknown[] = []
+  if (raw) {
+    try {
+      const parsed = JSON.parse(raw)
+      if (Array.isArray(parsed)) feed = parsed
+    } catch {
+      feed = []
+    }
+  }
+  feed.unshift(entry)
+  if (feed.length > ORDER_FEED_MAX) feed.length = ORDER_FEED_MAX
+  await kv.put(ORDER_FEED_KEY, JSON.stringify(feed))
 }
 
 async function sha256Hex(input: string): Promise<string> {

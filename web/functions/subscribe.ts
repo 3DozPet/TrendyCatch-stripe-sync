@@ -42,6 +42,28 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   // Signups never expire — this is a durable list, not a rolling feed.
   await env.ORDERS_KV.put(key, JSON.stringify(record))
 
+  // Also keep a single "subscribers:all" index (newest first, deduped by
+  // email) so /admin-subscribers can read it with one get() instead of
+  // list()-ing every subscriber: key — see admin-subscribers.ts for why
+  // list() must stay off this endpoint.
+  try {
+    const indexRaw = await env.ORDERS_KV.get("subscribers:all")
+    let all: any[] = []
+    if (indexRaw) {
+      try {
+        const parsed = JSON.parse(indexRaw)
+        if (Array.isArray(parsed)) all = parsed
+      } catch {
+        all = []
+      }
+    }
+    all = all.filter((s) => s?.email !== email)
+    all.unshift(record)
+    await env.ORDERS_KV.put("subscribers:all", JSON.stringify(all))
+  } catch (err) {
+    console.error("subscribers:all index update failed (signup was still recorded):", (err as Error).message)
+  }
+
   return json({ ok: true })
 }
 

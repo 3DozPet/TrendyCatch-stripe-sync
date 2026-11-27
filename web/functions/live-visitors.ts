@@ -2,12 +2,29 @@
 // Polled by /admin.html to show a Shopify-Live-View-style "N live on the
 // page right now" count, broken down by country. Counts the still-valid
 // (not yet expired) visitor:* heartbeat entries written by visitor-ping.ts.
+//
+// Unlike admin-orders/admin-subscribers, this one genuinely needs list() —
+// visitor heartbeats come from many independent page loads, with no single
+// writer that could maintain a rolling count instead. But Workers KV's free
+// plan caps list() at 1,000 calls/day account-wide, and this endpoint is
+// polled every 5s by admin.html, which alone would exceed that in well
+// under an hour (it's what was causing every list()-based endpoint,
+// including the order feed, to start 500ing with "KV list() limit exceeded
+// for the day"). So the real list()+get() scan only runs once every
+// CACHE_TTL_MS; every poll in between is served the cached snapshot via a
+// single get() on "visitors:snapshot". Worst case, even left open 24/7, this
+// is 86400s / 45s ≈ 1,920 recomputes/day — comfortably under budget once
+// admin-orders and admin-subscribers (together far bigger consumers) no
+// longer call list() at all.
 
 import { hasValidSession } from "./_lib/auth"
 
 interface Env {
   ORDERS_KV?: KVNamespace
 }
+
+const SNAPSHOT_KEY = "visitors:snapshot"
+const CACHE_TTL_MS = 45_000
 
 export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
   if (!env.ORDERS_KV) {
@@ -16,6 +33,18 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
 
   if (!(await hasValidSession(request, env.ORDERS_KV))) {
     return json({ error: "unauthorized" }, 401)
+  }
+
+  const cachedRaw = await env.ORDERS_KV.get(SNAPSHOT_KEY)
+  if (cachedRaw) {
+    try {
+      const cached = JSON.parse(cachedRaw)
+      if (Date.now() - Number(cached.computedAt ?? 0) < CACHE_TTL_MS) {
+        return json({ count: cached.count, byCountry: cached.byCountry })
+      }
+    } catch {
+      // fall through and recompute
+    }
   }
 
   const list = await env.ORDERS_KV.list({ prefix: "visitor:", limit: 500 })
@@ -33,6 +62,14 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
     } catch {
       // skip malformed entry
     }
+  }
+
+  try {
+    await env.ORDERS_KV.put(SNAPSHOT_KEY, JSON.stringify({ count, byCountry, computedAt: Date.now() }), {
+      expirationTtl: 120,
+    })
+  } catch (err) {
+    console.error("visitors:snapshot cache write failed (count still returned this request):", (err as Error).message)
   }
 
   return json({ count, byCountry })
