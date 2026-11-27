@@ -147,6 +147,73 @@
       "CA": 41.95,
       "NZ": 46.95,
       "US": 33.95
+    },
+    "detail": {
+      "eyebrow": "PUNCH-FREE · STAINLESS STEEL",
+      "bullets": [
+        "Keeps your razor off the sink and out of standing water",
+        "Punch-free wall mount, so there is no drilling",
+        "Stainless steel build made for a wet bathroom",
+        "Choose a 1, 2 or 4 pack for every shower and sink"
+      ],
+      "features": [
+        {
+          "icon": "🪒",
+          "title": "Dry between shaves",
+          "text": "Hanging your razor lets it drip dry, so it isn't sitting in a puddle on the counter."
+        },
+        {
+          "icon": "🛠️",
+          "title": "No drill needed",
+          "text": "The punch-free mount goes up without tools or holes in your tiles."
+        },
+        {
+          "icon": "✨",
+          "title": "Stainless steel",
+          "text": "A steel holder that suits a bathroom and wipes clean."
+        },
+        {
+          "icon": "📦",
+          "title": "Packs for the whole house",
+          "text": "Pick 1, 2 or 4 holders, enough for each shower and basin."
+        }
+      ],
+      "howItWorks": [
+        {
+          "title": "Clean",
+          "text": "Wipe the wall or tile and let it dry fully."
+        },
+        {
+          "title": "Stick",
+          "text": "Press the holder firmly onto the surface."
+        },
+        {
+          "title": "Hang",
+          "text": "Hang your razor on the hook after each shave."
+        }
+      ],
+      "faq": [
+        {
+          "q": "Do I need to drill?",
+          "a": "No. It uses a punch-free wall mount."
+        },
+        {
+          "q": "What surface works best?",
+          "a": "A clean, dry, smooth surface such as tile or glass gives the best hold."
+        },
+        {
+          "q": "How many come in an order?",
+          "a": "You choose a 1, 2 or 4 pack when you order."
+        },
+        {
+          "q": "How long does delivery take?",
+          "a": "Orders are usually handed to our shipping partners within 1 to 3 business days. Estimated delivery is 7 to 18 business days in Australia, 8 to 18 in the United States, and 10 to 20 in New Zealand and Canada. Shipping is free."
+        },
+        {
+          "q": "What if I change my mind?",
+          "a": "You can request a return within 30 days of receiving your item if it is unused and in its original packaging. Email orders@trendycatch.us with your order number. If it arrives damaged or faulty, we replace or refund it at no cost to you."
+        }
+      ]
     }
   },
   {
@@ -173,6 +240,73 @@
       "CA": 91.95,
       "NZ": 101.95,
       "US": 69.95
+    },
+    "detail": {
+      "eyebrow": "MEMORY FOAM · CONTOURED",
+      "bullets": [
+        "Butterfly shape contoured for your neck and shoulders",
+        "Slow-rebound memory foam that moulds to you",
+        "Designed to keep your head supported through the night",
+        "Comes in black"
+      ],
+      "features": [
+        {
+          "icon": "🦋",
+          "title": "Contoured shape",
+          "text": "The butterfly outline gives your neck and shoulders their own space on the pillow."
+        },
+        {
+          "icon": "☁️",
+          "title": "Slow-rebound foam",
+          "text": "Memory foam sinks slowly under your weight and returns to shape when you get up."
+        },
+        {
+          "icon": "😴",
+          "title": "Made for the whole night",
+          "text": "Built to keep its support from the time you lie down until morning."
+        },
+        {
+          "icon": "🖤",
+          "title": "Simple black finish",
+          "text": "A plain black pillow that suits any bedroom."
+        }
+      ],
+      "howItWorks": [
+        {
+          "title": "Unpack",
+          "text": "Take the pillow out and let the foam settle into shape."
+        },
+        {
+          "title": "Position",
+          "text": "Rest your neck in the curved section, with your shoulders against the wings."
+        },
+        {
+          "title": "Sleep",
+          "text": "Settle in and give yourself a few nights to get used to the new shape."
+        }
+      ],
+      "faq": [
+        {
+          "q": "Will it feel different from my normal pillow?",
+          "a": "Yes. Contoured memory foam feels firmer and more shaped than a standard pillow, and most people need a few nights to adjust."
+        },
+        {
+          "q": "What colour is it?",
+          "a": "Black."
+        },
+        {
+          "q": "Does it treat neck problems?",
+          "a": "It is a comfort pillow, not a medical device. If you have ongoing neck pain, check with your doctor."
+        },
+        {
+          "q": "How long does delivery take?",
+          "a": "Orders are usually handed to our shipping partners within 1 to 3 business days. Estimated delivery is 7 to 18 business days in Australia, 8 to 18 in the United States, and 10 to 20 in New Zealand and Canada. Shipping is free."
+        },
+        {
+          "q": "What if I change my mind?",
+          "a": "You can request a return within 30 days of receiving your item if it is unused and in its original packaging. Email orders@trendycatch.us with your order number. If it arrives damaged or faulty, we replace or refund it at no cost to you."
+        }
+      ]
     }
   },
   {
@@ -199,6 +333,73 @@
       "CA": 57.95,
       "NZ": 63.95,
       "US": 48.95
+    },
+    "detail": {
+      "eyebrow": "240W · CABLE + STAND",
+      "bullets": [
+        "USB-C cable rated up to 240W",
+        "Folds into its own phone stand",
+        "Braided cable, 1.5m long",
+        "Charge and watch hands-free at the same time"
+      ],
+      "features": [
+        {
+          "icon": "⚡",
+          "title": "Up to 240W",
+          "text": "A high-wattage USB-C cable. Actual charging speed depends on your device and charger."
+        },
+        {
+          "icon": "📱",
+          "title": "Built-in stand",
+          "text": "The cable folds into a stand, so you can prop your phone up while it charges."
+        },
+        {
+          "icon": "🧵",
+          "title": "Braided, 1.5m",
+          "text": "A braided cable with enough length to reach from the wall to your desk or bedside."
+        },
+        {
+          "icon": "🎒",
+          "title": "One less thing to carry",
+          "text": "Cable and stand in one, for your bag, desk or travel kit."
+        }
+      ],
+      "howItWorks": [
+        {
+          "title": "Plug in",
+          "text": "Connect the cable to your USB-C charger and your device."
+        },
+        {
+          "title": "Fold",
+          "text": "Fold the stand section out and set your phone on it."
+        },
+        {
+          "title": "Watch",
+          "text": "Charge while you scroll, watch or video call hands-free."
+        }
+      ],
+      "faq": [
+        {
+          "q": "Does it come with a charger?",
+          "a": "No. This is the cable with the built-in stand; use it with your own USB-C charger."
+        },
+        {
+          "q": "Will my phone charge at 240W?",
+          "a": "The cable supports up to 240W. Your phone or laptop charges at the speed its own hardware and charger allow."
+        },
+        {
+          "q": "How long is it?",
+          "a": "1.5 metres."
+        },
+        {
+          "q": "How long does delivery take?",
+          "a": "Orders are usually handed to our shipping partners within 1 to 3 business days. Estimated delivery is 7 to 18 business days in Australia, 8 to 18 in the United States, and 10 to 20 in New Zealand and Canada. Shipping is free."
+        },
+        {
+          "q": "What if I change my mind?",
+          "a": "You can request a return within 30 days of receiving your item if it is unused and in its original packaging. Email orders@trendycatch.us with your order number. If it arrives damaged or faulty, we replace or refund it at no cost to you."
+        }
+      ]
     }
   },
   {
@@ -225,6 +426,74 @@
       "CA": 41.95,
       "NZ": 46.95,
       "US": 35.95
+    },
+    "detail": {
+      "eyebrow": "MANUAL · NO BATTERIES",
+      "bullets": [
+        "Manual trimmer, so there are no batteries to replace",
+        "Stainless steel build",
+        "Washable, rinse it clean after use",
+        "Quiet, with no motor",
+        "Light grey finish"
+      ],
+      "features": [
+        {
+          "icon": "🔋",
+          "title": "No batteries",
+          "text": "It works by hand, so it's always ready and there is nothing to charge."
+        },
+        {
+          "icon": "🚿",
+          "title": "Washable",
+          "text": "Rinse it under the tap when you're done."
+        },
+        {
+          "icon": "🤫",
+          "title": "Silent",
+          "text": "No motor means no buzzing."
+        },
+        {
+          "icon": "✨",
+          "title": "Stainless steel",
+          "text": "A steel trimmer made to be used and washed again and again."
+        }
+      ],
+      "howItWorks": [
+        {
+          "title": "Insert",
+          "text": "Place the tip gently at the edge of the nostril or ear. Don't push it in deep."
+        },
+        {
+          "title": "Twist",
+          "text": "Turn the handle to trim."
+        },
+        {
+          "title": "Rinse",
+          "text": "Wash it under running water and let it dry."
+        }
+      ],
+      "faq": [
+        {
+          "q": "Does it need batteries or charging?",
+          "a": "No. It is fully manual."
+        },
+        {
+          "q": "Can I wash it?",
+          "a": "Yes, it is washable. Rinse it after each use and let it dry."
+        },
+        {
+          "q": "Is it safe to use?",
+          "a": "Use it gently and only at the edge of the nostril or ear. Don't use it on broken or irritated skin."
+        },
+        {
+          "q": "How long does delivery take?",
+          "a": "Orders are usually handed to our shipping partners within 1 to 3 business days. Estimated delivery is 7 to 18 business days in Australia, 8 to 18 in the United States, and 10 to 20 in New Zealand and Canada. Shipping is free."
+        },
+        {
+          "q": "Can I return it?",
+          "a": "If it arrives damaged or faulty, email orders@trendycatch.us within 30 days and we replace or refund it at no cost to you. For hygiene reasons, personal-care items that have been used can't be returned for change of mind."
+        }
+      ]
     }
   },
   {
@@ -251,6 +520,73 @@
       "CA": 83.95,
       "NZ": 91.95,
       "US": 59.95
+    },
+    "detail": {
+      "eyebrow": "HEAT + VIBRATION · RECHARGEABLE",
+      "bullets": [
+        "Adjustable heat for your lower belly or waist",
+        "Vibration massage alongside the warmth",
+        "Rechargeable 5000mAh battery, so there is no cord while you wear it",
+        "Strap-on belt design in grey"
+      ],
+      "features": [
+        {
+          "icon": "🔥",
+          "title": "Adjustable heat",
+          "text": "Set the warmth to the level that feels comfortable."
+        },
+        {
+          "icon": "💆‍♀️",
+          "title": "Vibration massage",
+          "text": "Add vibration to the heat, or use what suits you on the day."
+        },
+        {
+          "icon": "🔋",
+          "title": "5000mAh rechargeable",
+          "text": "Charge it, then wear it without being tied to a power point."
+        },
+        {
+          "icon": "🛋️",
+          "title": "Wear it anywhere",
+          "text": "Strap it on at home, at your desk or on the couch."
+        }
+      ],
+      "howItWorks": [
+        {
+          "title": "Charge",
+          "text": "Charge the belt fully before first use."
+        },
+        {
+          "title": "Wrap",
+          "text": "Fasten it around your waist over your lower belly or back."
+        },
+        {
+          "title": "Relax",
+          "text": "Choose your heat and vibration settings and get comfortable."
+        }
+      ],
+      "faq": [
+        {
+          "q": "Is it cordless?",
+          "a": "Yes. It runs on a rechargeable 5000mAh battery."
+        },
+        {
+          "q": "Is it only for period cramps?",
+          "a": "No. It is a waist heating and massage belt, so you can also use it for general warmth and comfort."
+        },
+        {
+          "q": "Is it safe for everyone?",
+          "a": "Start on the lowest heat and don't sleep while wearing it. Don't use it on broken skin. If you are pregnant, have a medical condition or reduced sensitivity to heat, check with your doctor first."
+        },
+        {
+          "q": "How long does delivery take?",
+          "a": "Orders are usually handed to our shipping partners within 1 to 3 business days. Estimated delivery is 7 to 18 business days in Australia, 8 to 18 in the United States, and 10 to 20 in New Zealand and Canada. Shipping is free."
+        },
+        {
+          "q": "What if I change my mind?",
+          "a": "You can request a return within 30 days of receiving your item if it is unused and in its original packaging. Email orders@trendycatch.us with your order number. If it arrives damaged or faulty, we replace or refund it at no cost to you."
+        }
+      ]
     }
   },
   {
@@ -277,6 +613,73 @@
       "CA": 61.95,
       "NZ": 68.95,
       "US": 50.95
+    },
+    "detail": {
+      "eyebrow": "240W · FOLD-FLAT STAND",
+      "bullets": [
+        "Fast-charge cable rated up to 240W",
+        "Integrated stand that folds flat",
+        "1.5m long, in black",
+        "Hands-free viewing while you charge"
+      ],
+      "features": [
+        {
+          "icon": "⚡",
+          "title": "Up to 240W",
+          "text": "Rated for high-power charging. Actual speed depends on your device and charger."
+        },
+        {
+          "icon": "📱",
+          "title": "Stand built in",
+          "text": "Prop your phone up for videos, calls or recipes while it charges."
+        },
+        {
+          "icon": "🧳",
+          "title": "Folds flat",
+          "text": "The stand folds away so the cable packs down for your bag."
+        },
+        {
+          "icon": "📏",
+          "title": "1.5m reach",
+          "text": "Long enough for the desk, bedside or couch."
+        }
+      ],
+      "howItWorks": [
+        {
+          "title": "Connect",
+          "text": "Plug the cable into your charger and your phone."
+        },
+        {
+          "title": "Unfold",
+          "text": "Open the stand and rest your phone on it."
+        },
+        {
+          "title": "Go hands-free",
+          "text": "Watch, scroll or call while your phone charges."
+        }
+      ],
+      "faq": [
+        {
+          "q": "Is a charger included?",
+          "a": "No. This is the cable with its integrated stand; use your own charger."
+        },
+        {
+          "q": "Will it charge my device at 240W?",
+          "a": "The cable supports up to 240W. Your device charges at the speed its hardware and charger allow."
+        },
+        {
+          "q": "What colour and length is it?",
+          "a": "Black, 1.5 metres."
+        },
+        {
+          "q": "How long does delivery take?",
+          "a": "Orders are usually handed to our shipping partners within 1 to 3 business days. Estimated delivery is 7 to 18 business days in Australia, 8 to 18 in the United States, and 10 to 20 in New Zealand and Canada. Shipping is free."
+        },
+        {
+          "q": "What if I change my mind?",
+          "a": "You can request a return within 30 days of receiving your item if it is unused and in its original packaging. Email orders@trendycatch.us with your order number. If it arrives damaged or faulty, we replace or refund it at no cost to you."
+        }
+      ]
     }
   },
   {
@@ -565,6 +968,69 @@
       "CA": 57.95,
       "NZ": 63.95,
       "US": 46.95
+    },
+    "detail": {
+      "eyebrow": "UNIVERSAL FIT · LINT FILTER",
+      "bullets": [
+        "Catches drain water before it reaches the floor",
+        "Universal fit design",
+        "Built-in lint filter",
+        "Helps keep the laundry floor dry"
+      ],
+      "features": [
+        {
+          "icon": "💧",
+          "title": "Catches the drips",
+          "text": "Collects drain water from your washing machine instead of letting it pool on the floor."
+        },
+        {
+          "icon": "📐",
+          "title": "Universal fit",
+          "text": "Designed to work with a wide range of washing machines."
+        },
+        {
+          "icon": "🧺",
+          "title": "Lint filter built in",
+          "text": "A filter in the tray catches lint as the water drains."
+        },
+        {
+          "icon": "🧽",
+          "title": "Less mopping",
+          "text": "A drier laundry floor means less cleaning up after each wash."
+        }
+      ],
+      "howItWorks": [
+        {
+          "title": "Place",
+          "text": "Position the tray where your washing machine drains."
+        },
+        {
+          "title": "Wash",
+          "text": "Run your machine as usual while the tray collects the water."
+        },
+        {
+          "title": "Clean",
+          "text": "Clear the lint filter and rinse the tray when needed."
+        }
+      ],
+      "faq": [
+        {
+          "q": "Will it fit my washing machine?",
+          "a": "It has a universal fit design. If you're unsure about your setup, email orders@trendycatch.us before ordering."
+        },
+        {
+          "q": "Does it need cleaning?",
+          "a": "Yes. Clear the lint filter and rinse the tray from time to time."
+        },
+        {
+          "q": "How long does delivery take?",
+          "a": "Orders are usually handed to our shipping partners within 1 to 3 business days. Estimated delivery is 7 to 18 business days in Australia, 8 to 18 in the United States, and 10 to 20 in New Zealand and Canada. Shipping is free."
+        },
+        {
+          "q": "What if I change my mind?",
+          "a": "You can request a return within 30 days of receiving your item if it is unused and in its original packaging. Email orders@trendycatch.us with your order number. If it arrives damaged or faulty, we replace or refund it at no cost to you."
+        }
+      ]
     }
   },
   {
@@ -591,6 +1057,73 @@
       "CA": 44.95,
       "NZ": 50.95,
       "US": 39.95
+    },
+    "detail": {
+      "eyebrow": "NO-PUNCH · 3-PIECE SET",
+      "bullets": [
+        "Hang cloths and gloves up to air-dry",
+        "Adhesive mount, so there are no screws or holes",
+        "Set of 3 clips",
+        "White finish"
+      ],
+      "features": [
+        {
+          "icon": "🧽",
+          "title": "Air-dry your cloths",
+          "text": "Hanging cloths and gloves lets air get around them between uses."
+        },
+        {
+          "icon": "🛠️",
+          "title": "No screws",
+          "text": "The adhesive mount goes on without drilling."
+        },
+        {
+          "icon": "3️⃣",
+          "title": "Three in a set",
+          "text": "Put them by the sink, in the laundry or in the bathroom."
+        },
+        {
+          "icon": "🤍",
+          "title": "Clean white",
+          "text": "A plain white clip that blends into a kitchen wall or cupboard."
+        }
+      ],
+      "howItWorks": [
+        {
+          "title": "Clean",
+          "text": "Wipe the surface and let it dry."
+        },
+        {
+          "title": "Stick",
+          "text": "Press the clip firmly in place."
+        },
+        {
+          "title": "Clip",
+          "text": "Push in your cloth or glove and let it dry."
+        }
+      ],
+      "faq": [
+        {
+          "q": "Do I need tools?",
+          "a": "No. The clips use an adhesive mount."
+        },
+        {
+          "q": "How many do I get?",
+          "a": "Three clips per set."
+        },
+        {
+          "q": "Where can I stick them?",
+          "a": "On a clean, dry, smooth surface such as tile, glass or a cupboard door."
+        },
+        {
+          "q": "How long does delivery take?",
+          "a": "Orders are usually handed to our shipping partners within 1 to 3 business days. Estimated delivery is 7 to 18 business days in Australia, 8 to 18 in the United States, and 10 to 20 in New Zealand and Canada. Shipping is free."
+        },
+        {
+          "q": "What if I change my mind?",
+          "a": "You can request a return within 30 days of receiving your item if it is unused and in its original packaging. Email orders@trendycatch.us with your order number. If it arrives damaged or faulty, we replace or refund it at no cost to you."
+        }
+      ]
     }
   },
   {
@@ -617,6 +1150,73 @@
       "CA": 51.95,
       "NZ": 57.95,
       "US": 39.95
+    },
+    "detail": {
+      "eyebrow": "USB-C RECHARGEABLE · HEAT SEAL",
+      "bullets": [
+        "Reseals snack, chip and freezer bags with heat",
+        "One swipe along the open edge",
+        "USB-C rechargeable",
+        "Small enough for a kitchen drawer"
+      ],
+      "features": [
+        {
+          "icon": "🔥",
+          "title": "Heat seal",
+          "text": "Uses heat to close the bag back up along its opening."
+        },
+        {
+          "icon": "👉",
+          "title": "One swipe",
+          "text": "Slide it along the edge of the bag to seal."
+        },
+        {
+          "icon": "🔌",
+          "title": "USB-C charging",
+          "text": "Recharge it with a USB-C cable instead of buying batteries."
+        },
+        {
+          "icon": "🥨",
+          "title": "Works on everyday bags",
+          "text": "Use it on chip bags, snack bags and freezer bags."
+        }
+      ],
+      "howItWorks": [
+        {
+          "title": "Charge",
+          "text": "Charge the sealer with a USB-C cable."
+        },
+        {
+          "title": "Line up",
+          "text": "Place the open edge of the bag in the sealer."
+        },
+        {
+          "title": "Swipe",
+          "text": "Slide along the edge to seal the bag."
+        }
+      ],
+      "faq": [
+        {
+          "q": "What bags does it work on?",
+          "a": "It is made for chip bags, snack bags and freezer bags."
+        },
+        {
+          "q": "How do I charge it?",
+          "a": "With a USB-C cable."
+        },
+        {
+          "q": "Is it safe to touch?",
+          "a": "The sealing area gets hot in use. Keep fingers clear of it and keep it away from children."
+        },
+        {
+          "q": "How long does delivery take?",
+          "a": "Orders are usually handed to our shipping partners within 1 to 3 business days. Estimated delivery is 7 to 18 business days in Australia, 8 to 18 in the United States, and 10 to 20 in New Zealand and Canada. Shipping is free."
+        },
+        {
+          "q": "What if I change my mind?",
+          "a": "You can request a return within 30 days of receiving your item if it is unused and in its original packaging. Email orders@trendycatch.us with your order number. If it arrives damaged or faulty, we replace or refund it at no cost to you."
+        }
+      ]
     }
   },
   {
@@ -733,6 +1333,73 @@
       "CA": 50.95,
       "NZ": 55.95,
       "US": 41.95
+    },
+    "detail": {
+      "eyebrow": "ULTRA-THIN · 6-PACK",
+      "bullets": [
+        "Hold cupboard doors shut with a magnet",
+        "Ultra-thin, so they sit out of sight",
+        "Adhesive fitting with no drill holes",
+        "Pack of 6"
+      ],
+      "features": [
+        {
+          "icon": "🧲",
+          "title": "Magnetic hold",
+          "text": "A magnet keeps the door closed until you open it."
+        },
+        {
+          "icon": "📏",
+          "title": "Ultra-thin",
+          "text": "Slim enough to hide inside the cabinet."
+        },
+        {
+          "icon": "🛠️",
+          "title": "No drilling",
+          "text": "Adhesive fitting, so your cabinets stay hole-free."
+        },
+        {
+          "icon": "📦",
+          "title": "Six in a pack",
+          "text": "Enough for a run of kitchen or bathroom cupboards."
+        }
+      ],
+      "howItWorks": [
+        {
+          "title": "Clean",
+          "text": "Wipe the inside of the cabinet and door and let them dry."
+        },
+        {
+          "title": "Stick",
+          "text": "Press one half onto the frame and the other onto the door so they line up."
+        },
+        {
+          "title": "Close",
+          "text": "Shut the door and the magnet holds it in place."
+        }
+      ],
+      "faq": [
+        {
+          "q": "Do I need to drill?",
+          "a": "No. They attach with adhesive."
+        },
+        {
+          "q": "How many are in a pack?",
+          "a": "Six catches."
+        },
+        {
+          "q": "Will they be visible?",
+          "a": "They are ultra-thin and fit inside the cabinet, so they sit out of sight when the door is closed."
+        },
+        {
+          "q": "How long does delivery take?",
+          "a": "Orders are usually handed to our shipping partners within 1 to 3 business days. Estimated delivery is 7 to 18 business days in Australia, 8 to 18 in the United States, and 10 to 20 in New Zealand and Canada. Shipping is free."
+        },
+        {
+          "q": "What if I change my mind?",
+          "a": "You can request a return within 30 days of receiving your item if it is unused and in its original packaging. Email orders@trendycatch.us with your order number. If it arrives damaged or faulty, we replace or refund it at no cost to you."
+        }
+      ]
     }
   },
   {
@@ -1009,6 +1676,73 @@
       "CA": 126.95,
       "NZ": 139.95,
       "US": 90.95
+    },
+    "detail": {
+      "eyebrow": "2-IN-1 · MEMORY FOAM",
+      "bullets": [
+        "2-in-1 travel neck pillow",
+        "Memory foam that moulds to your neck",
+        "Use it on a plane, in the car or on the couch",
+        "Comes in black"
+      ],
+      "features": [
+        {
+          "icon": "✈️",
+          "title": "Made for travel",
+          "text": "Bring it for flights, road trips and long train rides."
+        },
+        {
+          "icon": "☁️",
+          "title": "Memory foam",
+          "text": "Foam that shapes itself around your neck as you rest."
+        },
+        {
+          "icon": "🔁",
+          "title": "2-in-1 design",
+          "text": "Use it more than one way, depending on where you're sitting."
+        },
+        {
+          "icon": "🛋️",
+          "title": "Not only for trips",
+          "text": "Works just as well for a nap on the couch."
+        }
+      ],
+      "howItWorks": [
+        {
+          "title": "Unpack",
+          "text": "Take the pillow out and let the foam settle."
+        },
+        {
+          "title": "Position",
+          "text": "Place it around or behind your neck, whichever way is comfortable in your seat."
+        },
+        {
+          "title": "Rest",
+          "text": "Lean back and let the foam take the weight of your head."
+        }
+      ],
+      "faq": [
+        {
+          "q": "Where can I use it?",
+          "a": "On a plane, in the car, or at home on the couch."
+        },
+        {
+          "q": "What colour is it?",
+          "a": "Black."
+        },
+        {
+          "q": "Does it treat neck pain?",
+          "a": "It is a comfort pillow, not a medical device. If you have ongoing neck pain, check with your doctor."
+        },
+        {
+          "q": "How long does delivery take?",
+          "a": "Orders are usually handed to our shipping partners within 1 to 3 business days. Estimated delivery is 7 to 18 business days in Australia, 8 to 18 in the United States, and 10 to 20 in New Zealand and Canada. Shipping is free."
+        },
+        {
+          "q": "What if I change my mind?",
+          "a": "You can request a return within 30 days of receiving your item if it is unused and in its original packaging. Email orders@trendycatch.us with your order number. If it arrives damaged or faulty, we replace or refund it at no cost to you."
+        }
+      ]
     }
   },
   {
