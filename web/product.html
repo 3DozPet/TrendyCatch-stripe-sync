@@ -88,9 +88,29 @@
   .buybox .bullets { margin: 0 0 20px; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 9px; }
   .buybox .bullets li { display: flex; gap: 8px; font-size: 14px; line-height: 1.45; }
   .buybox .bullets li::before { content: "✓"; color: var(--green); font-weight: 800; flex-shrink: 0; }
-  .buybox .variant-select { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+  .buybox .variant-select { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
   .buybox .variant-select label { font-size: 12px; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; }
-  .buybox .variant-select select { font-size: 14px; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border); background: #fff; cursor: pointer; max-width: 320px; }
+  .swatch-row { display: flex; flex-wrap: wrap; gap: 10px; }
+  .swatch-row .swatch {
+    display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px 6px 6px;
+    border: 1.5px solid var(--border); border-radius: 999px; background: #fff; cursor: pointer;
+    font-size: 13px; font-weight: 600; color: var(--ink); transition: border-color 0.15s ease;
+  }
+  .swatch-row .swatch:hover { border-color: var(--accent-dark); }
+  .swatch-row .swatch.selected { border-color: var(--green); background: #f3f8f3; }
+  .swatch-row .swatch .dot {
+    width: 22px; height: 22px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.15); flex-shrink: 0;
+  }
+  .swatch-row .swatch.selected .dot::after {
+    content: "✓"; display: flex; align-items: center; justify-content: center;
+    width: 100%; height: 100%; font-size: 12px; color: #fff; text-shadow: 0 0 2px rgba(0,0,0,0.6);
+  }
+  .payment-badges { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 10px; }
+  .payment-badges span {
+    display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 600; color: var(--muted);
+    border: 1px solid var(--border); border-radius: 6px; padding: 4px 8px 4px 6px; background: #fff;
+  }
+  .payment-badges svg { display: block; }
   .buybox .price-row { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
   .buybox .price { font-size: 24px; font-weight: 800; color: #fff; background: var(--price); padding: 6px 14px; border-radius: 999px; }
   .buybox .price-note { font-size: 12px; color: var(--muted); }
@@ -190,16 +210,25 @@
         <p class="subhead" id="subhead"></p>
         <ul class="bullets" id="bullets"></ul>
         <div class="variant-select" id="variantWrap" style="display:none;">
-          <label for="variantPicker">Option</label>
-          <select id="variantPicker"></select>
+          <label id="variantLabel">Option</label>
+          <div id="variantPicker" class="swatch-row"></div>
         </div>
         <div class="price-row">
           <div class="price" id="price"></div>
           <div class="compare-price" id="comparePrice" style="display:none;"></div>
           <div class="price-note">free shipping</div>
         </div>
-        <button class="buy-btn" id="buyBtnMain">Buy Now</button>
-        <p class="guarantee">🔒 Secure checkout via Stripe · 🚚 Free shipping to AU, NZ, US &amp; Canada</p>
+        <button class="buy-btn" id="buyBtnMain">Add to cart</button>
+        <p class="guarantee">🔒 Secure checkout with Stripe · 🚚 Free shipping to AU, NZ, US &amp; Canada</p>
+        <div class="payment-badges" role="group" aria-label="Payment methods available">
+          <span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2.5" stroke="currentColor" stroke-width="1.6"/><rect x="2" y="9" width="20" height="3" fill="currentColor"/></svg>Card</span>
+          <span><svg width="14" height="14" viewBox="0 0 384 512" fill="currentColor" aria-hidden="true"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"/></svg>Apple Pay</span>
+          <span><svg width="16" height="16" viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3c-1.6 4.7-6.1 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l6-6C34.6 6.1 29.6 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.7-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.6 16 18.9 13 24 13c3.1 0 5.9 1.2 8 3.1l6-6C34.6 6.1 29.6 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.5 0 10.4-1.9 14.3-5.1l-6.6-5.4C29.7 35.4 27 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.6 39.6 16.3 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.2 4.3-4.1 5.7l6.6 5.4C41.6 35.8 44 30.3 44 24c0-1.3-.1-2.7-.4-3.5z"/></svg>Google Pay</span>
+          <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 15l6-6M8 16l-2 2a4 4 0 01-5.66-5.66l3-3a4 4 0 015.66 0M16 8l2-2a4 4 0 015.66 5.66l-3 3a4 4 0 01-5.66 0"/></svg>Link</span>
+          <span>Afterpay</span>
+          <span>Klarna</span>
+          <span>Zip</span>
+        </div>
       </div>
     </div>
   </div>
@@ -231,7 +260,7 @@
     <div class="price-row" style="justify-content:center; margin-bottom:20px;">
       <div class="price" id="priceClosing"></div>
     </div>
-    <button class="buy-btn" id="buyBtnClosing">Buy Now</button>
+    <button class="buy-btn" id="buyBtnClosing">Add to cart</button>
   </section>
 
 </main>
@@ -247,7 +276,7 @@
     <div class="title" id="stickyTitle"></div>
     <div class="price" id="stickyPrice"></div>
   </div>
-  <button class="buy-btn" id="buyBtnSticky">Buy Now</button>
+  <button class="buy-btn" id="buyBtnSticky">Add to cart</button>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -290,6 +319,26 @@ function showToast(msg) {
 
 function escapeHtml(str) {
   return String(str).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+// Maps a variant label like "Blush Pink" or "Cloud White" to a CSS colour
+// for the swatch dot, by matching known colour words anywhere in the label.
+// Returns null for a non-colour variant (a size, pack count, etc.), which
+// falls back to a plain text pill instead of a coloured dot.
+const COLOUR_WORDS = [
+  ["blush pink", "#f4c2cf"], ["rose gold", "#e8b4ab"], ["cloud white", "#f7f6f2"],
+  ["ivory", "#f7f3e8"], ["cream", "#f2e8d5"], ["beige", "#e8dcc8"], ["tan", "#d2b48c"],
+  ["black", "#1a1a1a"], ["white", "#f7f7f7"], ["grey", "#9ca3af"], ["gray", "#9ca3af"],
+  ["silver", "#c7c9cc"], ["gold", "#d4af37"], ["navy", "#1b2a4a"], ["blue", "#2563eb"],
+  ["teal", "#14b8a6"], ["green", "#1b5e20"], ["olive", "#6b7a3a"], ["mint", "#a7e8d0"],
+  ["red", "#d62828"], ["burgundy", "#6d1f2b"], ["maroon", "#6d1f2b"], ["pink", "#f4a6c1"],
+  ["purple", "#7c3aed"], ["lavender", "#c7b6e6"], ["orange", "#f97316"], ["yellow", "#facc15"],
+  ["brown", "#7a5230"], ["khaki", "#c3b091"],
+];
+function colourFromLabel(label) {
+  const lower = String(label).toLowerCase();
+  const hit = COLOUR_WORDS.find(([word]) => lower.includes(word));
+  return hit ? hit[1] : null;
 }
 
 // Same first-touch ad-attribution logic as the homepage, so an order placed
@@ -513,18 +562,33 @@ function renderProduct() {
   const bulletList = (detail.bullets && detail.bullets.length) ? detail.bullets : [product.hook, product.variant].filter(Boolean);
   bulletsEl.innerHTML = bulletList.map((b) => `<li>${escapeHtml(b)}</li>`).join("");
 
-  // Variant picker
+  // Variant picker — rendered as clickable swatches (a colour dot for
+  // recognised colour names, otherwise a plain text pill) rather than a
+  // dropdown, matching the pick-a-colour UI on the lunahug.netlify.app page.
   const variants = product.variants || [];
   if (variants.length) {
     document.getElementById("variantWrap").style.display = "";
+    const isColourSet = variants.every((v) => colourFromLabel(v.label));
+    document.getElementById("variantLabel").textContent = isColourSet ? "Colour" : "Option";
     const picker = document.getElementById("variantPicker");
-    picker.innerHTML = variants.map((v) => `<option value="${escapeHtml(v.sku)}">${escapeHtml(v.label)}</option>`).join("");
     selectedVariantSku = variants[0].sku;
-    picker.value = selectedVariantSku;
-    picker.addEventListener("change", () => {
-      selectedVariantSku = picker.value;
-      updatePriceDisplay();
-    });
+
+    function renderSwatches() {
+      picker.innerHTML = variants.map((v) => {
+        const colour = colourFromLabel(v.label);
+        const dot = colour ? `<span class="dot" style="background:${colour};"></span>` : "";
+        const selected = v.sku === selectedVariantSku ? " selected" : "";
+        return `<button type="button" class="swatch${selected}" data-sku="${escapeHtml(v.sku)}">${dot}${escapeHtml(v.label)}</button>`;
+      }).join("");
+      picker.querySelectorAll(".swatch").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          selectedVariantSku = btn.dataset.sku;
+          renderSwatches();
+          updatePriceDisplay();
+        });
+      });
+    }
+    renderSwatches();
   } else {
     selectedVariantSku = undefined;
   }
@@ -615,11 +679,11 @@ async function handleBuy(btn) {
 
 function resetButtons() {
   document.getElementById("buyBtnMain").disabled = false;
-  document.getElementById("buyBtnMain").textContent = "Buy Now";
+  document.getElementById("buyBtnMain").textContent = "Add to cart";
   document.getElementById("buyBtnClosing").disabled = false;
-  document.getElementById("buyBtnClosing").textContent = "Buy Now";
+  document.getElementById("buyBtnClosing").textContent = "Add to cart";
   document.getElementById("buyBtnSticky").disabled = false;
-  document.getElementById("buyBtnSticky").textContent = "Buy Now";
+  document.getElementById("buyBtnSticky").textContent = "Add to cart";
 }
 
 window.addEventListener("scroll", () => {
