@@ -50,6 +50,7 @@ function summary(e: any) {
     subject: String(e?.subject || "(no subject)"),
     createdAt: String(e?.created_at || ""),
     attachments: Array.isArray(e?.attachments) ? e.attachments.length : 0,
+    messageId: String(e?.message_id || ""),
   }
 }
 
