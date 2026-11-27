@@ -1543,7 +1543,159 @@
           "q": "Is it safe for everyone?",
           "a": "Always start on the lowest heat and don't sleep while wearing it. Don't use it on broken skin. If you are pregnant, have a medical condition or reduced sensitivity to heat, check with your doctor first."
         }
-      ]
+      ],
+      "galleryStyle": "hero",
+      "featuresTitle": "Why you'll reach for it every month",
+      "featuresIntro": "No hot water bottle to refill, no cord to trip over, no microwave. Just switch it on and get comfy.",
+      "story": [
+        {
+          "image": "https://cdn.shopify.com/s/files/1/0735/3902/7113/files/Gemini_Generated_Image_885pik885pik885p_fd568891-8238-44e6-9a3e-3ce98b35aac3.png",
+          "alt": "Woman relaxing with the belt",
+          "title": "Comfort that keeps you moving",
+          "paragraphs": [
+            "The belt was designed to help you feel like yourself again during your period, without being stuck in bed hugging a hot water bottle. Soothing warmth helps calm cramps, relax tension and bring comfort exactly where you need it.",
+            "Whether you're working, travelling, studying or resting at home, the belt gives you portable comfort that fits into your day."
+          ],
+          "stats": [
+            {
+              "value": "50°C",
+              "label": "Daily warmth"
+            },
+            {
+              "value": "55°C",
+              "label": "Cosy comfort"
+            },
+            {
+              "value": "60°C",
+              "label": "Deep warmth"
+            }
+          ]
+        },
+        {
+          "image": "https://cdn.shopify.com/s/files/1/0735/3902/7113/files/Gemini_Generated_Image_e0nbqme0nbqme0nb.png",
+          "alt": "The belt worn around the waist",
+          "title": "Simple comfort in seconds",
+          "paragraphs": [
+            "Wrap the adjustable belt around your waist, choose your heat setting and enjoy targeted warmth exactly where you need it.",
+            "Not only for period cramps: many people also use it for lower back tension, tummy discomfort, muscle relaxation and cosy warmth on cold days."
+          ],
+          "cta": true
+        }
+      ],
+      "howTitle": "Easy as 1, 2, 3",
+      "compare": {
+        "title": "The belt vs the old way",
+        "intro": "Why people are swapping the hot water bottle for a wrap.",
+        "columns": [
+          "Heated belt",
+          "Hot water bottle",
+          "Corded heat pad"
+        ],
+        "rows": [
+          [
+            "Cordless, wear while moving",
+            "✓",
+            "✓",
+            "✗"
+          ],
+          [
+            "Adjustable heat levels",
+            "✓ 3 levels",
+            "✗",
+            "✓"
+          ],
+          [
+            "Vibration massage",
+            "✓ 4 modes",
+            "✗",
+            "✗"
+          ],
+          [
+            "No boiling water or microwave",
+            "✓",
+            "✗",
+            "✓"
+          ],
+          [
+            "Stays in place with a strap",
+            "✓",
+            "✗",
+            "Sometimes"
+          ]
+        ]
+      },
+      "colours": {
+        "title": "Pick your colour",
+        "intro": "Both come in a pretty gift box. A lovely present for a friend, sister, daughter or partner.",
+        "items": [
+          {
+            "label": "Blush Pink",
+            "sku": "BLUSH-PINK",
+            "image": "https://shopifyfile.oss-us-west-1.aliyuncs.com/attached/pingtai/202611/CCB6B5615D6B2504DEC152550BE0F450.jpg"
+          },
+          {
+            "label": "Cloud White",
+            "sku": "CLOUD-WHITE",
+            "image": "https://shopifyfile.oss-us-west-1.aliyuncs.com/attached/pingtai/202611/B38C895BE47C952D535F32DA3F97B859.jpg"
+          }
+        ]
+      },
+      "specs": [
+        [
+          "Heat settings",
+          "3 levels (50°C / 55°C / 60°C), infrared heat therapy"
+        ],
+        [
+          "Massage",
+          "4 vibration modes"
+        ],
+        [
+          "Display",
+          "LED panel showing heat and massage level"
+        ],
+        [
+          "Battery",
+          "3.7V 1800mAh, rechargeable"
+        ],
+        [
+          "Charging",
+          "USB, 5V 1A (cable included)"
+        ],
+        [
+          "Rated power",
+          "3W"
+        ],
+        [
+          "Material",
+          "ABS + soft plush fabric"
+        ],
+        [
+          "Device size",
+          "180 × 80 × 25 mm"
+        ],
+        [
+          "Weight",
+          "Approx. 150g (device)"
+        ],
+        [
+          "Strap",
+          "Adjustable, fits most waists"
+        ],
+        [
+          "Colours",
+          "Blush Pink, Cloud White"
+        ],
+        [
+          "Gift box",
+          "220 × 120 × 60 mm"
+        ],
+        [
+          "In the box",
+          "Heated wrap, adjustable belt, USB cable, user manual, gift box"
+        ]
+      ],
+      "closingTitle": "Treat yourself to a little comfort",
+      "closingSub": "Cordless warmth and massage, gift-boxed, delivered free."
     }
   }
 ]
