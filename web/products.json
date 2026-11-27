@@ -1387,5 +1387,64 @@
       "CA",
       "US"
     ]
+  },
+  {
+    "id": "heated-period-relief-belt",
+    "title": "Heated Period Relief Massage Belt",
+    "hook": "A rechargeable heated belt with gentle vibration massage — soothing warmth for tough days of the month, at home, at work or on the couch.",
+    "images": [
+      "https://cdn.shopify.com/s/files/1/0735/3902/7113/files/Gemini_Generated_Image_v9m33nv9m33nv9m3.png",
+      "https://cdn.shopify.com/s/files/1/0735/3902/7113/files/Gemini_Generated_Image_689tn5689tn5689t.png",
+      "https://cdn.shopify.com/s/files/1/0735/3902/7113/files/0e915e107842fc0cf4030898ab4bff66.jpg",
+      "https://cdn.shopify.com/s/files/1/0735/3902/7113/files/Gemini_Generated_Image_40w67m40w67m40w6.png",
+      "https://cdn.shopify.com/s/files/1/0735/3902/7113/files/867660430095176ea4a79fdcd6b9f66a.jpg"
+    ],
+    "variant": "Blush Pink",
+    "variants": [
+      {
+        "label": "Blush Pink",
+        "sku": "BLUSH-PINK",
+        "prices": {
+          "AU": 39.95,
+          "CA": 37.95,
+          "NZ": 47.95,
+          "US": 26.95
+        },
+        "compareAt": {
+          "AU": 79.95,
+          "CA": 75.95,
+          "NZ": 95.95,
+          "US": 53.95
+        }
+      },
+      {
+        "label": "Cloud White",
+        "sku": "CLOUD-WHITE",
+        "prices": {
+          "AU": 39.95,
+          "CA": 37.95,
+          "NZ": 47.95,
+          "US": 26.95
+        },
+        "compareAt": {
+          "AU": 79.95,
+          "CA": 75.95,
+          "NZ": 95.95,
+          "US": 53.95
+        }
+      }
+    ],
+    "prices": {
+      "AU": 39.95,
+      "CA": 37.95,
+      "NZ": 47.95,
+      "US": 26.95
+    },
+    "compareAt": {
+      "AU": 79.95,
+      "CA": 75.95,
+      "NZ": 95.95,
+      "US": 53.95
+    }
   }
 ]
