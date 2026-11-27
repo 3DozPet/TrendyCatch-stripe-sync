@@ -1445,6 +1445,105 @@
       "CA": 75.95,
       "NZ": 95.95,
       "US": 53.95
+    },
+    "detail": {
+      "eyebrow": "CORDLESS · HEAT + MASSAGE",
+      "bullets": [
+        "Soothes cramps while you relax",
+        "3 warmth levels: 50°C, 55°C and 60°C",
+        "4 vibration massage modes",
+        "Cordless, with a 1800mAh rechargeable battery",
+        "Light at just 150g, with a slim profile you can wear under loose clothes",
+        "Arrives gift-boxed, ready to give"
+      ],
+      "features": [
+        {
+          "icon": "🔥",
+          "title": "Warms up quickly",
+          "text": "Three infrared heat settings with a clear LED display, so you always know your level. Comforting warmth for your lower belly or back."
+        },
+        {
+          "icon": "💆‍♀️",
+          "title": "Gentle vibration massage",
+          "text": "Four massage modes to pair with the warmth, or use on their own. Heat and vibration are controlled separately."
+        },
+        {
+          "icon": "🔋",
+          "title": "Truly cordless",
+          "text": "Charge by USB, then wear it under loose clothing while you work, study, travel or relax."
+        },
+        {
+          "icon": "💞",
+          "title": "Comfort anywhere",
+          "text": "Small and light enough to take to the office, uni, the car or on a flight."
+        },
+        {
+          "icon": "🌸",
+          "title": "Helps relax tension",
+          "text": "Gentle warmth helps soothe tense muscles and that heavy, aching feeling, so you can feel calmer and more at ease."
+        },
+        {
+          "icon": "🤫",
+          "title": "Quiet design",
+          "text": "Low-noise vibration, so you can use it while you read, watch a show or wind down at night."
+        }
+      ],
+      "howItWorks": [
+        {
+          "title": "Charge",
+          "text": "Plug in the included USB cable (5V 1A) until fully charged."
+        },
+        {
+          "title": "Wrap",
+          "text": "Fasten the adjustable strap around your waist, over your lower belly or back."
+        },
+        {
+          "title": "Relax",
+          "text": "Pick your warmth and massage level on the LED panel and unwind."
+        }
+      ],
+      "faq": [
+        {
+          "q": "Does it need to be plugged in while I use it?",
+          "a": "No. Charge it first, then wear it cordless."
+        },
+        {
+          "q": "How long does the belt stay warm?",
+          "a": "It gives long-lasting warmth on a single charge, enough for a workday session or a relaxing evening. Battery life depends on the heat and massage levels you use. Recharge with the included USB cable."
+        },
+        {
+          "q": "Can I use heat and massage at the same time?",
+          "a": "Yes. Heat and vibration are set separately, so you can use either one or both together."
+        },
+        {
+          "q": "Can I wear it under clothes?",
+          "a": "Yes. It's light and slim, and most people wear it comfortably under hoodies, jumpers or loose tops."
+        },
+        {
+          "q": "Is the belt adjustable?",
+          "a": "Yes. The strap adjusts to fit most waists."
+        },
+        {
+          "q": "Is the belt only for period cramps?",
+          "a": "Not at all. Many people also use it for lower back tension, tummy discomfort, muscle relaxation and cosy warmth on colder days."
+        },
+        {
+          "q": "How long does delivery take?",
+          "a": "Orders are dispatched within 2 to 3 business days and usually arrive in 8 to 15 business days, with tracking. Delivery is free."
+        },
+        {
+          "q": "What if I don't love it?",
+          "a": "Try it risk-free with our 30-day money-back guarantee. Email orders@trendycatch.us and we'll help you with a return."
+        },
+        {
+          "q": "How do I clean it?",
+          "a": "Switch off and unplug first. Wipe the device and strap gently with a slightly damp cloth. Don't submerge it in water or put it in the washing machine."
+        },
+        {
+          "q": "Is it safe for everyone?",
+          "a": "Always start on the lowest heat and don't sleep while wearing it. Don't use it on broken skin. If you are pregnant, have a medical condition or reduced sensitivity to heat, check with your doctor first."
+        }
+      ]
     }
   }
 ]
