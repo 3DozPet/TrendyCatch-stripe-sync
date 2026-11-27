@@ -1,6 +1,7 @@
 import { hasValidSession } from './_lib/auth'
+import { sendOrderEmail } from './_lib/order-email'
 
-interface Env { ORDERS_KV?: KVNamespace; ORDERS_DB?: D1Database }
+interface Env { ORDERS_KV?: KVNamespace; ORDERS_DB?: D1Database; RESEND_API_KEY?: string }
 const reply = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json', 'cache-control': 'no-store' } })
 
 export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
@@ -25,12 +26,29 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   const number = clean(input.trackingNumber, 100), carrier = clean(input.carrier, 100), url = clean(input.trackingUrl, 500)
   if (url) { try { if (new URL(url).protocol !== 'https:') throw Error() } catch { return reply({ error: 'Tracking link must use HTTPS' }, 400) } }
   const now = new Date().toISOString()
-  const existing = await env.ORDERS_DB.prepare('SELECT id, fulfillment_status FROM orders WHERE id = ?').bind(input.id).first()
+  const existing = await env.ORDERS_DB.prepare('SELECT id, fulfillment_status, tracking_number FROM orders WHERE id = ?').bind(input.id).first()
   if (!existing) return reply({ error: 'Order not found' }, 404)
   if (existing.fulfillment_status === 'cancelled') return reply({ error: 'Cancelled orders cannot be fulfilled' }, 409)
+  // Did this save actually add/change a tracking number? Compare against what
+  // was on the order before this update, so re-saving the same fulfilment
+  // form (e.g. just editing the carrier name) doesn't re-send the shipped
+  // email every time — only a genuinely new/changed tracking number does.
+  const trackingChanged = Boolean(number) && number !== (existing.tracking_number ?? '')
+
   await env.ORDERS_DB.batch([
     env.ORDERS_DB.prepare('UPDATE orders SET fulfillment_status = ?, tracking_number = ?, tracking_carrier = ?, tracking_url = ?, updated_at = ? WHERE id = ?').bind(input.status, number || null, carrier || null, url || null, now, input.id),
     env.ORDERS_DB.prepare('INSERT INTO order_events (order_id, event_type, created_at, detail_json) VALUES (?, ?, ?, ?)').bind(input.id, 'manual_fulfillment_update', now, JSON.stringify({ status: input.status, trackingNumber: number, carrier, url }))
   ])
-  return reply({ ok: true })
+
+  // Everything (tracking, customer notification) is handled right here on
+  // this dashboard — no separate "send confirmation" click required.
+  // Best-effort: a failed/unconfigured email never fails the fulfilment save
+  // that already succeeded above.
+  let email: { sent: boolean; error?: string } = { sent: false }
+  if (input.status === 'fulfilled' && trackingChanged) {
+    const result = await sendOrderEmail(env, input.id, 'shipped')
+    email = result.ok ? { sent: true } : { sent: false, error: result.skipped ? undefined : result.error }
+  }
+
+  return reply({ ok: true, email })
 }

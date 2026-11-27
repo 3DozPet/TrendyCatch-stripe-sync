@@ -732,7 +732,9 @@ function buildOrderEntry(order, items, opts) {
   const button=orderElement('button','Save fulfilment'); button.type='submit'; form.append(button); const result=orderElement('span'); result.setAttribute('role','status'); form.append(result);
   form.addEventListener('submit',async e=>{e.preventDefault(); button.disabled=true; result.textContent='Saving…'; try {
       if (select.value==='fulfilled' && number.value.trim() && !url.value.trim()) url.value = trackLink17(number.value);
-      const r=await fetch('/admin-order-history',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:order.id,status:select.value,trackingNumber:number.value,carrier:carrier.value,trackingUrl:url.value})}); const d=await r.json(); if(!r.ok) throw Error(d.error || 'Unable to save'); result.textContent='Saved'; order.fulfillment_status=select.value; order.tracking_number=number.value; order.tracking_carrier=carrier.value; order.tracking_url=url.value; entry.querySelector('summary').textContent=`${order.customer_name || 'Customer'} · ${order.currency} ${total.toFixed(2)} · ${select.value}`;
+      const r=await fetch('/admin-order-history',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:order.id,status:select.value,trackingNumber:number.value,carrier:carrier.value,trackingUrl:url.value})}); const d=await r.json(); if(!r.ok) throw Error(d.error || 'Unable to save');
+      result.textContent = d.email && d.email.sent ? 'Saved · shipping email sent' : (d.email && d.email.error ? `Saved (email not sent: ${d.email.error})` : 'Saved');
+      order.fulfillment_status=select.value; order.tracking_number=number.value; order.tracking_carrier=carrier.value; order.tracking_url=url.value; entry.querySelector('summary').textContent=`${order.customer_name || 'Customer'} · ${order.currency} ${total.toFixed(2)} · ${select.value}`;
     } catch(err) { result.textContent=err.message || 'Unable to save'; } finally {button.disabled=false;} });
   entry.append(form);
   return entry;
