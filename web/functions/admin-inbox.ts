@@ -12,12 +12,21 @@
 // one (orders@trendycatch.us) and Robbie's own (robbie@trendycatch.us) —
 // never merged into one list.
 //
-// Opening a single email (?id=...) also merges in any replies sent to that
-// sender from this dashboard (logged by admin-inbox-reply.ts under
-// `sentmail:<mailbox>:<address>`) into a `thread` array, oldest first, so a
-// reply the admin sent shows up in its own thread instead of only ever
-// existing as Resend's fire-and-forget send. That's one extra KV get() per
-// thread opened — not a list() — so it doesn't risk the daily list() cap
+// Opening a single email (?id=...) builds a `thread` array (oldest first)
+// of the whole correspondence with that sender, from two sources:
+//
+//   1. Resend's own sent-email log (GET /emails, then GET /emails/<id> for
+//      the bodies), filtered to mail this mailbox sent to that address. This
+//      is what makes the dashboard show the same thread Resend does — it
+//      covers replies sent before this dashboard kept its own copy, and
+//      anything sent straight from Resend rather than from here.
+//   2. This dashboard's own log of sends (admin-inbox-reply.ts writes
+//      `sentmail:<mailbox>:<address>` in KV). Kept because it's readable the
+//      instant a reply is sent, while Resend's list can lag behind, and
+//      because it still works if the API key can't read the sent log.
+//
+// Entries present in both are merged, not shown twice. One KV get() per
+// thread opened — not a list() — so no risk to the daily list() cap
 // admin-orders.ts ran into.
 //
 // The admin mailbox can carry one more lock on top of the normal dashboard
@@ -35,6 +44,11 @@ interface Env {
 }
 
 const API = "https://api.resend.com/emails/receiving"
+// Resend's sent-email endpoints: GET /emails lists sent mail (no bodies —
+// those need GET /emails/<id>), capped at limit=100 per call.
+const SENT_API = "https://api.resend.com/emails"
+// Bodies cost one request each, so only the newest few in a thread get one.
+const SENT_BODY_LIMIT = 6
 
 const MAILBOXES: Record<string, string> = {
   customer: "orders@trendycatch.us",
@@ -50,6 +64,76 @@ function matchesMailbox(e: any, address: string): boolean {
 function extractAddress(from: string): string {
   const m = String(from || "").match(/<([^<>]+)>/)
   return (m ? m[1] : String(from || "")).trim().toLowerCase()
+}
+function recipients(e: any): string[] {
+  return (Array.isArray(e?.to) ? e.to : [e?.to]).map((a: unknown) => String(a || "").toLowerCase())
+}
+
+// Everything this mailbox has sent to one address, newest-first, straight
+// from Resend's sent log. Returns [] on any problem (e.g. an API key that
+// can send but can't read the log) so the thread falls back to the KV copy.
+async function sentFromResend(
+  headers: Record<string, string>,
+  mailboxAddress: string,
+  correspondent: string,
+): Promise<any[]> {
+  const res = await fetch(`${SENT_API}?limit=100`, { headers })
+  if (!res.ok) return []
+  const data: any = await res.json()
+  const mine = (Array.isArray(data?.data) ? data.data : [])
+    .filter(
+      (m: any) =>
+        extractAddress(m?.from) === mailboxAddress &&
+        recipients(m).some((a) => a.includes(correspondent)),
+    )
+    .sort((a: any, b: any) => Date.parse(b?.created_at || "") - Date.parse(a?.created_at || ""))
+    .slice(0, SENT_BODY_LIMIT)
+
+  const bodies = await Promise.all(
+    mine.map(async (m: any) => {
+      try {
+        const r = await fetch(`${SENT_API}/${encodeURIComponent(String(m?.id || ""))}`, { headers })
+        return r.ok ? await r.json() : null
+      } catch {
+        return null
+      }
+    }),
+  )
+  return mine.map((m: any, i: number) => ({
+    direction: "out",
+    from: String(m?.from || ""),
+    to: recipients(m).join(", "),
+    subject: String(m?.subject || ""),
+    text: bodies[i] ? bodyText(bodies[i]) : "",
+    createdAt: String(m?.created_at || ""),
+  }))
+}
+
+function normalizeText(text: string): string {
+  return String(text || "").replace(/\s+/g, " ").trim()
+}
+// Same send seen through both sources: identical body, or — when Resend's
+// body couldn't be fetched — the same recipient at near-identical times.
+function sameMessage(a: any, b: any): boolean {
+  const ta = normalizeText(a?.text)
+  const tb = normalizeText(b?.text)
+  if (ta && tb) return ta === tb
+  const da = Date.parse(a?.createdAt || "")
+  const db = Date.parse(b?.createdAt || "")
+  return Number.isFinite(da) && Number.isFinite(db) && Math.abs(da - db) < 120000
+}
+// Resend's record wins on metadata, the KV copy fills in a body Resend
+// didn't hand back, and anything only one source knows about is kept.
+function mergeSent(fromResend: any[], fromKv: any[]): any[] {
+  const used = new Set<number>()
+  const merged = fromResend.map((r) => {
+    const i = fromKv.findIndex((k, idx) => !used.has(idx) && sameMessage(k, r))
+    if (i === -1) return r
+    used.add(i)
+    return { ...r, text: r.text || fromKv[i].text, subject: r.subject || fromKv[i].subject }
+  })
+  fromKv.forEach((k, i) => { if (!used.has(i)) merged.push(k) })
+  return merged
 }
 
 export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
@@ -81,18 +165,36 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
         { direction: "in", from: String(e?.from || ""), to: address, text: inboundText, createdAt: String(e?.created_at || "") },
       ]
       const correspondent = extractAddress(e?.from)
-      if (env.ORDERS_KV && correspondent) {
+      if (correspondent) {
+        let fromResend: any[] = []
         try {
-          const raw = await env.ORDERS_KV.get(`sentmail:${mailbox}:${correspondent}`)
-          if (raw) {
-            const sent = JSON.parse(raw)
-            if (Array.isArray(sent)) {
-              for (const s of sent) thread.push({ direction: "out", from: String(s?.from || ""), to: String(s?.to || ""), text: String(s?.text || ""), createdAt: String(s?.createdAt || "") })
-            }
-          }
+          fromResend = await sentFromResend(headers, address, correspondent)
         } catch {
-          // Best-effort — fall back to showing just the inbound email.
+          // Resend's sent log is unreadable right now — the KV copy below
+          // still covers anything sent from this dashboard.
         }
+        let fromKv: any[] = []
+        if (env.ORDERS_KV) {
+          try {
+            const raw = await env.ORDERS_KV.get(`sentmail:${mailbox}:${correspondent}`)
+            if (raw) {
+              const sent = JSON.parse(raw)
+              if (Array.isArray(sent)) {
+                fromKv = sent.map((s: any) => ({
+                  direction: "out",
+                  from: String(s?.from || ""),
+                  to: String(s?.to || ""),
+                  subject: String(s?.subject || ""),
+                  text: String(s?.text || ""),
+                  createdAt: String(s?.createdAt || ""),
+                }))
+              }
+            }
+          } catch {
+            // Best-effort — fall back to whatever Resend gave us.
+          }
+        }
+        thread.push(...mergeSent(fromResend, fromKv))
       }
       thread.sort((a, b) => Date.parse(a.createdAt || "") - Date.parse(b.createdAt || ""))
       return json({ email: { ...summary(e), text: inboundText, thread } })

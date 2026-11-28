@@ -1028,7 +1028,8 @@ function renderThread(items) {
   text.innerHTML = (items && items.length
     ? items.map((m) => {
         const who = m.direction === "out" ? "You" : senderName(m.from) || senderAddress(m.from);
-        return `<div class="mail-msg ${m.direction === "out" ? "out" : "in"}"><span class="mail-msg-meta">${escapeHtml(who)} · ${timeAgo(m.createdAt)}</span>${escapeHtml(m.text || "(no text)")}</div>`;
+        const subject = m.direction === "out" && m.subject ? " · " + m.subject : "";
+        return `<div class="mail-msg ${m.direction === "out" ? "out" : "in"}"><span class="mail-msg-meta">${escapeHtml(who)} · ${timeAgo(m.createdAt)}${escapeHtml(subject)}</span>${escapeHtml(m.text || "(no text)")}</div>`;
       }).join("")
     : `<div class="mail-msg in">(no text in this email)</div>`);
   text.scrollTop = text.scrollHeight;
