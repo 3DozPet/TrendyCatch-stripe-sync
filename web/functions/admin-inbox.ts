@@ -1,11 +1,15 @@
-// GET /admin-inbox        — latest emails sent to @trendycatch.us addresses
-//                           the dashboard is allowed to show
-// GET /admin-inbox?id=... — one email's full text
+// GET /admin-inbox                  — latest customer emails (orders@)
+// GET /admin-inbox?mailbox=admin    — latest emails to robbie@ (separate,
+//                                     admin-only "Admin inbox" panel)
+// GET /admin-inbox?id=...           — one email's full text (pass the same
+//                                     &mailbox= it was listed under)
 //
 // Read straight from Resend's receiving API (nothing is copied into KV), and
 // gated exactly like /admin-subscribers: this is for the store owner's eyes
 // only (valid dashboard session required) — not visible to anyone else, e.g.
-// Robbie himself has no separate login here.
+// Robbie himself has no separate login here. Two separate mailboxes, kept
+// apart on the dashboard: the customer-facing one (orders@trendycatch.us)
+// and Robbie's own (robbie@trendycatch.us) — never merged into one list.
 import { hasValidSession } from "./_lib/auth"
 
 interface Env {
@@ -15,14 +19,16 @@ interface Env {
 
 const API = "https://api.resend.com/emails/receiving"
 
-// Mail to any of these addresses shows on the dashboard's Inbox panel, for
-// the logged-in admin only. orders@ is the customer-facing address; robbie@
-// is Robbie's own address — both land in the same admin-only view, each row
-// still shows which address it was actually sent to.
-const DASHBOARD_ADDRESSES = ["orders@trendycatch.us", "robbie@trendycatch.us"]
-function isCustomerMail(e: any): boolean {
+const MAILBOXES: Record<string, string> = {
+  customer: "orders@trendycatch.us",
+  admin: "robbie@trendycatch.us",
+}
+function addressFor(mailbox: string): string {
+  return MAILBOXES[mailbox] || MAILBOXES.customer
+}
+function matchesMailbox(e: any, address: string): boolean {
   const to = Array.isArray(e?.to) ? e.to : [e?.to]
-  return to.some((a: unknown) => DASHBOARD_ADDRESSES.some((addr) => String(a || "").toLowerCase().includes(addr)))
+  return to.some((a: unknown) => String(a || "").toLowerCase().includes(address))
 }
 
 export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
@@ -33,7 +39,9 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
     return json({ emails: [], error: "Email isn't set up (RESEND_API_KEY missing)." })
   }
   const headers = { Authorization: `Bearer ${env.RESEND_API_KEY}` }
-  const id = new URL(request.url).searchParams.get("id")
+  const url = new URL(request.url)
+  const id = url.searchParams.get("id")
+  const address = addressFor(url.searchParams.get("mailbox") || "customer")
 
   try {
     if (id) {
@@ -41,13 +49,16 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
       const res = await fetch(`${API}/${id}`, { headers })
       if (!res.ok) return json({ error: providerError(res.status) })
       const e: any = await res.json()
-      if (!isCustomerMail(e)) return json({ error: "Not found" }, 404)
+      if (!matchesMailbox(e, address)) return json({ error: "Not found" }, 404)
       return json({ email: { ...summary(e), text: bodyText(e) } })
     }
     const res = await fetch(`${API}?limit=50`, { headers })
     if (!res.ok) return json({ emails: [], error: providerError(res.status) })
     const data: any = await res.json()
-    const emails = (Array.isArray(data?.data) ? data.data : []).filter(isCustomerMail).slice(0, 25).map(summary)
+    const emails = (Array.isArray(data?.data) ? data.data : [])
+      .filter((e: any) => matchesMailbox(e, address))
+      .slice(0, 25)
+      .map(summary)
     return json({ emails, count: emails.length })
   } catch {
     return json({ emails: [], error: "Couldn't reach the email provider — try again shortly." })
