@@ -1909,8 +1909,7 @@
       "https://ae-pic-a1.aliexpress-media.com/kf/S8b3e7fdfc45743408438479637d36ef2x.jpg",
       "https://ae-pic-a1.aliexpress-media.com/kf/S5f192bd8c9d84fcd9da7649fa060a98dJ.jpg",
       "https://ae-pic-a1.aliexpress-media.com/kf/S27cd4d4b5c1b44dba1ad91b48848e7b2N.jpg",
-      "https://ae-pic-a1.aliexpress-media.com/kf/S00c593eb545d44b4be6bc9ed6c5b21a4K.jpg",
-      "https://ae-pic-a1.aliexpress-media.com/kf/S19e6f89d0ff0431380ec8fa07f40e593M.jpg"
+      "https://ae-pic-a1.aliexpress-media.com/kf/S00c593eb545d44b4be6bc9ed6c5b21a4K.jpg"
     ],
     "variant": "3M(W) x 1M(H), 100 LEDs, warm white, cool white or multicolour, USB powered, remote included",
     "variants": [
@@ -2039,6 +2038,174 @@
           "CA": 53.95,
           "US": 44.95
         }
+      },
+      {
+        "label": "400 LEDs (4M x 2M) · Warm White",
+        "sku": "400LED-4x2",
+        "prices": {
+          "AU": 32.95,
+          "CA": 32.95,
+          "US": 27.95
+        },
+        "compareAt": {
+          "AU": 58.95,
+          "CA": 58.95,
+          "US": 49.95
+        }
+      },
+      {
+        "label": "400 LEDs (4M x 2M) · Cool White",
+        "sku": "400LED-4x2-CW",
+        "prices": {
+          "AU": 32.95,
+          "CA": 32.95,
+          "US": 27.95
+        },
+        "compareAt": {
+          "AU": 58.95,
+          "CA": 58.95,
+          "US": 49.95
+        }
+      },
+      {
+        "label": "400 LEDs (4M x 2M) · Multicolour",
+        "sku": "400LED-4x2-MC",
+        "prices": {
+          "AU": 32.95,
+          "CA": 32.95,
+          "US": 27.95
+        },
+        "compareAt": {
+          "AU": 58.95,
+          "CA": 58.95,
+          "US": 49.95
+        }
+      },
+      {
+        "label": "500 LEDs (4M x 3M) · Warm White",
+        "sku": "500LED-4x3",
+        "prices": {
+          "AU": 34.95,
+          "CA": 34.95,
+          "US": 29.95
+        },
+        "compareAt": {
+          "AU": 62.95,
+          "CA": 62.95,
+          "US": 53.95
+        }
+      },
+      {
+        "label": "500 LEDs (4M x 3M) · Cool White",
+        "sku": "500LED-4x3-CW",
+        "prices": {
+          "AU": 34.95,
+          "CA": 34.95,
+          "US": 29.95
+        },
+        "compareAt": {
+          "AU": 62.95,
+          "CA": 62.95,
+          "US": 53.95
+        }
+      },
+      {
+        "label": "500 LEDs (4M x 3M) · Multicolour",
+        "sku": "500LED-4x3-MC",
+        "prices": {
+          "AU": 34.95,
+          "CA": 34.95,
+          "US": 29.95
+        },
+        "compareAt": {
+          "AU": 62.95,
+          "CA": 62.95,
+          "US": 53.95
+        }
+      },
+      {
+        "label": "600 LEDs (6M x 2M) · Warm White",
+        "sku": "600LED-6x2",
+        "prices": {
+          "AU": 37.95,
+          "CA": 37.95,
+          "US": 32.95
+        },
+        "compareAt": {
+          "AU": 67.95,
+          "CA": 67.95,
+          "US": 58.95
+        }
+      },
+      {
+        "label": "600 LEDs (6M x 2M) · Cool White",
+        "sku": "600LED-6x2-CW",
+        "prices": {
+          "AU": 37.95,
+          "CA": 37.95,
+          "US": 32.95
+        },
+        "compareAt": {
+          "AU": 67.95,
+          "CA": 67.95,
+          "US": 58.95
+        }
+      },
+      {
+        "label": "600 LEDs (6M x 2M) · Multicolour",
+        "sku": "600LED-6x2-MC",
+        "prices": {
+          "AU": 37.95,
+          "CA": 37.95,
+          "US": 32.95
+        },
+        "compareAt": {
+          "AU": 67.95,
+          "CA": 67.95,
+          "US": 58.95
+        }
+      },
+      {
+        "label": "700 LEDs (6M x 3M) · Warm White",
+        "sku": "700LED-6x3",
+        "prices": {
+          "AU": 39.95,
+          "CA": 39.95,
+          "US": 34.95
+        },
+        "compareAt": {
+          "AU": 71.95,
+          "CA": 71.95,
+          "US": 62.95
+        }
+      },
+      {
+        "label": "700 LEDs (6M x 3M) · Cool White",
+        "sku": "700LED-6x3-CW",
+        "prices": {
+          "AU": 39.95,
+          "CA": 39.95,
+          "US": 34.95
+        },
+        "compareAt": {
+          "AU": 71.95,
+          "CA": 71.95,
+          "US": 62.95
+        }
+      },
+      {
+        "label": "700 LEDs (6M x 3M) · Multicolour",
+        "sku": "700LED-6x3-MC",
+        "prices": {
+          "AU": 39.95,
+          "CA": 39.95,
+          "US": 34.95
+        },
+        "compareAt": {
+          "AU": 71.95,
+          "CA": 71.95,
+          "US": 62.95
+        }
       }
     ],
     "prices": {
@@ -2058,8 +2225,9 @@
         "Choose warm white, cool white or multicolour — dimmable",
         "USB powered (5V) — no bulky plug pack needed",
         "Simple hook-and-drape install, no drilling or tools",
-        "Available in 100, 200 or 300 LEDs to match your space",
-        "Remote control and battery included"
+        "Available in 7 sizes, 100 to 700 LEDs, to match any space",
+        "Remote control and battery included",
+        "Great for Christmas, New Year, weddings, birthdays and Valentine's Day"
       ],
       "features": [
         {
@@ -2080,7 +2248,12 @@
         {
           "icon": "📐",
           "title": "A size for every wall",
-          "text": "Choose 100, 200 or 300 LEDs to cover anything from a headboard to a full curtain wall."
+          "text": "Choose from 100 up to 700 LEDs to cover anything from a headboard to a full curtain wall."
+        },
+        {
+          "icon": "🎉",
+          "title": "Dressed for any occasion",
+          "text": "From Christmas and New Year to weddings, birthdays and Valentine's Day — instant festive backdrop whenever you need it."
         }
       ],
       "howItWorks": [
