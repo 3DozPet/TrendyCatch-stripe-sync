@@ -615,6 +615,32 @@ async function loadPixels() {
 }
 loadPixels();
 
+// Same live-visitor heartbeat index.html sends, so the admin dashboard's
+// live map counts people on product pages too. Without it, ad traffic sent
+// straight to a product link never appeared as "live" at all — only people
+// who happened to land on the home page did. Sends the product id along
+// with the path (and nothing else from the query string, so click ids like
+// ttclid don't end up in the dashboard) to show what's being viewed.
+(function startLiveVisitorHeartbeat() {
+  let visitorId = sessionStorage.getItem("tc_visitor_id");
+  if (!visitorId) {
+    visitorId = (crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`);
+    sessionStorage.setItem("tc_visitor_id", visitorId);
+  }
+  const productParam = new URLSearchParams(location.search).get("id");
+  const page = location.pathname + (productParam ? "?id=" + productParam : "");
+  const ping = () => {
+    fetch("/visitor-ping", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ visitorId, page }),
+      keepalive: true,
+    }).catch(() => {});
+  };
+  ping();
+  setInterval(ping, 20000);
+})();
+
 async function detectCountry() {
   try {
     const res = await fetch("/geo");
