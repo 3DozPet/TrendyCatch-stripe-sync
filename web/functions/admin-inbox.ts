@@ -1,10 +1,11 @@
-// GET /admin-inbox        — latest emails customers sent to @trendycatch.us
+// GET /admin-inbox        — latest emails sent to @trendycatch.us addresses
+//                           the dashboard is allowed to show
 // GET /admin-inbox?id=... — one email's full text
 //
 // Read straight from Resend's receiving API (nothing is copied into KV), and
-// gated exactly like /admin-subscribers: customer mail is for the store
-// owner's eyes only. Only plain text is returned — the dashboard never renders
-// a sender's HTML.
+// gated exactly like /admin-subscribers: this is for the store owner's eyes
+// only (valid dashboard session required) — not visible to anyone else, e.g.
+// Robbie himself has no separate login here.
 import { hasValidSession } from "./_lib/auth"
 
 interface Env {
@@ -14,14 +15,14 @@ interface Env {
 
 const API = "https://api.resend.com/emails/receiving"
 
-// The dashboard inbox is the customer inbox: only mail addressed to
-// orders@trendycatch.us shows here. Anything sent to another address on the
-// domain (e.g. robbie@trendycatch.us, the private admin address) is never
-// listed or opened on the dashboard.
-const CUSTOMER_ADDRESS = "orders@trendycatch.us"
+// Mail to any of these addresses shows on the dashboard's Inbox panel, for
+// the logged-in admin only. orders@ is the customer-facing address; robbie@
+// is Robbie's own address — both land in the same admin-only view, each row
+// still shows which address it was actually sent to.
+const DASHBOARD_ADDRESSES = ["orders@trendycatch.us", "robbie@trendycatch.us"]
 function isCustomerMail(e: any): boolean {
   const to = Array.isArray(e?.to) ? e.to : [e?.to]
-  return to.some((a: unknown) => String(a || "").toLowerCase().includes(CUSTOMER_ADDRESS))
+  return to.some((a: unknown) => DASHBOARD_ADDRESSES.some((addr) => String(a || "").toLowerCase().includes(addr)))
 }
 
 export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {

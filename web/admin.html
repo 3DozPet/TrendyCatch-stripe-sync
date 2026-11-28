@@ -437,7 +437,7 @@ main#orderList { display:flex; flex-direction:column; gap:12px; }
 </section>
 
 <section class="panel" id="inbox">
-  <div class="section-heading" style="margin-top:0;"><div><h2>Inbox</h2><p>Customer emails sent to orders@trendycatch.us — tap one to read and reply</p></div><button id="inboxCompose" type="button" class="header-btn">New message</button></div>
+  <div class="section-heading" style="margin-top:0;"><div><h2>Inbox</h2><p>Mail sent to orders@trendycatch.us or robbie@trendycatch.us — admin-only, tap one to read and reply</p></div><button id="inboxCompose" type="button" class="header-btn">New message</button></div>
   <div class="breakdown subscribers-panel inbox-panel" style="max-width:1160px;margin:0 auto;">
     <div id="inboxList"></div>
   </div>
@@ -899,28 +899,33 @@ document.getElementById("mailWinSend").addEventListener("click", async () => {
   const box = document.getElementById("mailWinReply");
   const btn = document.getElementById("mailWinSend");
   if (!box.value.trim()) { status.textContent = mailWinCurrent.compose ? "Write a message first." : "Write a reply first."; return; }
-  let to, subject, messageId;
+  let to, subject, messageId, from;
   if (mailWinCurrent.compose) {
     to = document.getElementById("mailWinTo").value.trim();
     subject = document.getElementById("mailWinSubjectInput").value.trim();
     if (!to) { status.textContent = "Who's this going to?"; return; }
     if (!subject) { status.textContent = "Give it a subject first."; return; }
     messageId = "";
+    from = "orders@trendycatch.us";
   } else {
     to = senderAddress(mailWinCurrent.from);
     subject = /^re:/i.test(mailWinCurrent.subject) ? mailWinCurrent.subject : "Re: " + mailWinCurrent.subject;
     messageId = mailWinCurrent.messageId || "";
+    // Reply from whichever admin address the original mail came in on —
+    // a thread that landed on robbie@trendycatch.us gets replied to from
+    // robbie@, not orders@, so the recipient sees a consistent address.
+    from = String(mailWinCurrent.to || "").toLowerCase().includes("robbie@trendycatch.us") ? "robbie@trendycatch.us" : "orders@trendycatch.us";
   }
   btn.disabled = true; status.textContent = "Sending…";
   try {
     const res = await fetch("/admin-inbox-reply", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ to, subject, text: box.value, messageId }),
+      body: JSON.stringify({ to, subject, text: box.value, messageId, from }),
     });
     const data = await res.json();
     if (!res.ok) throw Error(data.error || "Unable to send");
-    status.textContent = `Sent to ${to} from orders@trendycatch.us`; box.value = "";
+    status.textContent = `Sent to ${to} from ${from}`; box.value = "";
     if (mailWinCurrent.compose) { document.getElementById("mailWinTo").value = ""; document.getElementById("mailWinSubjectInput").value = ""; }
   } catch (e) {
     status.textContent = e.message || "Unable to send";

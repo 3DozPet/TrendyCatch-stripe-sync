@@ -1,12 +1,16 @@
-// POST /admin-inbox-reply — send a plain-text reply to a customer from the
-// dashboard's inbox window. Same gate as every other admin write: valid
-// session + same-origin request. Always sent from orders@trendycatch.us.
+// POST /admin-inbox-reply — send a plain-text reply (or a brand-new message)
+// from the dashboard's inbox window. Same gate as every other admin write:
+// valid session + same-origin request. Defaults to orders@trendycatch.us;
+// pass `from: "robbie@trendycatch.us"` to reply as Robbie's own address
+// instead (e.g. when replying to a thread that came in on robbie@).
 import { hasValidSession } from "./_lib/auth"
 
 interface Env {
   ORDERS_KV?: KVNamespace
   RESEND_API_KEY?: string
 }
+
+const ALLOWED_FROM = new Set(["orders@trendycatch.us", "robbie@trendycatch.us"])
 
 export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   if (!env.ORDERS_KV || !(await hasValidSession(request, env.ORDERS_KV))) return json({ error: "Unauthorized" }, 401)
@@ -20,11 +24,14 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   const subject = typeof input.subject === "string" ? input.subject.trim().slice(0, 200) : ""
   const text = typeof input.text === "string" ? input.text.trim().slice(0, 10000) : ""
   const messageId = typeof input.messageId === "string" ? input.messageId.trim().slice(0, 300) : ""
+  const fromAddress = typeof input.from === "string" && ALLOWED_FROM.has(input.from.trim().toLowerCase())
+    ? input.from.trim().toLowerCase()
+    : "orders@trendycatch.us"
   if (!/^[^\s@<>"'&,;]+@[^\s@<>"'&,;]+\.[^\s@<>"'&,;]+$/.test(to) || to.length > 254) return json({ error: "That email address doesn't look right." }, 400)
   if (!text) return json({ error: "Write a reply first." }, 400)
 
   const body: Record<string, unknown> = {
-    from: "TrendyCatch <orders@trendycatch.us>",
+    from: `TrendyCatch <${fromAddress}>`,
     to: [to],
     subject: subject || "Re: your message to TrendyCatch",
     text,
