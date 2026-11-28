@@ -683,6 +683,22 @@ function fireInitiateCheckout(prod) {
   if (window.__tcGtag) window.__tcGtag("event", "begin_checkout", { currency, value, items: [{ item_id: prod.id, item_name: prod.title }] });
 }
 
+function fireAddToCart(prod) {
+  const value = getPriceForVariant(prod, selectedVariantSku);
+  const currency = currentCountry === "US" ? "USD" : currentCountry === "NZ" ? "NZD" : currentCountry === "CA" ? "CAD" : "AUD";
+  if (window.__tcFbq) window.__tcFbq("track", "AddToCart", { content_ids: [prod.id], content_name: prod.title, currency, value });
+  if (window.__tcTtq) window.__tcTtq.track("AddToCart", { content_id: prod.id, content_name: prod.title, value, currency });
+  if (window.__tcGtag) window.__tcGtag("event", "add_to_cart", { currency, value, items: [{ item_id: prod.id, item_name: prod.title }] });
+}
+
+function fireAddPaymentInfo(prod) {
+  const value = getPriceForVariant(prod, selectedVariantSku);
+  const currency = currentCountry === "US" ? "USD" : currentCountry === "NZ" ? "NZD" : currentCountry === "CA" ? "CAD" : "AUD";
+  if (window.__tcFbq) window.__tcFbq("track", "AddPaymentInfo", { content_ids: [prod.id], content_name: prod.title, currency, value });
+  if (window.__tcTtq) window.__tcTtq.track("AddPaymentInfo", { content_id: prod.id, content_name: prod.title, value, currency });
+  if (window.__tcGtag) window.__tcGtag("event", "add_payment_info", { currency, value, items: [{ item_id: prod.id, item_name: prod.title }] });
+}
+
 function allBuyButtons() {
   return Array.from(document.querySelectorAll(".buy-btn"));
 }
@@ -1028,6 +1044,7 @@ async function handleBuy(btn) {
     b.textContent = "Loading…";
   });
 
+  fireAddToCart(product);
   fireInitiateCheckout(product);
 
   try {
@@ -1045,6 +1062,7 @@ async function handleBuy(btn) {
     });
     const data = await res.json();
     if (data.url) {
+      fireAddPaymentInfo(product);
       location.href = data.url;
     } else {
       showToast(data.error || "Something went wrong — please try again.");

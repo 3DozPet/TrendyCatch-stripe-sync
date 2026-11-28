@@ -538,6 +538,22 @@ function fireInitiateCheckout(product) {
   if (window.__tcGtag) window.__tcGtag("event", "begin_checkout", { currency, value, items: [{ item_id: product.id, item_name: product.title }] });
 }
 
+function fireAddToCart(product) {
+  const value = product.prices[currentCountry];
+  const currency = currentCountry === "US" ? "USD" : currentCountry === "NZ" ? "NZD" : currentCountry === "CA" ? "CAD" : "AUD";
+  if (window.__tcFbq) window.__tcFbq("track", "AddToCart", { content_ids: [product.id], content_name: product.title, currency, value });
+  if (window.__tcTtq) window.__tcTtq.track("AddToCart", { content_id: product.id, content_name: product.title, value, currency });
+  if (window.__tcGtag) window.__tcGtag("event", "add_to_cart", { currency, value, items: [{ item_id: product.id, item_name: product.title }] });
+}
+
+function fireAddPaymentInfo(product) {
+  const value = product.prices[currentCountry];
+  const currency = currentCountry === "US" ? "USD" : currentCountry === "NZ" ? "NZD" : currentCountry === "CA" ? "CAD" : "AUD";
+  if (window.__tcFbq) window.__tcFbq("track", "AddPaymentInfo", { content_ids: [product.id], content_name: product.title, currency, value });
+  if (window.__tcTtq) window.__tcTtq.track("AddPaymentInfo", { content_id: product.id, content_name: product.title, value, currency });
+  if (window.__tcGtag) window.__tcGtag("event", "add_payment_info", { currency, value, items: [{ item_id: product.id, item_name: product.title }] });
+}
+
 // ---------------------------------------------------------------------------
 // Geolocation + pricing
 async function detectCountry() {
@@ -700,6 +716,7 @@ async function handleBuy(btn) {
   const originalText = btn.textContent;
   btn.textContent = "Loading…";
 
+  fireAddToCart(product);
   fireInitiateCheckout(product);
 
   try {
@@ -716,6 +733,7 @@ async function handleBuy(btn) {
     });
     const data = await res.json();
     if (data.url) {
+      fireAddPaymentInfo(product);
       location.href = data.url;
     } else {
       showToast(data.error || "Something went wrong — please try again.");
