@@ -4,12 +4,21 @@
 // GET /admin-inbox?id=...           — one email's full text (pass the same
 //                                     &mailbox= it was listed under)
 //
-// Read straight from Resend's receiving API (nothing is copied into KV), and
-// gated exactly like /admin-subscribers: this is for the store owner's eyes
-// only (valid dashboard session required) — not visible to anyone else, e.g.
-// Robbie himself has no separate login here. Two separate mailboxes, kept
-// apart on the dashboard: the customer-facing one (orders@trendycatch.us)
-// and Robbie's own (robbie@trendycatch.us) — never merged into one list.
+// Read straight from Resend's receiving API — inbound mail itself is never
+// copied into KV — and gated exactly like /admin-subscribers: this is for
+// the store owner's eyes only (valid dashboard session required) — not
+// visible to anyone else, e.g. Robbie himself has no separate login here.
+// Two separate mailboxes, kept apart on the dashboard: the customer-facing
+// one (orders@trendycatch.us) and Robbie's own (robbie@trendycatch.us) —
+// never merged into one list.
+//
+// Opening a single email (?id=...) also merges in any replies sent to that
+// sender from this dashboard (logged by admin-inbox-reply.ts under
+// `sentmail:<mailbox>:<address>`) into a `thread` array, oldest first, so a
+// reply the admin sent shows up in its own thread instead of only ever
+// existing as Resend's fire-and-forget send. That's one extra KV get() per
+// thread opened — not a list() — so it doesn't risk the daily list() cap
+// admin-orders.ts ran into.
 //
 // The admin mailbox can carry one more lock on top of the normal dashboard
 // session: a second password (ADMIN_INBOX_KEY, a Cloudflare secret — never
@@ -38,6 +47,10 @@ function matchesMailbox(e: any, address: string): boolean {
   const to = Array.isArray(e?.to) ? e.to : [e?.to]
   return to.some((a: unknown) => String(a || "").toLowerCase().includes(address))
 }
+function extractAddress(from: string): string {
+  const m = String(from || "").match(/<([^<>]+)>/)
+  return (m ? m[1] : String(from || "")).trim().toLowerCase()
+}
 
 export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
   if (!env.ORDERS_KV || !(await hasValidSession(request, env.ORDERS_KV))) {
@@ -63,7 +76,26 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
       if (!res.ok) return json({ error: providerError(res.status) })
       const e: any = await res.json()
       if (!matchesMailbox(e, address)) return json({ error: "Not found" }, 404)
-      return json({ email: { ...summary(e), text: bodyText(e) } })
+      const inboundText = bodyText(e)
+      const thread: any[] = [
+        { direction: "in", from: String(e?.from || ""), to: address, text: inboundText, createdAt: String(e?.created_at || "") },
+      ]
+      const correspondent = extractAddress(e?.from)
+      if (env.ORDERS_KV && correspondent) {
+        try {
+          const raw = await env.ORDERS_KV.get(`sentmail:${mailbox}:${correspondent}`)
+          if (raw) {
+            const sent = JSON.parse(raw)
+            if (Array.isArray(sent)) {
+              for (const s of sent) thread.push({ direction: "out", from: String(s?.from || ""), to: String(s?.to || ""), text: String(s?.text || ""), createdAt: String(s?.createdAt || "") })
+            }
+          }
+        } catch {
+          // Best-effort — fall back to showing just the inbound email.
+        }
+      }
+      thread.sort((a, b) => Date.parse(a.createdAt || "") - Date.parse(b.createdAt || ""))
+      return json({ email: { ...summary(e), text: inboundText, thread } })
     }
     const res = await fetch(`${API}?limit=50`, { headers })
     if (!res.ok) return json({ emails: [], error: providerError(res.status) })
