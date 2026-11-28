@@ -437,7 +437,7 @@ main#orderList { display:flex; flex-direction:column; gap:12px; }
 </section>
 
 <section class="panel" id="inbox">
-  <div class="section-heading" style="margin-top:0;"><div><h2>Inbox</h2><p>Customer emails sent to orders@trendycatch.us — tap one to read and reply</p></div></div>
+  <div class="section-heading" style="margin-top:0;"><div><h2>Inbox</h2><p>Customer emails sent to orders@trendycatch.us — tap one to read and reply</p></div><button id="inboxCompose" type="button" class="header-btn">New message</button></div>
   <div class="breakdown subscribers-panel inbox-panel" style="max-width:1160px;margin:0 auto;">
     <div id="inboxList"></div>
   </div>
@@ -451,12 +451,21 @@ main#orderList { display:flex; flex-direction:column; gap:12px; }
     </div>
     <div class="mail-win-body">
       <div class="mail-win-col">
-        <h4>Message</h4>
+        <!-- Compose-only fields: a brand-new message to anyone (a supplier,
+             etc.), not a reply to something already in the inbox. Hidden for
+             the normal "read & reply to a customer" path. -->
+        <div id="mailWinComposeFields" style="display:none;">
+          <h4>To</h4>
+          <input type="email" id="mailWinTo" placeholder="name@example.com" style="width:100%;font:inherit;font-size:13.5px;padding:8px 10px;border:1px solid var(--border-strong);border-radius:8px;background:var(--surface);color:var(--ink);margin-bottom:10px;">
+          <h4>Subject</h4>
+          <input type="text" id="mailWinSubjectInput" placeholder="What's this about?" style="width:100%;font:inherit;font-size:13.5px;padding:8px 10px;border:1px solid var(--border-strong);border-radius:8px;background:var(--surface);color:var(--ink);margin-bottom:10px;">
+        </div>
+        <h4 id="mailWinMessageLabel">Message</h4>
         <div class="mail-win-text" id="mailWinText"></div>
         <textarea id="mailWinReply" placeholder="Write your reply…"></textarea>
         <div class="mail-win-actions"><button type="button" class="header-btn" id="mailWinSend">Send reply</button><span id="mailWinStatus" role="status"></span></div>
       </div>
-      <div class="mail-win-col">
+      <div class="mail-win-col" id="mailWinCustomerCol">
         <h4>Customer</h4>
         <div class="mail-cust" id="mailWinCustomer"></div>
         <h4>Orders &amp; fulfilment</h4>
@@ -803,17 +812,46 @@ document.getElementById("mailWinClose").addEventListener("click", closeMailWin);
 document.getElementById("mailWin").addEventListener("click", (ev) => { if (ev.target.id === "mailWin") closeMailWin(); });
 document.addEventListener("keydown", (ev) => { if (ev.key === "Escape") closeMailWin(); });
 
+// A brand-new message — to a supplier or anyone else, not just a reply to a
+// customer thread already in the inbox. Reuses the same mail window and the
+// same /admin-inbox-reply send path (it only needs to/subject/text), just
+// with editable To/Subject fields and no existing thread, customer lookup,
+// or order history to show.
+function openComposeWin() {
+  mailWinCurrent = { compose: true };
+  document.getElementById("mailWinSubject").style.display = "none";
+  document.getElementById("mailWinMeta").textContent = "";
+  document.getElementById("mailWinComposeFields").style.display = "";
+  document.getElementById("mailWinMessageLabel").textContent = "Message";
+  document.getElementById("mailWinText").style.display = "none";
+  document.getElementById("mailWinCustomerCol").style.display = "none";
+  document.getElementById("mailWinTo").value = "";
+  document.getElementById("mailWinSubjectInput").value = "";
+  document.getElementById("mailWinReply").value = "";
+  document.getElementById("mailWinReply").placeholder = "Write your message…";
+  document.getElementById("mailWinSend").textContent = "Send";
+  document.getElementById("mailWinStatus").textContent = "";
+  document.getElementById("mailWin").classList.add("open");
+}
+document.getElementById("inboxCompose").addEventListener("click", openComposeWin);
+
 async function openMailWin(id) {
   const summary = inboxEmails.find((m) => m.id === id);
   if (!summary) return;
   mailWinCurrent = summary;
   const address = senderAddress(summary.from);
+  document.getElementById("mailWinSubject").style.display = "";
   document.getElementById("mailWinSubject").textContent = summary.subject;
   document.getElementById("mailWinMeta").textContent = `From ${summary.from} · to ${summary.to} · ${timeAgo(summary.createdAt)}${summary.attachments ? " · " + summary.attachments + " attachment(s) — open in Resend to view" : ""}`;
-  const text = document.getElementById("mailWinText"); text.textContent = "Loading…";
+  document.getElementById("mailWinComposeFields").style.display = "none";
+  document.getElementById("mailWinMessageLabel").textContent = "Message";
+  const text = document.getElementById("mailWinText"); text.style.display = ""; text.textContent = "Loading…";
+  document.getElementById("mailWinCustomerCol").style.display = "";
   const cust = document.getElementById("mailWinCustomer"); cust.textContent = "Loading…";
   const orders = document.getElementById("mailWinOrders"); orders.textContent = "";
   document.getElementById("mailWinReply").value = "";
+  document.getElementById("mailWinReply").placeholder = "Write your reply…";
+  document.getElementById("mailWinSend").textContent = "Send reply";
   document.getElementById("mailWinStatus").textContent = "";
   document.getElementById("mailWin").classList.add("open");
   markInboxSeen(id); renderInbox();
@@ -860,18 +898,30 @@ document.getElementById("mailWinSend").addEventListener("click", async () => {
   const status = document.getElementById("mailWinStatus");
   const box = document.getElementById("mailWinReply");
   const btn = document.getElementById("mailWinSend");
-  if (!box.value.trim()) { status.textContent = "Write a reply first."; return; }
+  if (!box.value.trim()) { status.textContent = mailWinCurrent.compose ? "Write a message first." : "Write a reply first."; return; }
+  let to, subject, messageId;
+  if (mailWinCurrent.compose) {
+    to = document.getElementById("mailWinTo").value.trim();
+    subject = document.getElementById("mailWinSubjectInput").value.trim();
+    if (!to) { status.textContent = "Who's this going to?"; return; }
+    if (!subject) { status.textContent = "Give it a subject first."; return; }
+    messageId = "";
+  } else {
+    to = senderAddress(mailWinCurrent.from);
+    subject = /^re:/i.test(mailWinCurrent.subject) ? mailWinCurrent.subject : "Re: " + mailWinCurrent.subject;
+    messageId = mailWinCurrent.messageId || "";
+  }
   btn.disabled = true; status.textContent = "Sending…";
   try {
-    const subject = /^re:/i.test(mailWinCurrent.subject) ? mailWinCurrent.subject : "Re: " + mailWinCurrent.subject;
     const res = await fetch("/admin-inbox-reply", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ to: senderAddress(mailWinCurrent.from), subject, text: box.value, messageId: mailWinCurrent.messageId || "" }),
+      body: JSON.stringify({ to, subject, text: box.value, messageId }),
     });
     const data = await res.json();
     if (!res.ok) throw Error(data.error || "Unable to send");
-    status.textContent = "Reply sent from orders@trendycatch.us"; box.value = "";
+    status.textContent = `Sent to ${to} from orders@trendycatch.us`; box.value = "";
+    if (mailWinCurrent.compose) { document.getElementById("mailWinTo").value = ""; document.getElementById("mailWinSubjectInput").value = ""; }
   } catch (e) {
     status.textContent = e.message || "Unable to send";
   } finally {
