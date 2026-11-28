@@ -70,6 +70,7 @@ function buildEmailHtml(order: Record<string, unknown>, items: Array<Record<stri
     <p><strong>Total: ${currency} ${total}</strong></p>
     ${addressHtml ? `<p><strong>Shipping to:</strong><br>${addressHtml}</p>` : ''}
     ${trackingHtml}
+    <p style="margin-top:20px;"><a href="https://trendycatch.us/my-orders.html" style="color:#5a3ec8;font-weight:bold;text-decoration:none;">View all my orders &rarr;</a></p>
     <p style="color:#666;font-size:13px;margin-top:24px;">Questions about your order? Just reply to this email — we're at orders@trendycatch.us.</p>
   </div>`
 }

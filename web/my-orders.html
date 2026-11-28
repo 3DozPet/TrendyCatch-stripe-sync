@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>My Orders — TrendyCatch</title>
+<meta name="robots" content="noindex" />
+<style>
+  :root {
+    --ink: #2b2230; --muted: #6e6480; --bg: #f7f3ff;
+    --green: #5a3ec8; --green-dark: #43299e;
+    --accent: #ff8fb8; --accent-dark: #f56fa3;
+    --border: #e8e0f5;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: var(--bg); color: var(--ink); }
+  header.site { background: var(--green); background-image: linear-gradient(180deg, var(--green) 0%, var(--green-dark) 100%); color: #fff; padding: 16px 20px; }
+  header.site a { color: #fff; text-decoration: none; font-weight: 800; font-size: 18px; }
+  main { max-width: 640px; margin: 0 auto; padding: 32px 20px 80px; }
+  h1 { font-size: 22px; margin: 0 0 6px; }
+  p.lead { color: var(--muted); margin: 0 0 24px; font-size: 14px; line-height: 1.6; }
+  .card { background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 24px; }
+  label { display: block; font-size: 13px; font-weight: 700; margin-bottom: 6px; }
+  input[type="email"] { width: 100%; padding: 12px 14px; border: 1.5px solid var(--border); border-radius: 12px; font: inherit; font-size: 15px; }
+  input[type="email"]:focus { outline: 2px solid var(--green); border-color: var(--green); }
+  button.primary { margin-top: 14px; width: 100%; padding: 13px; border: none; border-radius: 12px; background: var(--green); color: #fff; font-weight: 700; font-size: 15px; cursor: pointer; }
+  button.primary:disabled { opacity: 0.6; cursor: default; }
+  .msg { font-size: 13px; margin-top: 12px; color: var(--muted); }
+  .msg.error { color: var(--accent-dark); font-weight: 600; }
+  .msg.success { color: var(--green-dark); font-weight: 600; }
+  .order { background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 18px; margin-bottom: 14px; }
+  .order-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
+  .order-head strong { font-size: 15px; }
+  .order-head span { font-size: 12px; color: var(--muted); }
+  .status-pill { display: inline-block; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.03em; }
+  .status-pill.fulfilled { background: #e3f6ea; color: #1f7a45; }
+  .status-pill.unfulfilled { background: #fdf0e0; color: #a6610d; }
+  .order ul { margin: 8px 0; padding-left: 18px; font-size: 13.5px; }
+  .order .tracking { font-size: 13px; margin-top: 6px; }
+  .order .total { font-weight: 700; font-size: 14px; margin-top: 6px; }
+  .top-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
+  .signout { font-size: 13px; color: var(--muted); background: none; border: none; cursor: pointer; text-decoration: underline; padding: 0; }
+  .empty { color: var(--muted); font-size: 14px; }
+</style>
+</head>
+<body>
+<header class="site"><a href="/">TrendyCatch</a></header>
+<main>
+  <div id="loginView">
+    <h1>My Orders</h1>
+    <p class="lead">Enter the email you ordered with and we'll send you a one-time sign-in link — no password needed.</p>
+    <div class="card">
+      <form id="loginForm">
+        <label for="loginEmail">Email address</label>
+        <input type="email" id="loginEmail" placeholder="you@example.com" required autocomplete="email" />
+        <button type="submit" class="primary" id="loginBtn">Send me a sign-in link</button>
+        <p class="msg" id="loginMsg"></p>
+      </form>
+    </div>
+  </div>
+
+  <div id="ordersView" style="display:none;">
+    <div class="top-row">
+      <div>
+        <h1 style="margin-bottom:2px;">My Orders</h1>
+        <span id="ordersEmail" style="font-size:13px;color:var(--muted);"></span>
+      </div>
+      <button type="button" class="signout" id="signOutBtn">Sign out</button>
+    </div>
+    <div id="ordersList"></div>
+  </div>
+</main>
+<script>
+function escapeHtml(s) { return String(s).replace(/[&<>"']/g, (c) => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c])); }
+function money(minor, currency) { return (currency || "USD") + " " + (Number(minor || 0) / 100).toFixed(2); }
+function fmtDate(iso) { try { return new Date(iso).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" }); } catch { return iso || ""; } }
+function orderRef(n) { const num = Number(n); return Number.isFinite(num) && num > 0 ? "TC-" + String(num).padStart(6, "0") : "Order"; }
+
+function showError(msg) {
+  const el = document.getElementById("loginMsg");
+  if (msg === "expired") el.textContent = "That link has expired or was already used — request a new one below.";
+  else if (msg) el.textContent = msg;
+  el.className = "msg error";
+}
+
+async function tryLoadOrders() {
+  const res = await fetch("/customer-orders", { cache: "no-store" });
+  if (!res.ok) return false;
+  const data = await res.json();
+  renderOrders(data);
+  return true;
+}
+
+function renderOrders(data) {
+  document.getElementById("loginView").style.display = "none";
+  document.getElementById("ordersView").style.display = "";
+  document.getElementById("ordersEmail").textContent = data.email || "";
+  const list = document.getElementById("ordersList");
+  if (!data.orders || !data.orders.length) {
+    list.innerHTML = '<p class="empty">No orders found for this email yet.</p>';
+    return;
+  }
+  list.innerHTML = data.orders.map((o) => {
+    const items = (o.items || []).map((i) => `<li>${escapeHtml(i.quantity ?? 1)} × ${escapeHtml(i.title || "Item")}${i.variant ? " — " + escapeHtml(i.variant) : ""}</li>`).join("");
+    const statusClass = o.fulfillmentStatus === "fulfilled" ? "fulfilled" : "unfulfilled";
+    const statusLabel = o.fulfillmentStatus === "fulfilled" ? "Shipped" : "Processing";
+    return `<div class="order">
+      <div class="order-head"><strong>${escapeHtml(orderRef(o.orderNumber))}</strong><span>${escapeHtml(fmtDate(o.createdAt))}</span></div>
+      <span class="status-pill ${statusClass}">${statusLabel}</span>
+      <ul>${items || "<li>Order details unavailable</li>"}</ul>
+      ${o.trackingNumber ? `<p class="tracking">Tracking number: <strong>${escapeHtml(o.trackingNumber)}</strong></p>` : ""}
+      <p class="total">Total: ${escapeHtml(money(o.totalMinor, o.currency))}</p>
+    </div>`;
+  }).join("");
+}
+
+document.getElementById("loginForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const btn = document.getElementById("loginBtn");
+  const msg = document.getElementById("loginMsg");
+  const email = document.getElementById("loginEmail").value.trim();
+  btn.disabled = true; msg.className = "msg"; msg.textContent = "Sending…";
+  try {
+    const res = await fetch("/customer-login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
+    });
+    const data = await res.json();
+    msg.className = res.ok ? "msg success" : "msg error";
+    msg.textContent = data.message || data.error || "Something went wrong — please try again.";
+  } catch {
+    msg.className = "msg error"; msg.textContent = "Network error — please try again.";
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+document.getElementById("signOutBtn").addEventListener("click", async () => {
+  try { await fetch("/customer-logout", { method: "POST" }); } catch {}
+  location.href = "/my-orders.html";
+});
+
+(async function init() {
+  const params = new URLSearchParams(location.search);
+  const token = params.get("token");
+  if (token) {
+    try {
+      const res = await fetch(`/customer-session?token=${encodeURIComponent(token)}`, { cache: "no-store" });
+      history.replaceState(null, "", "/my-orders.html");
+      if (res.ok) { await tryLoadOrders(); return; }
+      showError("expired");
+      return;
+    } catch {
+      showError("Something went wrong — please try again.");
+      return;
+    }
+  }
+  await tryLoadOrders();
+})();
+</script>
+</body>
+</html>
