@@ -7,7 +7,16 @@ const reply = (body: unknown, status = 200) => new Response(JSON.stringify(body)
 export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
   if (!env.ORDERS_KV || !env.ORDERS_DB) return reply({ error: 'Order storage is not configured' }, 503)
   if (!(await hasValidSession(request, env.ORDERS_KV))) return reply({ error: 'Unauthorized' }, 401)
-  const result = await env.ORDERS_DB.prepare('SELECT id, created_at, customer_name, customer_email, customer_phone, shipping_name, shipping_address_json, billing_address_json, currency, total_minor, payment_status, fulfillment_status, tracking_number, tracking_carrier, tracking_url, updated_at FROM orders ORDER BY created_at DESC, id DESC LIMIT 100').all()
+  // order_number is a stable, human-friendly sequence (1, 2, 3…) derived
+  // from insertion order — the TC-000001 shown in the dashboard — kept
+  // separate from `id`, which stays the full Stripe checkout session ID
+  // that every other query/webhook/email already keys off of.
+  const result = await env.ORDERS_DB.prepare(
+    `WITH numbered AS (SELECT id, ROW_NUMBER() OVER (ORDER BY created_at ASC, id ASC) AS order_number FROM orders)
+     SELECT o.id, o.created_at, o.customer_name, o.customer_email, o.customer_phone, o.shipping_name, o.shipping_address_json, o.billing_address_json, o.currency, o.total_minor, o.payment_status, o.fulfillment_status, o.tracking_number, o.tracking_carrier, o.tracking_url, o.updated_at, n.order_number
+     FROM orders o JOIN numbered n ON n.id = o.id
+     ORDER BY o.created_at DESC, o.id DESC LIMIT 100`
+  ).all()
   const orders = result.results || []
   const items = await env.ORDERS_DB.prepare('SELECT order_id, product_id, title, variant, quantity, unit_amount_minor, image_url FROM order_items WHERE order_id IN (SELECT id FROM orders ORDER BY created_at DESC, id DESC LIMIT 100) ORDER BY id').all()
   return reply({ orders, items: items.results || [], limit: 100 })

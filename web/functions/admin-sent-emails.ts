@@ -30,11 +30,17 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
   const url = new URL(request.url)
   const id = url.searchParams.get("id")
 
+  // Same TC-000001-style order_number used in the Order history panel
+  // (see admin-order-history.ts), joined in here so the sent-email log
+  // doesn't show the raw Stripe session ID either.
+  const NUMBERED_CTE = `WITH numbered AS (SELECT id, ROW_NUMBER() OVER (ORDER BY created_at ASC, id ASC) AS order_number FROM orders)`
+
   if (id) {
     const row = await env.ORDERS_DB
       .prepare(
-        `SELECT oe.id, oe.order_id, oe.event_type, oe.created_at, oe.detail_json, o.customer_name
-         FROM order_events oe LEFT JOIN orders o ON o.id = oe.order_id
+        `${NUMBERED_CTE}
+         SELECT oe.id, oe.order_id, oe.event_type, oe.created_at, oe.detail_json, o.customer_name, n.order_number
+         FROM order_events oe LEFT JOIN orders o ON o.id = oe.order_id LEFT JOIN numbered n ON n.id = oe.order_id
          WHERE oe.id = ? AND oe.event_type IN (${EMAIL_EVENT_TYPES.map(() => "?").join(",")})`
       )
       .bind(id, ...EMAIL_EVENT_TYPES)
@@ -46,8 +52,9 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
   const limit = Math.min(Number(url.searchParams.get("limit") || "100") || 100, 200)
   const result = await env.ORDERS_DB
     .prepare(
-      `SELECT oe.id, oe.order_id, oe.event_type, oe.created_at, oe.detail_json, o.customer_name
-       FROM order_events oe LEFT JOIN orders o ON o.id = oe.order_id
+      `${NUMBERED_CTE}
+       SELECT oe.id, oe.order_id, oe.event_type, oe.created_at, oe.detail_json, o.customer_name, n.order_number
+       FROM order_events oe LEFT JOIN orders o ON o.id = oe.order_id LEFT JOIN numbered n ON n.id = oe.order_id
        WHERE oe.event_type IN (${EMAIL_EVENT_TYPES.map(() => "?").join(",")})
        ORDER BY oe.created_at DESC LIMIT ?`
     )
@@ -68,6 +75,7 @@ function toEmailRecord(row: any, includeHtml: boolean): Record<string, unknown> 
   const record: Record<string, unknown> = {
     id: row.id,
     orderId: row.order_id,
+    orderNumber: row.order_number ?? null,
     customer: row.customer_name || null,
     to: detail.to || null,
     subject: detail.subject || null,

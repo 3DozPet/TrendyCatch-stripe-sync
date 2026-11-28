@@ -779,23 +779,25 @@ function printableAddress(raw) {
   try { const a=JSON.parse(raw); return [a.line1,a.line2,a.city,a.state,a.postal_code,a.country].filter(Boolean).join(', ') || 'Not provided'; } catch { return 'Address unavailable'; }
 }
 function orderField(parent, label, value) { const p=orderElement('p'); const strong=orderElement('strong',label+': '); p.append(strong, document.createTextNode(value || 'Not provided')); parent.append(p); }
-// Order IDs are full Stripe checkout session IDs (cs_live_a1B2c3...), which
-// is accurate but reads as noise in a list of orders. Show a short
-// reference instead; click it to copy the full ID (still needed to look an
-// order up in the Stripe dashboard).
-function shortOrderRef(id) {
-  const tail = String(id || '').replace(/^cs_(live|test)_/, '').slice(-8).toUpperCase();
-  return tail ? '#' + tail : '';
+// Order IDs are full Stripe checkout session IDs (cs_live_a1B2c3...) under
+// the hood — accurate, but reads as noise in a list of orders. The backend
+// (admin-order-history.ts / admin-sent-emails.ts) now joins in a stable
+// order_number (1, 2, 3… by creation order), shown here as TC-000001. The
+// full Stripe ID is still one click away (copied to clipboard) for looking
+// an order up in the Stripe dashboard.
+function orderNumberLabel(orderNumber) {
+  const n = Number(orderNumber);
+  return Number.isFinite(n) && n > 0 ? 'TC-' + String(n).padStart(6, '0') : '';
 }
-function orderIdField(parent, id) {
+function orderIdField(parent, order) {
   const p = orderElement('p');
   p.append(orderElement('strong', 'Order ID: '));
-  const span = orderElement('span', shortOrderRef(id) || 'Not provided');
-  if (id) {
+  const span = orderElement('span', orderNumberLabel(order.order_number) || 'Not provided');
+  if (order.id) {
     span.style.cursor = 'pointer'; span.style.textDecoration = 'underline dotted';
-    span.title = 'Click to copy full order ID (' + id + ')';
+    span.title = 'Click to copy full order ID (' + order.id + ')';
     span.addEventListener('click', () => {
-      navigator.clipboard?.writeText(id).catch(() => {});
+      navigator.clipboard?.writeText(order.id).catch(() => {});
       const original = span.textContent;
       span.textContent = 'Copied!';
       setTimeout(() => { span.textContent = original; }, 1200);
@@ -847,7 +849,7 @@ function buildOrderEntry(order, items, opts) {
   const total=Number(order.total_minor || 0)/100;
   entry.append(orderElement('summary',`${order.customer_name || 'Customer'} · ${order.currency} ${total.toFixed(2)} · ${order.fulfillment_status}`));
   const fields=orderElement('div',null,'history-fields');
-  orderIdField(fields,order.id); orderField(fields,'Date',order.created_at); orderField(fields,'Email',order.customer_email); orderField(fields,'Phone',order.customer_phone);
+  orderIdField(fields,order); orderField(fields,'Date',order.created_at); orderField(fields,'Email',order.customer_email); orderField(fields,'Phone',order.customer_phone);
   orderField(fields,'Shipping name',order.shipping_name); orderField(fields,'Shipping address',printableAddress(order.shipping_address_json)); orderField(fields,'Billing address',printableAddress(order.billing_address_json));
   orderField(fields,'Payment',order.payment_status); entry.append(fields);
   entry.append(buildItemsRow(items));
@@ -1018,7 +1020,7 @@ async function refreshSentEmails() {
       <div class="email-row" data-id="${escapeHtml(e.id)}">
         <div class="email-main">
           <div class="email-subject">${escapeHtml(e.subject || '(no subject on file)')}</div>
-          <div class="email-meta">To ${escapeHtml(e.to || 'unknown')}${e.customer ? ' · ' + escapeHtml(e.customer) : ''} · Order ${escapeHtml(shortOrderRef(e.orderId))} · ${timeAgo(e.sentAt)}</div>
+          <div class="email-meta">To ${escapeHtml(e.to || 'unknown')}${e.customer ? ' · ' + escapeHtml(e.customer) : ''} · Order ${escapeHtml(orderNumberLabel(e.orderNumber))} · ${timeAgo(e.sentAt)}</div>
         </div>
         <div class="email-actions">
           <span class="email-kind ${e.kind}">${emailKindLabel(e.kind)}</span>
@@ -1050,7 +1052,7 @@ document.getElementById('sentEmailsList').addEventListener('click', async (e) =>
 
 function openEmailModal(email) {
   document.getElementById('emailModalSubject').textContent = email.subject || '(no subject on file)';
-  document.getElementById('emailModalMeta').textContent = `To ${email.to || 'unknown'} · ${emailKindLabel(email.kind)} · Order ${shortOrderRef(email.orderId)} · ${timeAgo(email.sentAt)} — exactly what the customer received`;
+  document.getElementById('emailModalMeta').textContent = `To ${email.to || 'unknown'} · ${emailKindLabel(email.kind)} · Order ${orderNumberLabel(email.orderNumber)} · ${timeAgo(email.sentAt)} — exactly what the customer received`;
   const frame = document.getElementById('emailModalFrame');
   frame.srcdoc = email.html || '<p style="font-family:sans-serif;color:#666;padding:20px;">No stored copy of this email.</p>';
   document.getElementById('emailModal').hidden = false;
