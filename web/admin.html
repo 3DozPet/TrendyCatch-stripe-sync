@@ -210,6 +210,14 @@ header .status { font-size:13px; color:var(--muted); display:flex; align-items:c
   border-radius:8px; background:var(--surface); color:var(--ink); min-width:0;
 }
 .history-form input:focus, .history-form select:focus { outline:2px solid var(--accent-soft); border-color:var(--accent); }
+.history-form textarea {
+  font:inherit; font-size:13.5px; padding:8px 10px; border:1px solid var(--border-strong);
+  border-radius:8px; background:var(--surface); color:var(--ink); min-width:0; resize:vertical;
+}
+.history-form textarea:focus { outline:2px solid var(--accent-soft); border-color:var(--accent); }
+.od-compose-form { flex-direction:column; align-items:stretch; }
+.od-compose-form label { flex:1 1 auto; }
+.od-compose-form .od-compose-send-row { display:flex; align-items:center; gap:10px; }
 .history-form button[type="submit"] {
   background:var(--accent); color:var(--accent-ink); border:1px solid var(--accent); font-weight:700;
   font-size:13.5px; padding:9px 16px; border-radius:9px; cursor:pointer; transition:background .12s;
@@ -1207,6 +1215,41 @@ function openOrderDetailModal(order, items) {
     finally { confirmBtn.disabled = false; }
   });
   confirmRow.append(confirmBtn, confirmStatus);
+
+  // Free-text email to this customer — for anything that isn't an order
+  // confirmation or a reply to something they wrote in first. Reuses
+  // /admin-inbox-reply (it only needs to/subject/text; it doesn't require a
+  // real inbox thread), so this is the same send path as Inbox replies, just
+  // reachable without the customer having emailed first.
+  if (order.customer_email) {
+    const composeForm = orderElement('form', null, 'history-form od-compose-form');
+    const subjLabel = orderElement('label', 'Subject');
+    const subjInput = document.createElement('input'); subjInput.type = 'text'; subjInput.maxLength = 200;
+    subjInput.placeholder = 'A note about your TrendyCatch order';
+    subjLabel.append(subjInput); composeForm.append(subjLabel);
+    const bodyLabel = orderElement('label', `Message to ${order.customer_email}`);
+    const bodyText = document.createElement('textarea'); bodyText.rows = 4; bodyText.maxLength = 10000;
+    bodyLabel.append(bodyText); composeForm.append(bodyLabel);
+    const sendRow = orderElement('div', null, 'od-compose-send-row');
+    const composeSendBtn = orderElement('button', 'Send email'); composeSendBtn.type = 'submit';
+    const composeStatus = orderElement('span'); composeStatus.setAttribute('role', 'status');
+    sendRow.append(composeSendBtn, composeStatus); composeForm.append(sendRow);
+    composeForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!bodyText.value.trim()) { composeStatus.textContent = 'Write a message first.'; return; }
+      composeSendBtn.disabled = true; composeStatus.textContent = 'Sending from orders@trendycatch.us…';
+      try {
+        const r = await fetch('/admin-inbox-reply', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ to: order.customer_email, subject: subjInput.value.trim() || `A note about your TrendyCatch order`, text: bodyText.value }) });
+        const d = await r.json().catch(() => ({}));
+        if (reloadIfUnauthorized(r.status)) return;
+        if (!r.ok) throw new Error(d.error || 'Unable to send');
+        composeStatus.textContent = `Sent to ${order.customer_email}`;
+        subjInput.value = ''; bodyText.value = '';
+      } catch (err) { composeStatus.textContent = err.message || 'Unable to send'; }
+      finally { composeSendBtn.disabled = false; }
+    });
+    confirmRow.append(composeForm);
+  }
 
   // Fulfilment form — same fields/endpoint as the inline card, so saving
   // here and saving from the Order history list both land on the same data.
