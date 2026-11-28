@@ -22,6 +22,15 @@ function escapeHtml(value: string): string {
   return value.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' } as Record<string, string>)[c])
 }
 
+// TC-000001-style reference for customer-facing text (subject + body),
+// matching what the admin dashboard shows — never the raw Stripe checkout
+// session ID, which looks like line noise to a customer and isn't anything
+// they can do anything with anyway.
+function orderDisplayId(order: Record<string, unknown>): string {
+  const n = Number(order.order_number)
+  return Number.isFinite(n) && n > 0 ? 'TC-' + String(n).padStart(6, '0') : String(order.id)
+}
+
 function buildEmailHtml(order: Record<string, unknown>, items: Array<Record<string, unknown>>, kind: OrderEmailKind): string {
   const currency = String(order.currency || 'USD').toUpperCase()
   const total = (Number(order.total_minor || 0) / 100).toFixed(2)
@@ -56,7 +65,7 @@ function buildEmailHtml(order: Record<string, unknown>, items: Array<Record<stri
 
   return `<div style="font-family:Arial,Helvetica,sans-serif;max-width:480px;margin:0 auto;color:#222;">
     <h2 style="margin-bottom:4px;">${heading}</h2>
-    <p style="color:#666;margin-top:0;">Order ${escapeHtml(String(order.id))}${order.created_at ? ' · ' + escapeHtml(String(order.created_at)) : ''}</p>
+    <p style="color:#666;margin-top:0;">Order ${escapeHtml(orderDisplayId(order))}${order.created_at ? ' · ' + escapeHtml(String(order.created_at)) : ''}</p>
     <ul style="padding-left:18px;">${itemRows}</ul>
     <p><strong>Total: ${currency} ${total}</strong></p>
     ${addressHtml ? `<p><strong>Shipping to:</strong><br>${addressHtml}</p>` : ''}
@@ -78,7 +87,11 @@ export async function sendOrderEmail(env: OrderEmailEnv, orderId: string, kind: 
   }
 
   const order = await env.ORDERS_DB
-    .prepare('SELECT id, created_at, customer_name, customer_email, shipping_name, shipping_address_json, currency, total_minor, fulfillment_status, tracking_number, tracking_carrier, tracking_url FROM orders WHERE id = ?')
+    .prepare(
+      `WITH numbered AS (SELECT id, ROW_NUMBER() OVER (ORDER BY created_at ASC, id ASC) AS order_number FROM orders)
+       SELECT o.id, o.created_at, o.customer_name, o.customer_email, o.shipping_name, o.shipping_address_json, o.currency, o.total_minor, o.fulfillment_status, o.tracking_number, o.tracking_carrier, o.tracking_url, n.order_number
+       FROM orders o LEFT JOIN numbered n ON n.id = o.id WHERE o.id = ?`
+    )
     .bind(orderId)
     .first()
   if (!order) return { ok: false, error: 'Order not found' }
@@ -89,9 +102,10 @@ export async function sendOrderEmail(env: OrderEmailEnv, orderId: string, kind: 
   const items = (itemsResult.results || []) as Array<Record<string, unknown>>
 
   const html = buildEmailHtml(order as Record<string, unknown>, items, kind)
+  const displayId = orderDisplayId(order as Record<string, unknown>)
   const subject = kind === 'shipped'
-    ? `Your TrendyCatch order ${order.id} has shipped`
-    : `Your TrendyCatch order ${order.id} confirmation`
+    ? `Your TrendyCatch order ${displayId} has shipped`
+    : `Your TrendyCatch order ${displayId} confirmation`
 
   let resendResponse: Response
   try {
