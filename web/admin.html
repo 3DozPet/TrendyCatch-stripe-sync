@@ -114,12 +114,19 @@ header .status { font-size:13px; color:var(--muted); display:flex; align-items:c
 /* ---- Home: live visitor world map ---- */
 :root { --live-map-ocean:#eef0fb; --live-map-land:#c7cbe6; }
 .live-map-card {
-  max-width:1200px; margin:22px auto 0; background:var(--surface); border:1px solid var(--border);
+  max-width:1500px; margin:22px auto 0; background:var(--surface); border:1px solid var(--border);
   border-radius:var(--radius-lg); padding:18px 20px 20px; box-shadow:var(--shadow-sm);
+  transition:max-width .2s ease;
 }
 .live-map-card h2 { font-size:18px; margin:0; font-weight:800; color:var(--ink); letter-spacing:-.01em; display:flex; align-items:center; }
 .live-map-count { font-size:13px; font-weight:700; color:var(--success); background:var(--success-soft); padding:5px 12px; border-radius:999px; white-space:nowrap; }
 .live-map-count #liveMapCount { font-size:15px; }
+.live-map-actions { display:flex; align-items:center; gap:8px; }
+.live-map-maximize-btn { display:inline-flex; align-items:center; gap:6px; }
+.live-map-maximize-btn svg { width:14px; height:14px; stroke:currentColor; }
+.live-map-maximize-btn .label-collapse { display:none; }
+.live-map-card.maximized .live-map-maximize-btn .label-expand { display:none; }
+.live-map-card.maximized .live-map-maximize-btn .label-collapse { display:inline; }
 .live-map {
   position:relative; width:100%; border-radius:var(--radius-md); overflow:hidden;
   background:var(--live-map-ocean);
@@ -132,19 +139,54 @@ header .status { font-size:13px; color:var(--muted); display:flex; align-items:c
   border-radius:999px; pointer-events:none;
 }
 .live-map-empty.hide { display:none; }
+
+/* Maximise: the card lifts out of the page flow into a fullscreen-ish overlay,
+   so the map itself (not just its container) gets meaningfully bigger. */
+.live-map-backdrop {
+  display:none; position:fixed; inset:0; background:rgba(16,14,24,.55); z-index:999;
+}
+.live-map-backdrop.show { display:block; }
+.live-map-card.maximized {
+  position:fixed; inset:24px; z-index:1000; max-width:none; margin:0;
+  display:flex; flex-direction:column; box-shadow:0 20px 60px rgba(0,0,0,.35);
+}
+.live-map-card.maximized .live-map { flex:1; min-height:0; }
+.live-map-card.maximized .live-map svg { width:100%; height:100%; object-fit:contain; }
+
+/* Honeycomb (hexagon) visitor dots */
 .live-pin {
-  position:absolute; width:10px; height:10px; margin:-5px 0 0 -5px; border-radius:50%;
-  background:var(--success); animation:liveMapPinIn .3s ease-out, liveMapPinPulse 1.8s ease-out .3s infinite;
+  position:absolute; width:16px; height:16px; margin:-8px 0 0 -8px;
+  transition:left 1s cubic-bezier(.22,.61,.36,1), top 1s cubic-bezier(.22,.61,.36,1);
+  pointer-events:auto; cursor:pointer;
 }
-.live-pin.leaving { animation:liveMapPinOut .4s ease-in forwards; }
-.live-pin::after {
-  content:attr(data-label); position:absolute; bottom:14px; left:50%; transform:translateX(-50%);
-  font-size:11px; font-weight:600; color:var(--ink-2); background:var(--surface); padding:2px 7px;
-  border-radius:6px; white-space:nowrap; box-shadow:var(--shadow-sm); opacity:0; pointer-events:none;
-  transition:opacity .15s;
+.live-pin-hex {
+  position:absolute; inset:0; background:var(--success);
+  clip-path:polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  animation:liveMapPinLand .55s cubic-bezier(.2,.8,.3,1) both, liveMapPinPulse 1.8s ease-out .55s infinite;
 }
-.live-pin:hover::after { opacity:1; }
-@keyframes liveMapPinIn { from{ transform:scale(0); opacity:0; } to{ transform:scale(1); opacity:1; } }
+.live-pin.leaving .live-pin-hex { animation:liveMapPinOut .4s ease-in forwards; }
+
+/* "Flag" popout: a small white banner with a pointer tail, shown on hover/tap */
+.live-pin-flag {
+  position:absolute; bottom:20px; left:50%; transform:translateX(-50%) translateY(4px);
+  background:#fff; color:var(--ink); border-radius:8px; padding:6px 10px;
+  box-shadow:0 6px 18px rgba(0,0,0,.18); white-space:nowrap; text-align:left;
+  opacity:0; pointer-events:none; transition:opacity .15s, transform .15s; z-index:2;
+}
+.live-pin-flag::after {
+  content:""; position:absolute; top:100%; left:50%; transform:translateX(-50%);
+  border:5px solid transparent; border-top-color:#fff;
+}
+.live-pin-flag .flag-line1 { font-size:12px; font-weight:700; display:flex; align-items:center; gap:5px; }
+.live-pin-flag .flag-line2 { font-size:10.5px; color:var(--muted); margin-top:1px; }
+.live-pin:hover .live-pin-flag, .live-pin.show-flag .live-pin-flag {
+  opacity:1; transform:translateX(-50%) translateY(0); pointer-events:none;
+}
+@keyframes liveMapPinLand {
+  0% { transform:translateY(-36px) scale(.25); opacity:0; }
+  65% { transform:translateY(3px) scale(1.15); opacity:1; }
+  100% { transform:translateY(0) scale(1); opacity:1; }
+}
 @keyframes liveMapPinOut { to{ transform:scale(0); opacity:0; } }
 @keyframes liveMapPinPulse {
   0% { box-shadow:0 0 0 0 rgba(26,156,99,.5); }
@@ -417,10 +459,17 @@ main#orderList { display:flex; flex-direction:column; gap:12px; }
     <button id="logoutBtn" class="header-btn">Log out</button>
   </div>
 </header>
-<div class="live-map-card">
+<div class="live-map-backdrop" id="liveMapBackdrop"></div>
+<div class="live-map-card" id="liveMapCard">
   <div class="section-heading" style="margin:0 0 14px;">
     <div><h2><span class="live-dot"></span>Live visitors</h2><p>Who's on trendycatch.us right now, as it happens</p></div>
-    <div class="live-map-count"><span id="liveMapCount">0</span> live</div>
+    <div class="live-map-actions">
+      <div class="live-map-count"><span id="liveMapCount">0</span> live</div>
+      <button type="button" id="liveMapMaximizeBtn" class="header-btn live-map-maximize-btn" aria-label="Maximise map">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M21 16v3a2 2 0 0 1-2 2h-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+        <span class="label-expand">Maximise</span><span class="label-collapse">Minimise</span>
+      </button>
+    </div>
   </div>
   <div class="live-map" id="liveMap">
     <svg viewBox="0 0 960 400" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
@@ -811,6 +860,38 @@ function projectToMapPct(lon, lat) {
 }
 
 const liveMapPinEls = new Map(); // visitor id -> pin element
+const liveMapPinTimers = new Map(); // visitor id -> interval id (live clock while flag is open)
+
+// Regional-indicator flag emoji from an ISO-3166 alpha-2 code (A-Z -> 🇦-🇿,
+// combined the two letters make a flag glyph most platforms render natively).
+// Falls back to a globe for anything else (e.g. "UNKNOWN").
+function countryFlagEmoji(code) {
+  if (!code || code.length !== 2 || !/^[A-Za-z]{2}$/.test(code)) return "🌐";
+  const base = 0x1f1e6; // regional indicator "A"
+  return String.fromCodePoint(...[...code.toUpperCase()].map((c) => base + (c.charCodeAt(0) - 65)));
+}
+
+// No timezone database on the client, so this approximates local time from
+// longitude (15° ≈ 1 hour) — close enough for an at-a-glance "what time is
+// it there" on the flag popout, not meant to be minute-exact.
+function approxLocalTimeAt(lon) {
+  const offsetHours = Math.round(lon / 15);
+  const shifted = new Date(Date.now() + offsetHours * 3600000);
+  const time = shifted.toLocaleTimeString([], { hour: "numeric", minute: "2-digit", timeZone: "UTC" });
+  const date = shifted.toLocaleDateString([], { weekday: "short", month: "short", day: "numeric", timeZone: "UTC" });
+  return `${time} · ${date}`;
+}
+
+function startPinClock(id, flagEl, lon) {
+  stopPinClock(id);
+  const tick = () => { flagEl.textContent = approxLocalTimeAt(lon); };
+  tick();
+  liveMapPinTimers.set(id, setInterval(tick, 1000));
+}
+function stopPinClock(id) {
+  const t = liveMapPinTimers.get(id);
+  if (t) { clearInterval(t); liveMapPinTimers.delete(id); }
+}
 
 function renderLiveMap(visitors) {
   const container = document.getElementById("liveMapPins");
@@ -826,12 +907,32 @@ function renderLiveMap(visitors) {
     if (!pin) {
       pin = document.createElement("div");
       pin.className = "live-pin";
+      pin.innerHTML = `
+        <div class="live-pin-hex"></div>
+        <div class="live-pin-flag">
+          <div class="flag-line1"><span class="flag-emoji"></span><span class="flag-place"></span></div>
+          <div class="flag-line2"></div>
+        </div>`;
+      // Tap-to-toggle so the flag popout works on touch admin devices too, not just hover.
+      pin.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const nowOpen = pin.classList.toggle("show-flag");
+        if (nowOpen) startPinClock(v.id, pin.querySelector(".flag-line2"), v.lon);
+        else stopPinClock(v.id);
+      });
+      pin.addEventListener("mouseenter", () => startPinClock(v.id, pin.querySelector(".flag-line2"), v.lon));
+      pin.addEventListener("mouseleave", () => { if (!pin.classList.contains("show-flag")) stopPinClock(v.id); });
       container.appendChild(pin);
       liveMapPinEls.set(v.id, pin);
     }
+    // Smoothly glides to the new spot (CSS transition on left/top) rather than
+    // snapping, so a visitor's dot visibly travels as soon as they land / move between pages.
     pin.style.left = `${xPct}%`;
     pin.style.top = `${yPct}%`;
-    pin.dataset.label = v.city ? `${v.city}, ${countryName(v.country)}` : countryName(v.country);
+    const place = v.city ? `${v.city}, ${countryName(v.country)}` : countryName(v.country);
+    pin.querySelector(".flag-emoji").textContent = countryFlagEmoji(v.country);
+    pin.querySelector(".flag-place").textContent = place;
+    if (liveMapPinTimers.has(v.id)) pin.querySelector(".flag-line2").textContent = approxLocalTimeAt(v.lon);
   }
 
   // Drop pins for visitors who've dropped off (heartbeat expired) since the last poll.
@@ -839,11 +940,32 @@ function renderLiveMap(visitors) {
     if (seen.has(id)) continue;
     pin.classList.add("leaving");
     liveMapPinEls.delete(id);
+    stopPinClock(id);
     setTimeout(() => pin.remove(), 450);
   }
 
   if (empty) empty.classList.toggle("hide", seen.size > 0);
 }
+
+// ---- Maximise toggle for the live visitor map ----
+(function setupLiveMapMaximize() {
+  const card = document.getElementById("liveMapCard");
+  const btn = document.getElementById("liveMapMaximizeBtn");
+  const backdrop = document.getElementById("liveMapBackdrop");
+  if (!card || !btn || !backdrop) return;
+
+  function setMaximized(on) {
+    card.classList.toggle("maximized", on);
+    backdrop.classList.toggle("show", on);
+    document.body.style.overflow = on ? "hidden" : "";
+    btn.setAttribute("aria-label", on ? "Minimise map" : "Maximise map");
+  }
+  btn.addEventListener("click", () => setMaximized(!card.classList.contains("maximized")));
+  backdrop.addEventListener("click", () => setMaximized(false));
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && card.classList.contains("maximized")) setMaximized(false);
+  });
+})();
 
 async function pollLiveVisitors() {
   try {
