@@ -598,6 +598,21 @@ async function loadPixels() {
     }(window, document, 'ttq');
     /* eslint-enable */
     window.__tcTtq = window.ttq;
+
+    // Advanced matching: identify every visitor with a persistent anonymous
+    // external_id (no PII) to raise TikTok's Event Match Quality coverage.
+    // Same localStorage key as index.html so it's consistent across pages.
+    try {
+      let tcExternalId = localStorage.getItem("tc_external_id");
+      if (!tcExternalId) {
+        tcExternalId = crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+        localStorage.setItem("tc_external_id", tcExternalId);
+      }
+      window.__tcExternalId = tcExternalId;
+      window.__tcTtq.identify({ external_id: tcExternalId });
+    } catch (e) {
+      // localStorage unavailable (private browsing, blocked cookies, etc.) — skip external_id
+    }
   }
 
   if (config.ga4MeasurementId) {
