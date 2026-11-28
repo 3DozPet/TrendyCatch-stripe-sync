@@ -445,8 +445,14 @@ main#orderList { display:flex; flex-direction:column; gap:12px; }
 </section>
 
 <section class="panel" id="admininbox">
-  <div class="section-heading" style="margin-top:0;"><div><h2>Admin inbox</h2><p>Mail sent to robbie@trendycatch.us — admin-only, separate from the customer inbox</p></div><button id="adminInboxCompose" type="button" class="header-btn">New message</button></div>
-  <div class="breakdown subscribers-panel inbox-panel" style="max-width:1160px;margin:0 auto;">
+  <div class="section-heading" style="margin-top:0;"><div><h2>Admin inbox</h2><p>Mail sent to robbie@trendycatch.us — a second password on top of the dashboard login</p></div><button id="adminInboxCompose" type="button" class="header-btn">New message</button></div>
+  <div class="breakdown" id="adminInboxLock" style="max-width:360px;margin:40px auto;text-align:center;">
+    <p style="margin:0 0 12px;color:var(--muted);">This inbox needs its own password.</p>
+    <input type="password" id="adminInboxPassword" placeholder="Admin inbox password" style="width:100%;font:inherit;font-size:13.5px;padding:9px 11px;border:1px solid var(--border-strong);border-radius:8px;background:var(--surface);color:var(--ink);margin-bottom:10px;">
+    <button type="button" id="adminInboxUnlock" class="header-btn" style="width:100%;">Unlock</button>
+    <p id="adminInboxLockStatus" role="status" style="color:#e0245e;min-height:1.2em;margin-top:8px;"></p>
+  </div>
+  <div class="breakdown subscribers-panel inbox-panel" id="adminInboxContent" style="max-width:1160px;margin:0 auto;display:none;">
     <div id="adminInboxList"></div>
   </div>
 </section>
@@ -787,7 +793,30 @@ document.addEventListener("keydown", (ev) => { if (ev.key === "Escape") closeMai
 // fromAddress }. Each controller keeps its own list of emails and its own
 // read/unread state, and talks to /admin-inbox?mailbox=<mailbox>.
 function makeInboxController(cfg) {
+  // cfg.requiresKey: this mailbox needs a second password (X-Admin-Key,
+  // checked server-side against the ADMIN_INBOX_KEY secret) on top of the
+  // normal dashboard login. Kept in sessionStorage only — cleared when the
+  // tab closes — never localStorage, so it doesn't linger.
   let emails = [];
+  let unlocked = !cfg.requiresKey;
+
+  function getKey() { try { return sessionStorage.getItem(cfg.keyStorageKey) || ""; } catch (e) { return ""; } }
+  function setKey(k) { try { sessionStorage.setItem(cfg.keyStorageKey, k); } catch (e) {} }
+  function clearKey() { try { sessionStorage.removeItem(cfg.keyStorageKey); } catch (e) {} }
+  function authHeaders() { return cfg.requiresKey && getKey() ? { "X-Admin-Key": getKey() } : {}; }
+  function showLocked(message) {
+    unlocked = false;
+    clearKey();
+    document.getElementById(cfg.lockElId).style.display = "";
+    document.getElementById(cfg.contentElId).style.display = "none";
+    document.getElementById(cfg.lockStatusId).textContent = message || "";
+  }
+  function showUnlocked() {
+    unlocked = true;
+    document.getElementById(cfg.lockElId).style.display = "none";
+    document.getElementById(cfg.contentElId).style.display = "";
+  }
+
   function seen() {
     try { return new Set(JSON.parse(localStorage.getItem(cfg.seenKey) || "[]")); } catch (e) { return new Set(); }
   }
@@ -809,9 +838,11 @@ function makeInboxController(cfg) {
       .join("");
   }
   async function poll() {
+    if (cfg.requiresKey && !unlocked) return;
     try {
-      const res = await fetch(`/admin-inbox?mailbox=${cfg.mailbox}`, { cache: "no-store" });
+      const res = await fetch(`/admin-inbox?mailbox=${cfg.mailbox}`, { cache: "no-store", headers: authHeaders() });
       if (reloadIfUnauthorized(res.status)) return;
+      if (res.status === 403 && cfg.requiresKey) { showLocked("Wrong password — try again."); return; }
       const data = await res.json();
       const el = document.getElementById(cfg.listId);
       emails = data.emails || [];
@@ -825,12 +856,38 @@ function makeInboxController(cfg) {
       // transient — leave the last known list showing
     }
   }
+  if (cfg.requiresKey) {
+    document.getElementById(cfg.unlockBtnId).addEventListener("click", async () => {
+      const pwInput = document.getElementById(cfg.passwordInputId);
+      const status = document.getElementById(cfg.lockStatusId);
+      const pw = pwInput.value;
+      if (!pw) { status.textContent = "Enter the password first."; return; }
+      status.textContent = "Checking…";
+      setKey(pw);
+      unlocked = true;
+      const res = await fetch(`/admin-inbox?mailbox=${cfg.mailbox}`, { cache: "no-store", headers: authHeaders() });
+      if (reloadIfUnauthorized(res.status)) return;
+      if (res.status === 403) { showLocked("Wrong password — try again."); return; }
+      const data = await res.json();
+      emails = data.emails || [];
+      pwInput.value = "";
+      showUnlocked();
+      render();
+    });
+    document.getElementById(cfg.passwordInputId).addEventListener("keydown", (ev) => {
+      if (ev.key === "Enter") document.getElementById(cfg.unlockBtnId).click();
+    });
+  }
   // A brand-new message — to a supplier or anyone else, not just a reply to
   // a thread already in this inbox. Reuses the same mail window and the
   // same /admin-inbox-reply send path, just with editable To/Subject fields
   // and no existing thread, customer lookup, or order history to show.
   function openCompose() {
-    mailWinCurrent = { compose: true, mailbox: cfg.mailbox, fromAddress: cfg.fromAddress };
+    if (cfg.requiresKey && !unlocked) {
+      document.getElementById(cfg.lockStatusId).textContent = "Unlock this inbox first.";
+      return;
+    }
+    mailWinCurrent = { compose: true, mailbox: cfg.mailbox, fromAddress: cfg.fromAddress, authHeaders: authHeaders() };
     document.getElementById("mailWinSubject").style.display = "none";
     document.getElementById("mailWinMeta").textContent = "";
     document.getElementById("mailWinComposeFields").style.display = "";
@@ -848,7 +905,7 @@ function makeInboxController(cfg) {
   async function openMail(id) {
     const summary = emails.find((m) => m.id === id);
     if (!summary) return;
-    mailWinCurrent = { ...summary, mailbox: cfg.mailbox, fromAddress: cfg.fromAddress };
+    mailWinCurrent = { ...summary, mailbox: cfg.mailbox, fromAddress: cfg.fromAddress, authHeaders: authHeaders() };
     const address = senderAddress(summary.from);
     document.getElementById("mailWinSubject").style.display = "";
     document.getElementById("mailWinSubject").textContent = summary.subject;
@@ -866,7 +923,7 @@ function makeInboxController(cfg) {
     document.getElementById("mailWin").classList.add("open");
     markSeen(id); render();
 
-    fetch(`/admin-inbox?mailbox=${cfg.mailbox}&id=${encodeURIComponent(id)}`, { cache: "no-store" })
+    fetch(`/admin-inbox?mailbox=${cfg.mailbox}&id=${encodeURIComponent(id)}`, { cache: "no-store", headers: authHeaders() })
       .then((r) => r.json())
       .then((d) => {
         if (!mailWinCurrent || mailWinCurrent.id !== id) return;
@@ -898,11 +955,17 @@ function makeInboxController(cfg) {
     }
   }
   document.getElementById(cfg.composeBtnId).addEventListener("click", openCompose);
-  return { poll, openMail };
+  return { poll, openMail, relock: cfg.requiresKey ? showLocked : null };
 }
 
 const customerInbox = makeInboxController({ mailbox: "customer", listId: "inboxList", badgeId: "inboxBadge", seenKey: "tcInboxSeen", composeBtnId: "inboxCompose", fromAddress: "orders@trendycatch.us" });
-const adminInbox = makeInboxController({ mailbox: "admin", listId: "adminInboxList", badgeId: "adminInboxBadge", seenKey: "tcAdminInboxSeen", composeBtnId: "adminInboxCompose", fromAddress: "robbie@trendycatch.us" });
+const adminInbox = makeInboxController({
+  mailbox: "admin", listId: "adminInboxList", badgeId: "adminInboxBadge", seenKey: "tcAdminInboxSeen",
+  composeBtnId: "adminInboxCompose", fromAddress: "robbie@trendycatch.us",
+  requiresKey: true, keyStorageKey: "tcAdminKey",
+  lockElId: "adminInboxLock", contentElId: "adminInboxContent",
+  passwordInputId: "adminInboxPassword", unlockBtnId: "adminInboxUnlock", lockStatusId: "adminInboxLockStatus",
+});
 const inboxControllers = { customer: customerInbox, admin: adminInbox };
 
 document.addEventListener("click", (ev) => {
@@ -935,10 +998,17 @@ document.getElementById("mailWinSend").addEventListener("click", async () => {
   try {
     const res = await fetch("/admin-inbox-reply", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...(mailWinCurrent.authHeaders || {}) },
       body: JSON.stringify({ to, subject, text: box.value, messageId, from }),
     });
     const data = await res.json();
+    if (res.status === 403 && data.error === "wrong_password") {
+      status.textContent = "Wrong admin inbox password — unlock it again.";
+      const mailbox = mailWinCurrent.mailbox;
+      const controller = mailbox && inboxControllers[mailbox];
+      if (controller && controller.relock) controller.relock("Wrong password — unlock again to send.");
+      return;
+    }
     if (!res.ok) throw Error(data.error || "Unable to send");
     status.textContent = `Sent to ${to} from ${from}`; box.value = "";
     if (mailWinCurrent.compose) { document.getElementById("mailWinTo").value = ""; document.getElementById("mailWinSubjectInput").value = ""; }

@@ -2,12 +2,16 @@
 // from the dashboard's inbox window. Same gate as every other admin write:
 // valid session + same-origin request. Defaults to orders@trendycatch.us;
 // pass `from: "robbie@trendycatch.us"` to reply as Robbie's own address
-// instead (e.g. when replying to a thread that came in on robbie@).
+// instead (e.g. when replying to a thread that came in on robbie@) — that
+// address additionally requires the X-Admin-Key header (ADMIN_INBOX_KEY, a
+// Cloudflare secret), the same second password that gates reading robbie@'s
+// mail in /admin-inbox.
 import { hasValidSession } from "./_lib/auth"
 
 interface Env {
   ORDERS_KV?: KVNamespace
   RESEND_API_KEY?: string
+  ADMIN_INBOX_KEY?: string
 }
 
 const ALLOWED_FROM = new Set(["orders@trendycatch.us", "robbie@trendycatch.us"])
@@ -27,6 +31,11 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   const fromAddress = typeof input.from === "string" && ALLOWED_FROM.has(input.from.trim().toLowerCase())
     ? input.from.trim().toLowerCase()
     : "orders@trendycatch.us"
+  if (fromAddress === "robbie@trendycatch.us") {
+    if (!env.ADMIN_INBOX_KEY) return json({ error: "Admin inbox isn't set up yet (ADMIN_INBOX_KEY missing)." }, 503)
+    const given = request.headers.get("X-Admin-Key") || ""
+    if (given !== env.ADMIN_INBOX_KEY) return json({ error: "wrong_password" }, 403)
+  }
   if (!/^[^\s@<>"'&,;]+@[^\s@<>"'&,;]+\.[^\s@<>"'&,;]+$/.test(to) || to.length > 254) return json({ error: "That email address doesn't look right." }, 400)
   if (!text) return json({ error: "Write a reply first." }, 400)
 
