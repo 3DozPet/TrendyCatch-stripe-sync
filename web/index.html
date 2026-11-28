@@ -481,6 +481,22 @@ async function loadPixels() {
     }(window, document, 'ttq');
     /* eslint-enable */
     window.__tcTtq = window.ttq;
+
+    // Advanced matching: identify every visitor with a persistent anonymous
+    // external_id (no PII) to raise TikTok's Event Match Quality coverage.
+    // Upgraded to include email once the visitor gives it (see signupForm
+    // handler below) — TikTok's pixel hashes these client-side.
+    try {
+      let tcExternalId = localStorage.getItem("tc_external_id");
+      if (!tcExternalId) {
+        tcExternalId = crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+        localStorage.setItem("tc_external_id", tcExternalId);
+      }
+      window.__tcExternalId = tcExternalId;
+      window.__tcTtq.identify({ external_id: tcExternalId });
+    } catch (e) {
+      // localStorage unavailable (private browsing, blocked cookies, etc.) — skip external_id
+    }
   }
 
   if (config.ga4MeasurementId) {
@@ -855,6 +871,10 @@ document.getElementById("signupForm").addEventListener("submit", async (e) => {
     });
     const data = await res.json();
     if (res.ok) {
+      // Now that we have the visitor's email, upgrade advanced matching so
+      // later events in this session (AddToCart, InitiateCheckout, etc.)
+      // match TikTok accounts better.
+      if (window.__tcTtq) window.__tcTtq.identify({ email, external_id: window.__tcExternalId });
       msg.className = "signup-msg success";
       msg.textContent = data.couponUsed
         ? "Looks like you've already used your welcome code on a past order."
