@@ -799,6 +799,10 @@ function makeInboxController(cfg) {
   // tab closes — never localStorage, so it doesn't linger.
   let emails = [];
   let unlocked = !cfg.requiresKey;
+  // Only true once the user has actually clicked Unlock with something
+  // typed — distinguishes "never tried yet" (show the plain prompt) from
+  // "just got it wrong" (show the error) on the very first automatic poll.
+  let unlockAttempted = false;
 
   function getKey() { try { return sessionStorage.getItem(cfg.keyStorageKey) || ""; } catch (e) { return ""; } }
   function setKey(k) { try { sessionStorage.setItem(cfg.keyStorageKey, k); } catch (e) {} }
@@ -838,11 +842,18 @@ function makeInboxController(cfg) {
       .join("");
   }
   async function poll() {
-    if (cfg.requiresKey && !unlocked) return;
+    // Always ask the server — never assume locked. Until ADMIN_INBOX_KEY is
+    // actually set in Cloudflare, the server has nothing to check and just
+    // serves the mail normally; this panel only locks once it starts
+    // getting 403s back, and unlocks again the moment the key is accepted.
     try {
       const res = await fetch(`/admin-inbox?mailbox=${cfg.mailbox}`, { cache: "no-store", headers: authHeaders() });
       if (reloadIfUnauthorized(res.status)) return;
-      if (res.status === 403 && cfg.requiresKey) { showLocked("Wrong password — try again."); return; }
+      if (cfg.requiresKey && res.status === 403) {
+        showLocked(unlockAttempted ? "Wrong password — try again." : "");
+        return;
+      }
+      if (cfg.requiresKey && !unlocked) showUnlocked();
       const data = await res.json();
       const el = document.getElementById(cfg.listId);
       emails = data.emails || [];
@@ -863,16 +874,10 @@ function makeInboxController(cfg) {
       const pw = pwInput.value;
       if (!pw) { status.textContent = "Enter the password first."; return; }
       status.textContent = "Checking…";
+      unlockAttempted = true;
       setKey(pw);
-      unlocked = true;
-      const res = await fetch(`/admin-inbox?mailbox=${cfg.mailbox}`, { cache: "no-store", headers: authHeaders() });
-      if (reloadIfUnauthorized(res.status)) return;
-      if (res.status === 403) { showLocked("Wrong password — try again."); return; }
-      const data = await res.json();
-      emails = data.emails || [];
-      pwInput.value = "";
-      showUnlocked();
-      render();
+      await poll();
+      if (unlocked) pwInput.value = "";
     });
     document.getElementById(cfg.passwordInputId).addEventListener("keydown", (ev) => {
       if (ev.key === "Enter") document.getElementById(cfg.unlockBtnId).click();

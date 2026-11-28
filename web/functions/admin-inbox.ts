@@ -11,11 +11,12 @@
 // apart on the dashboard: the customer-facing one (orders@trendycatch.us)
 // and Robbie's own (robbie@trendycatch.us) — never merged into one list.
 //
-// The admin mailbox has one more lock on top of the normal dashboard
+// The admin mailbox can carry one more lock on top of the normal dashboard
 // session: a second password (ADMIN_INBOX_KEY, a Cloudflare secret — never
-// committed here) sent as the X-Admin-Key header. Anyone with the regular
-// dashboard login can see the customer inbox, but only someone who also
-// knows this second password can open robbie@'s mail.
+// committed here) sent as the X-Admin-Key header. That lock only applies
+// once the store owner actually sets the secret in Cloudflare; until then
+// this mailbox behaves like the customer one — no second password asked
+// for, same as any other panel behind the regular dashboard login.
 import { hasValidSession } from "./_lib/auth"
 
 interface Env {
@@ -44,8 +45,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
   }
   const url = new URL(request.url)
   const mailbox = url.searchParams.get("mailbox") || "customer"
-  if (mailbox === "admin") {
-    if (!env.ADMIN_INBOX_KEY) return json({ error: "Admin inbox isn't set up yet (ADMIN_INBOX_KEY missing)." }, 503)
+  if (mailbox === "admin" && env.ADMIN_INBOX_KEY) {
     const given = request.headers.get("X-Admin-Key") || ""
     if (given !== env.ADMIN_INBOX_KEY) return json({ error: "wrong_password" }, 403)
   }
