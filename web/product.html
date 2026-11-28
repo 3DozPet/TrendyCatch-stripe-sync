@@ -798,7 +798,7 @@ function renderProduct() {
         const optionsHtml = groupVariants.map((v) => {
           const price = getPriceForVariant(product, v.sku);
           const priceText = typeof price === "number" ? ` — ${symbol}${price.toFixed(2)}` : "";
-          const shortLabel = v.label.replace(new RegExp(selectedColourKey.replace(/[.*+?^${}()|[\]\]/g, "\$&"), "i"), "").replace(/[·,-]\s*$/, "").trim();
+          const shortLabel = v.label.replace(new RegExp(selectedColourKey.replace(/[.*+?^${}()|[\]\\]/g, "\$&"), "i"), "").replace(/[·,-]\s*$/, "").trim();
           return `<option value="${escapeHtml(v.sku)}"${v.sku === selectedVariantSku ? " selected" : ""}>${escapeHtml(shortLabel || v.label)}${priceText}</option>`;
         }).join("");
         picker.innerHTML = `<div class="swatch-row">${swatchesHtml}</div><select class="variant-dropdown" aria-label="Size" style="margin-top:10px;">${optionsHtml}</select>`;
