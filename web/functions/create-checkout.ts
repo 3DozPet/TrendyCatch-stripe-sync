@@ -127,7 +127,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
   }
   if (couponCode) {
     const invalid = () => json({ error: "That code isn't valid or has already been used. Remove it to check out without a discount." }, 400)
-    if (!env.ORDERS_KV || !/^(TC-[A-Z0-9]{8}|WELCOME-[A-Z0-9]{5})$/.test(couponCode)) return invalid()
+    if (!env.ORDERS_KV || !/^(TC-[A-Z0-9]{8}|[A-Z0-9]{6})$/.test(couponCode)) return invalid()
     const raw = await env.ORDERS_KV.get(couponKey)
     if (!raw) return invalid()
     couponRecord = JSON.parse(raw)

@@ -132,8 +132,8 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
 // Unambiguous characters only (no 0/O, 1/I/L) so a code is easy to type.
 function newCouponCode(): string {
   const alphabet = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"
-  const bytes = crypto.getRandomValues(new Uint8Array(5))
-  return "WELCOME-" + [...bytes].map((b) => alphabet[b % alphabet.length]).join("")
+  const bytes = crypto.getRandomValues(new Uint8Array(6))
+  return [...bytes].map((b) => alphabet[b % alphabet.length]).join("")
 }
 
 async function sendCouponEmail(apiKey: string, to: string, code: string): Promise<string> {
