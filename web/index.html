@@ -470,7 +470,13 @@ async function loadPixels() {
     /* eslint-disable */
     !function (w, d, t) {
       w.TiktokAnalyticsObject=t;var ttq=w[t]=w[t]||[];ttq.methods=["page","track","identify","instances","debug","on","off","once","ready","alias","group","enableCookie","disableCookie"],ttq.setAndDefer=function(t,e){t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}};for(var i=0;i<ttq.methods.length;i++)ttq.setAndDefer(ttq,ttq.methods[i]);ttq.instance=function(t){for(var e=ttq._i[t]||[],n=0;n<e.length;n++)ttq.setAndDefer(e,e[n]);return e},ttq.load=function(e,n){var r="https://analytics.tiktok.com/i18n/pixel/events.js",o=n&&n.partner;ttq._i=ttq._i||{},ttq._i[e]=[],ttq._i[e]._u=r,ttq._t=ttq._t||{},ttq._t[e]=+new Date,ttq._o=ttq._o||{},ttq._o[e]=n||{};var a=document.createElement("script");a.type="text/javascript",a.async=!0,a.src=r+"?sdkid="+e+"&lib="+t;var s=document.getElementsByTagName("script")[0];s.parentNode.insertBefore(a,s)};
-      ttq.load(config.tiktokPixelCode);
+      // autoConfig:false turns off TikTok's automatic page-scraping event
+      // detection, which was firing its own ViewContent/AddToCart-style
+      // events with no currency attached (logged as "[TikTok Pixel] -
+      // Missing 'currency' parameter" on every page load) — the server-side
+      // Purchase event fired from stripe-sync-core.ts already sends a
+      // correct currency and is unaffected by this.
+      ttq.load(config.tiktokPixelCode, { autoConfig: false });
       ttq.page();
     }(window, document, 'ttq');
     /* eslint-enable */

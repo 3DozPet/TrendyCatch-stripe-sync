@@ -156,6 +156,34 @@ export async function handleStripeOrderSync(
     }
   }
 
+  // Mark a welcome/discount coupon as redeemed once its order has actually
+  // been paid. create-checkout.ts only ever sets a coupon's status to
+  // "pending" (with the Stripe session it was used on) — nothing previously
+  // flipped it to "used" on a successful payment, so the admin dashboard's
+  // "sent Xh ago · not used yet" line never updated even after the customer
+  // completed checkout with the code. (The old lazy check in
+  // create-checkout.ts only caught this retroactively, the *next* time the
+  // same code was submitted again.) This runs once per order, right after
+  // the dedupe gate above, so a Stripe webhook retry can't double-process it.
+  const welcomeCode = (session.metadata?.welcome_code as string | undefined)?.trim().toUpperCase()
+  if (env.ORDERS_KV && welcomeCode) {
+    try {
+      const couponKey = `coupon:${welcomeCode}`
+      const raw = await env.ORDERS_KV.get(couponKey)
+      if (raw) {
+        const record = JSON.parse(raw)
+        if (record.status !== "used") {
+          await env.ORDERS_KV.put(
+            couponKey,
+            JSON.stringify({ ...record, status: "used", usedAt: new Date().toISOString(), usedOnSessionId: session.id }),
+          )
+        }
+      }
+    } catch (err) {
+      console.error(`[${account.accountLabel}] Failed to mark coupon ${welcomeCode} as used (order was still created):`, (err as Error).message)
+    }
+  }
+
   if (shopifyConfigured) {
     try {
       const already = await shopifyGraphql(
