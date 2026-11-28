@@ -462,6 +462,7 @@ let currentCountry = "AU";
 let product = null;
 let selectedVariantSku = null;
 let selectVariant = () => {};
+let showProductImage = () => {};
 
 function showToast(msg) {
   const t = document.getElementById("toast");
@@ -492,6 +493,18 @@ function colourFromLabel(label) {
   const lower = String(label).toLowerCase();
   const hit = COLOUR_WORDS.find(([word]) => lower.includes(word));
   return hit ? hit[1] : null;
+}
+
+// Looks up a product photo for the colour/mode named in a variant's label
+// (e.g. "100 LEDs (3M x 1M) · Warm White" -> the "Warm White" photo), using
+// the optional product.variantImages map of {label substring: image URL}.
+// Returns null if the product has no such map or no key matches the label.
+function imageForVariantLabel(prod, label) {
+  const map = prod && prod.variantImages;
+  if (!map) return null;
+  const lower = String(label).toLowerCase();
+  const key = Object.keys(map).find((k) => lower.includes(k.toLowerCase()));
+  return key ? map[key] : null;
 }
 
 // Same first-touch ad-attribution logic as the homepage, so an order placed
@@ -724,6 +737,7 @@ function renderProduct() {
     thumbs.innerHTML = images.map((src, i) => `<button type="button" aria-label="Show photo ${i + 1}"><img src="${src}" alt="" loading="lazy" /></button>`).join("");
     thumbs.querySelectorAll("button").forEach((b, i) => b.addEventListener("click", () => showImage(i)));
     mainImgWrap.addEventListener("click", () => openLightbox(mainImg.src, mainImg.alt));
+    showProductImage = showImage;
     showImage(0);
   } else if (images.length > 1) {
     mainImgWrap.style.display = "none";
@@ -752,15 +766,55 @@ function renderProduct() {
   if (variants.length) {
     document.getElementById("variantWrap").style.display = "";
     const isColourSet = variants.every((v) => colourFromLabel(v.label));
-    document.getElementById("variantLabel").textContent = isColourSet ? "Colour" : "Option";
     const picker = document.getElementById("variantPicker");
     selectedVariantSku = variants[0].sku;
 
+    const colourKeys = product.variantImages ? Object.keys(product.variantImages) : [];
+    const colourKeyForVariant = (v) => colourKeys.find((k) => String(v.label).toLowerCase().includes(k.toLowerCase()));
+    const useColourGroups = !isColourSet && colourKeys.length > 1 && variants.every((v) => colourKeyForVariant(v));
+
+    document.getElementById("variantLabel").textContent = useColourGroups ? "Colour" : (isColourSet ? "Colour" : "Option");
+
+    let selectedColourKey = useColourGroups ? colourKeyForVariant(variants[0]) : null;
+
+    function swatchColourFor(key) {
+      const lower = key.toLowerCase();
+      if (lower.includes("warm")) return "#ffce85";
+      if (lower.includes("cool")) return "#d7ecff";
+      if (lower.includes("multi")) return "conic-gradient(from 0deg, #ff5f6d, #ffc371, #47cf73, #3aa0ff, #a66bff, #ff5f6d)";
+      return colourFromLabel(key) || "#ccc";
+    }
+
     function renderSwatches() {
+      const symbol = COUNTRY_SYMBOL[currentCountry] || "$";
+
+      if (useColourGroups) {
+        let groupVariants = variants.filter((v) => colourKeyForVariant(v) === selectedColourKey);
+        if (!groupVariants.some((v) => v.sku === selectedVariantSku)) selectedVariantSku = groupVariants[0].sku;
+        const swatchesHtml = colourKeys.map((key) => {
+          const selected = key === selectedColourKey ? " selected" : "";
+          return `<button type="button" class="swatch colour-swatch${selected}" data-colour="${escapeHtml(key)}"><span class="dot" style="background:${swatchColourFor(key)};"></span>${escapeHtml(key)}</button>`;
+        }).join("");
+        const optionsHtml = groupVariants.map((v) => {
+          const price = getPriceForVariant(product, v.sku);
+          const priceText = typeof price === "number" ? ` — ${symbol}${price.toFixed(2)}` : "";
+          const shortLabel = v.label.replace(new RegExp(selectedColourKey.replace(/[.*+?^${}()|[\]\]/g, "\$&"), "i"), "").replace(/[·,-]\s*$/, "").trim();
+          return `<option value="${escapeHtml(v.sku)}"${v.sku === selectedVariantSku ? " selected" : ""}>${escapeHtml(shortLabel || v.label)}${priceText}</option>`;
+        }).join("");
+        picker.innerHTML = `<div class="swatch-row">${swatchesHtml}</div><select class="variant-dropdown" aria-label="Size" style="margin-top:10px;">${optionsHtml}</select>`;
+        picker.querySelectorAll(".colour-swatch").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            selectedColourKey = btn.dataset.colour;
+            const firstOfColour = variants.find((v) => colourKeyForVariant(v) === selectedColourKey);
+            selectVariant(firstOfColour.sku);
+          });
+        });
+        picker.querySelector("select").addEventListener("change", (e) => selectVariant(e.target.value));
+        return;
+      }
       // Non-colour options (pack sizes, bag sizes…) use a dropdown that shows
       // each option's price; colours keep the tappable swatches.
       if (!isColourSet) {
-        const symbol = COUNTRY_SYMBOL[currentCountry] || "$";
         picker.innerHTML = `<select class="variant-dropdown" aria-label="Option">${variants.map((v) => {
           const price = getPriceForVariant(product, v.sku);
           const priceText = typeof price === "number" ? ` — ${symbol}${price.toFixed(2)}` : "";
@@ -781,9 +835,19 @@ function renderProduct() {
     }
     selectVariant = (sku) => {
       selectedVariantSku = sku;
+      if (useColourGroups) {
+        const chosenVariant = variants.find((v) => v.sku === sku);
+        if (chosenVariant) selectedColourKey = colourKeyForVariant(chosenVariant);
+      }
       renderSwatches();
       document.querySelectorAll(".colour-card").forEach((c) => c.classList.toggle("selected", c.dataset.sku === sku));
       updatePriceDisplay();
+      const chosen = variants.find((v) => v.sku === sku);
+      const imgUrl = chosen && imageForVariantLabel(product, chosen.label);
+      if (imgUrl) {
+        const idx = images.indexOf(imgUrl);
+        if (idx >= 0) showProductImage(idx);
+      }
     };
     renderSwatches();
   } else {
