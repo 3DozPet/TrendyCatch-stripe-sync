@@ -909,6 +909,23 @@ function renderProduct() {
 }
 
 async function handleBuy(btn) {
+  // Most people never notice the collapsed "Have a welcome code?" box, so
+  // the first time someone taps Add to cart in a session (with no code
+  // entered yet), ask instead of assuming they don't have one — open the
+  // box and let them type it before continuing. Tapping Add to cart again
+  // (box open, or nothing typed) goes straight through, so this only ever
+  // interrupts the flow once.
+  const codeBox = document.getElementById("codeBox");
+  const couponField = document.getElementById("couponInput");
+  const askedAlready = sessionStorage.getItem("tc_coupon_asked") === "1";
+  if (!askedAlready && !codeBox.open && !couponField.value.trim()) {
+    sessionStorage.setItem("tc_coupon_asked", "1");
+    codeBox.open = true;
+    couponField.focus();
+    showToast("Have a coupon code? Enter it below, then tap Add to cart again.");
+    return;
+  }
+
   const originalText = btn.textContent;
   allBuyButtons().forEach((b) => {
     b.disabled = true;

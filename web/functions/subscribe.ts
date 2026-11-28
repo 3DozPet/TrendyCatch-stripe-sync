@@ -51,19 +51,51 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     updatedAt: new Date().toISOString(),
     couponCode,
     couponEmailedAt: existing?.couponEmailedAt ?? null,
+    unsubscribed: Boolean(existing?.unsubscribed),
   }
 
   if (!alreadyHadCode) {
     await env.ORDERS_KV.put(`coupon:${couponCode}`, JSON.stringify({ subscriberKey: key, status: "unused", createdAt: record.updatedAt }))
   }
 
-  // Email the code once. If sending fails the signup is still saved, and the
-  // next signup attempt with the same address tries the email again.
+  // Decide whether to (re-)send the code:
+  //  - brand-new signup, never emailed yet          -> send
+  //  - signing up again with a code already emailed -> only resend if the
+  //    code is still unused/pending (not already redeemed on a past order)
+  //    and it's been a few minutes since the last send, so someone who
+  //    lost the email in spam can get it again without the form becoming
+  //    a way to spam-bomb an inbox with resends.
+  // "already_used" tells the frontend to stop suggesting a resend at all.
+  let couponStatus = "unused"
+  if (alreadyHadCode) {
+    const couponRaw = await env.ORDERS_KV.get(`coupon:${couponCode}`)
+    if (couponRaw) {
+      try {
+        couponStatus = JSON.parse(couponRaw).status || "unused"
+      } catch {
+        couponStatus = "unused"
+      }
+    }
+  }
+
+  const RESEND_COOLDOWN_MS = 5 * 60 * 1000
+  const lastEmailedAt = record.couponEmailedAt ? new Date(record.couponEmailedAt).getTime() : 0
+  const withinCooldown = Date.now() - lastEmailedAt < RESEND_COOLDOWN_MS
+  const alreadyUsed = alreadyHadCode && couponStatus === "used"
+  const eligibleToSend = !record.unsubscribed && !alreadyUsed && (!alreadyHadCode || !withinCooldown)
+
   // emailStatus says why an email did or didn't go (no secrets in it), so a
-  // failed send can be diagnosed from the response instead of guessing.
-  let emailed = Boolean(record.couponEmailedAt)
-  let emailStatus = emailed ? "already_sent" : "not_configured"
-  if (!emailed && env.RESEND_API_KEY) {
+  // failed send — or a deliberate skip — can be diagnosed from the response
+  // instead of guessing.
+  let emailed = false
+  let emailStatus = alreadyUsed
+    ? "already_used"
+    : record.unsubscribed
+      ? "unsubscribed"
+      : withinCooldown && alreadyHadCode
+        ? "already_sent"
+        : "not_configured"
+  if (eligibleToSend && env.RESEND_API_KEY) {
     emailStatus = await sendCouponEmail(env.RESEND_API_KEY, email, couponCode)
     emailed = emailStatus === "sent"
     if (emailed) record.couponEmailedAt = new Date().toISOString()
@@ -94,7 +126,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     console.error("subscribers:all index update failed (signup was still recorded):", (err as Error).message)
   }
 
-  return json({ ok: true, alreadySubscribed: alreadyHadCode, emailed, emailStatus })
+  return json({ ok: true, alreadySubscribed: alreadyHadCode, emailed, emailStatus, couponUsed: alreadyUsed })
 }
 
 // Unambiguous characters only (no 0/O, 1/I/L) so a code is easy to type.
@@ -105,15 +137,23 @@ function newCouponCode(): string {
 }
 
 async function sendCouponEmail(apiKey: string, to: string, code: string): Promise<string> {
+  const unsubscribeUrl = `https://trendycatch.us/unsubscribe?email=${encodeURIComponent(to)}`
   const html = `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;max-width:520px;margin:0 auto;color:#2b2230;">
     <h2 style="font-size:22px;margin:0 0 12px;">Welcome to TrendyCatch</h2>
     <p style="font-size:15px;line-height:1.6;">Thanks for signing up. Here is your welcome code:</p>
     <p style="font-size:24px;font-weight:800;letter-spacing:2px;background:#f1eaff;border:1px dashed #5a3ec8;border-radius:12px;padding:14px;text-align:center;color:#43299e;">${code}</p>
     <p style="font-size:15px;line-height:1.6;">It takes 10% off the first 30.00 of your order (up to 3.00 off, in your own currency). Enter it on any product page before you tap Add to cart.</p>
-    <p style="font-size:13px;line-height:1.6;color:#6e6480;">One code per email address, valid for one order. Don't want these emails? Just reply and we'll take you off the list.</p>
+    <p style="font-size:13px;line-height:1.6;color:#6e6480;">One code per email address, valid for one order.</p>
     <p style="font-size:14px;"><a href="https://trendycatch.us/" style="color:#5a3ec8;font-weight:700;">Shop TrendyCatch</a></p>
+    <p style="font-size:11px;line-height:1.6;color:#9b93a8;margin-top:24px;border-top:1px solid #eee;padding-top:12px;">You're getting this because you asked for a welcome code at trendycatch.us. <a href="${unsubscribeUrl}" style="color:#9b93a8;">Unsubscribe</a></p>
   </div>`
   try {
+    // List-Unsubscribe + List-Unsubscribe-Post (RFC 8058) give Gmail/Yahoo/etc
+    // a one-click opt-out they can act on without the customer ever opening
+    // the email — mailboxes increasingly use the presence (and use) of this
+    // pair as a deliverability signal for anything that looks promotional,
+    // and this coupon email is the only promotional mail this domain sends
+    // (shipping/confirmation emails are transactional and don't need it).
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: { Authorization: `Bearer ${apiKey.trim()}`, "Content-Type": "application/json" },
@@ -122,6 +162,10 @@ async function sendCouponEmail(apiKey: string, to: string, code: string): Promis
         to: [to],
         subject: "Your TrendyCatch welcome code",
         html,
+        headers: {
+          "List-Unsubscribe": `<${unsubscribeUrl}>, <mailto:orders@trendycatch.us?subject=unsubscribe>`,
+          "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+        },
       }),
     })
     return res.ok ? "sent" : `provider_rejected_${res.status}`

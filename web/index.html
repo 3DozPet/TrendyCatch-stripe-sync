@@ -829,11 +829,15 @@ document.getElementById("signupForm").addEventListener("submit", async (e) => {
     const data = await res.json();
     if (res.ok) {
       msg.className = "signup-msg success";
-      msg.textContent = data.alreadySubscribed
-        ? "You're already on the list — your welcome code was sent to this address."
-        : data.emailed
-          ? "You're on the list — check your inbox for your welcome code."
-          : "You're on the list, but we couldn't email your code just now. Email orders@trendycatch.us and we'll send it.";
+      msg.textContent = data.couponUsed
+        ? "Looks like you've already used your welcome code on a past order."
+        : data.alreadySubscribed
+          ? (data.emailed
+              ? "You're already on the list — we've re-sent your welcome code, check your inbox (and spam folder)."
+              : "You're already on the list — your welcome code was already emailed to this address. Check your spam folder, or email orders@trendycatch.us.")
+          : data.emailed
+            ? "You're on the list — check your inbox (and spam folder) for your welcome code."
+            : "You're on the list, but we couldn't email your code just now. Email orders@trendycatch.us and we'll send it.";
       emailInput.value = "";
     } else {
       msg.textContent = data.error || "Something went wrong — please try again.";

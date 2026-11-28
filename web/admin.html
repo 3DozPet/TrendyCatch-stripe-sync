@@ -779,6 +779,31 @@ function printableAddress(raw) {
   try { const a=JSON.parse(raw); return [a.line1,a.line2,a.city,a.state,a.postal_code,a.country].filter(Boolean).join(', ') || 'Not provided'; } catch { return 'Address unavailable'; }
 }
 function orderField(parent, label, value) { const p=orderElement('p'); const strong=orderElement('strong',label+': '); p.append(strong, document.createTextNode(value || 'Not provided')); parent.append(p); }
+// Order IDs are full Stripe checkout session IDs (cs_live_a1B2c3...), which
+// is accurate but reads as noise in a list of orders. Show a short
+// reference instead; click it to copy the full ID (still needed to look an
+// order up in the Stripe dashboard).
+function shortOrderRef(id) {
+  const tail = String(id || '').replace(/^cs_(live|test)_/, '').slice(-8).toUpperCase();
+  return tail ? '#' + tail : '';
+}
+function orderIdField(parent, id) {
+  const p = orderElement('p');
+  p.append(orderElement('strong', 'Order ID: '));
+  const span = orderElement('span', shortOrderRef(id) || 'Not provided');
+  if (id) {
+    span.style.cursor = 'pointer'; span.style.textDecoration = 'underline dotted';
+    span.title = 'Click to copy full order ID (' + id + ')';
+    span.addEventListener('click', () => {
+      navigator.clipboard?.writeText(id).catch(() => {});
+      const original = span.textContent;
+      span.textContent = 'Copied!';
+      setTimeout(() => { span.textContent = original; }, 1200);
+    });
+  }
+  p.append(span);
+  parent.append(p);
+}
 function formInput(form, label, name, value, type='text') {
   const wrap=orderElement('label',label); const input=document.createElement('input'); input.type=type; input.name=name; input.value=value || ''; wrap.append(input); form.append(wrap); return input;
 }
@@ -822,7 +847,7 @@ function buildOrderEntry(order, items, opts) {
   const total=Number(order.total_minor || 0)/100;
   entry.append(orderElement('summary',`${order.customer_name || 'Customer'} · ${order.currency} ${total.toFixed(2)} · ${order.fulfillment_status}`));
   const fields=orderElement('div',null,'history-fields');
-  orderField(fields,'Order ID',order.id); orderField(fields,'Date',order.created_at); orderField(fields,'Email',order.customer_email); orderField(fields,'Phone',order.customer_phone);
+  orderIdField(fields,order.id); orderField(fields,'Date',order.created_at); orderField(fields,'Email',order.customer_email); orderField(fields,'Phone',order.customer_phone);
   orderField(fields,'Shipping name',order.shipping_name); orderField(fields,'Shipping address',printableAddress(order.shipping_address_json)); orderField(fields,'Billing address',printableAddress(order.billing_address_json));
   orderField(fields,'Payment',order.payment_status); entry.append(fields);
   entry.append(buildItemsRow(items));
@@ -993,7 +1018,7 @@ async function refreshSentEmails() {
       <div class="email-row" data-id="${escapeHtml(e.id)}">
         <div class="email-main">
           <div class="email-subject">${escapeHtml(e.subject || '(no subject on file)')}</div>
-          <div class="email-meta">To ${escapeHtml(e.to || 'unknown')}${e.customer ? ' · ' + escapeHtml(e.customer) : ''} · Order ${escapeHtml(e.orderId || '')} · ${timeAgo(e.sentAt)}</div>
+          <div class="email-meta">To ${escapeHtml(e.to || 'unknown')}${e.customer ? ' · ' + escapeHtml(e.customer) : ''} · Order ${escapeHtml(shortOrderRef(e.orderId))} · ${timeAgo(e.sentAt)}</div>
         </div>
         <div class="email-actions">
           <span class="email-kind ${e.kind}">${emailKindLabel(e.kind)}</span>
@@ -1025,7 +1050,7 @@ document.getElementById('sentEmailsList').addEventListener('click', async (e) =>
 
 function openEmailModal(email) {
   document.getElementById('emailModalSubject').textContent = email.subject || '(no subject on file)';
-  document.getElementById('emailModalMeta').textContent = `To ${email.to || 'unknown'} · ${emailKindLabel(email.kind)} · Order ${email.orderId || ''} · ${timeAgo(email.sentAt)} — exactly what the customer received`;
+  document.getElementById('emailModalMeta').textContent = `To ${email.to || 'unknown'} · ${emailKindLabel(email.kind)} · Order ${shortOrderRef(email.orderId)} · ${timeAgo(email.sentAt)} — exactly what the customer received`;
   const frame = document.getElementById('emailModalFrame');
   frame.srcdoc = email.html || '<p style="font-family:sans-serif;color:#666;padding:20px;">No stored copy of this email.</p>';
   document.getElementById('emailModal').hidden = false;
