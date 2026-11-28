@@ -58,14 +58,13 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     await env.ORDERS_KV.put(`coupon:${couponCode}`, JSON.stringify({ subscriberKey: key, status: "unused", createdAt: record.updatedAt }))
   }
 
-  // Decide whether to (re-)send the code:
-  //  - brand-new signup, never emailed yet          -> send
-  //  - signing up again with a code already emailed -> only resend if the
-  //    code is still unused/pending (not already redeemed on a past order)
-  //    and it's been a few minutes since the last send, so someone who
-  //    lost the email in spam can get it again without the form becoming
-  //    a way to spam-bomb an inbox with resends.
-  // "already_used" tells the frontend to stop suggesting a resend at all.
+  // One email, one coupon, sent once — full stop. Signing up again with the
+  // same address never generates a new code and never re-triggers the
+  // email, whether the code has been used or is still sitting unused. The
+  // only exception: if the very first send never actually went out
+  // (couponEmailedAt is still null — Resend wasn't configured yet, or the
+  // provider rejected it), that one real attempt still hasn't happened, so
+  // it's retried here rather than leaving the signup silently coupon-less.
   let couponStatus = "unused"
   if (alreadyHadCode) {
     const couponRaw = await env.ORDERS_KV.get(`coupon:${couponCode}`)
@@ -78,11 +77,9 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     }
   }
 
-  const RESEND_COOLDOWN_MS = 5 * 60 * 1000
-  const lastEmailedAt = record.couponEmailedAt ? new Date(record.couponEmailedAt).getTime() : 0
-  const withinCooldown = Date.now() - lastEmailedAt < RESEND_COOLDOWN_MS
   const alreadyUsed = alreadyHadCode && couponStatus === "used"
-  const eligibleToSend = !record.unsubscribed && !alreadyUsed && (!alreadyHadCode || !withinCooldown)
+  const neverSuccessfullyEmailed = !record.couponEmailedAt
+  const eligibleToSend = !record.unsubscribed && !alreadyUsed && (!alreadyHadCode || neverSuccessfullyEmailed)
 
   // emailStatus says why an email did or didn't go (no secrets in it), so a
   // failed send — or a deliberate skip — can be diagnosed from the response
@@ -92,7 +89,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     ? "already_used"
     : record.unsubscribed
       ? "unsubscribed"
-      : withinCooldown && alreadyHadCode
+      : alreadyHadCode && !neverSuccessfullyEmailed
         ? "already_sent"
         : "not_configured"
   if (eligibleToSend && env.RESEND_API_KEY) {
