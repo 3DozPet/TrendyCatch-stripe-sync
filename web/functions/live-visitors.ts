@@ -40,7 +40,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
     try {
       const cached = JSON.parse(cachedRaw)
       if (Date.now() - Number(cached.computedAt ?? 0) < CACHE_TTL_MS) {
-        return json({ count: cached.count, byCountry: cached.byCountry })
+        return json({ count: cached.count, byCountry: cached.byCountry, points: cached.points || [] })
       }
     } catch {
       // fall through and recompute
@@ -49,6 +49,9 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
 
   const list = await env.ORDERS_KV.list({ prefix: "visitor:", limit: 500 })
   const byCountry: Record<string, number> = {}
+  // One dot per city, not per visitor — several heartbeats from the same
+  // city collapse into a single point with a count, for the home-page map.
+  const pointsByKey = new Map<string, { city: string; country: string; lat: number; lon: number; count: number }>()
   let count = 0
 
   for (const k of list.keys) {
@@ -59,20 +62,29 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
       const country = entry.country ?? "UNKNOWN"
       byCountry[country] = (byCountry[country] ?? 0) + 1
       count += 1
+      if (typeof entry.lat === "number" && typeof entry.lon === "number") {
+        const city = String(entry.city || "")
+        const key = `${city}|${country}`
+        const existing = pointsByKey.get(key)
+        if (existing) existing.count += 1
+        else pointsByKey.set(key, { city, country, lat: entry.lat, lon: entry.lon, count: 1 })
+      }
     } catch {
       // skip malformed entry
     }
   }
 
+  const points = Array.from(pointsByKey.values())
+
   try {
-    await env.ORDERS_KV.put(SNAPSHOT_KEY, JSON.stringify({ count, byCountry, computedAt: Date.now() }), {
+    await env.ORDERS_KV.put(SNAPSHOT_KEY, JSON.stringify({ count, byCountry, points, computedAt: Date.now() }), {
       expirationTtl: 120,
     })
   } catch (err) {
     console.error("visitors:snapshot cache write failed (count still returned this request):", (err as Error).message)
   }
 
-  return json({ count, byCountry })
+  return json({ count, byCountry, points })
 }
 
 function json(data: unknown, status = 200): Response {

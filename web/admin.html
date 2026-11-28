@@ -348,8 +348,17 @@ main#orderList { display:flex; flex-direction:column; gap:12px; }
   .history-form { flex-direction:column; align-items:stretch; }
   .history-form label { min-width:0; }
 }
+#liveMapCard { max-width:1160px; margin:16px auto 0; }
+#liveMapWrap { position:relative; }
+#liveMapWrap mappo-world { width:100%; display:block; }
+#liveMapWrap .live-flag {
+  position:absolute; font-size:15px; line-height:1; transform:translate(-50%,-135%);
+  pointer-events:none; filter:drop-shadow(0 1px 2px rgba(0,0,0,.35));
+}
+#liveMapEmpty { color:var(--muted); font-size:13.5px; padding:10px 2px 0; }
 </style>
 
+<script type="module" src="https://unpkg.com/mappo@0.7.0"></script>
 </head>
 <body>
 <div class="topbar"><span class="brandmark">T</span><strong>TrendyCatch</strong><span class="spacer"></span><a href="/" target="_blank" rel="noopener">View store ↗</a></div>
@@ -377,6 +386,15 @@ main#orderList { display:flex; flex-direction:column; gap:12px; }
     <button id="logoutBtn" class="header-btn">Log out</button>
   </div>
 </header>
+<div class="breakdown" id="liveMapCard">
+  <h3>Live on the site right now</h3>
+  <div id="liveMapWrap">
+    <mappo-world id="liveWorldMap" cols="130" dot-shape="circle" dot-size="0.55"
+      figure-color="#e4e7f5" marker-color="#4f46e5" marker-shape="circle"
+      marker-scale="2" marker-pulse="true" interactive="false"></mappo-world>
+  </div>
+  <p id="liveMapEmpty" style="display:none;">No one on the site right now — dots light up here the moment someone lands on a page.</p>
+</div>
 </section>
 
 <section class="panel" id="analytics" aria-label="Business overview">
@@ -749,9 +767,45 @@ async function pollLiveVisitors() {
     document.getElementById("statLive").textContent = live.count ?? 0;
     const byCountry = Object.entries(live.byCountry || {}).sort((a, b) => b[1] - a[1]);
     renderBreakdown("liveByCountry", byCountry, (v) => v);
+    updateLiveMap(live.points || []);
   } catch (e) {
     // transient — leave the last known count showing
   }
+}
+
+// Turns a 2-letter country code into its flag emoji (regional-indicator
+// trick — no image/library needed). Falls back to nothing for codes that
+// don't resolve to a real flag (e.g. "UNKNOWN").
+function countryFlag(code) {
+  const cc = String(code || "").toUpperCase();
+  if (!/^[A-Z]{2}$/.test(cc)) return "";
+  return String.fromCodePoint(...[...cc].map((ch) => 0x1f1e6 + ch.charCodeAt(0) - 65));
+}
+
+// Plots live visitors as pulsing dots on the honeycomb-style world map
+// (mappo.js), with a small flag badge hovering over each city. Dots are
+// re-set on every poll rather than animated in/out — visitor counts here
+// are small enough that a full redraw every few seconds is unnoticeable.
+function updateLiveMap(points) {
+  const map = document.getElementById("liveWorldMap");
+  if (!map) return;
+  const pts = Array.isArray(points) ? points : [];
+  const markers = pts
+    .map((p) => `${String(p.city || p.country || "").replace(/[@,;]/g, " ")}@${p.lat},${p.lon}`)
+    .join("; ");
+  map.setAttribute("markers", markers);
+  map.querySelectorAll(".live-flag").forEach((el) => el.remove());
+  pts.forEach((p) => {
+    const flag = document.createElement("span");
+    flag.className = "live-flag";
+    flag.dataset.lat = p.lat;
+    flag.dataset.lon = p.lon;
+    const place = p.city ? `${p.city}, ${p.country}` : p.country;
+    flag.title = p.count > 1 ? `${place} · ${p.count} live` : place;
+    flag.textContent = countryFlag(p.country) || "📍";
+    map.appendChild(flag);
+  });
+  document.getElementById("liveMapEmpty").style.display = pts.length ? "none" : "";
 }
 
 function escapeHtml(str) {
