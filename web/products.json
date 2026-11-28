@@ -1906,8 +1906,15 @@
     "title": "LED Fairy String Curtain Lights with Remote (8 Modes)",
     "hook": "Turn any wall into a warm, glowing backdrop in minutes — 8 remote-controlled light modes, no tools, no mess.",
     "images": [
+      "https://ae-pic-a1.aliexpress-media.com/kf/Sc7481e043c18490197b7a7ef02e85509u.jpg",
       "https://ae-pic-a1.aliexpress-media.com/kf/S76ec8dd957d04071ace81f223528edfdJ.jpg",
-      "https://ae-pic-a1.aliexpress-media.com/kf/S83b723a0697f4bf58e20adb73b61ffd5h.jpg"
+      "https://ae-pic-a1.aliexpress-media.com/kf/S83b723a0697f4bf58e20adb73b61ffd5h.jpg",
+      "https://ae-pic-a1.aliexpress-media.com/kf/Sb18903a7739b4a7f8b733d5b26d851bbB.jpg",
+      "https://ae-pic-a1.aliexpress-media.com/kf/Sb8e13cffcf134bf1b1266d3b165e10f3s.jpg",
+      "https://ae-pic-a1.aliexpress-media.com/kf/S29d41a80bf5b454dbd0a6bd3e3a075cc8.jpg",
+      "https://ae-pic-a1.aliexpress-media.com/kf/S4775556622064c808987e2fbed0036f97.jpg",
+      "https://ae-pic-a1.aliexpress-media.com/kf/S14c014d1541d435d943d1d64017e179fE.jpg",
+      "https://ae-pic-a1.aliexpress-media.com/kf/S14c31127aebb44f39fd5c582bef11861j.jpg"
     ],
     "variant": "3M(W) x 1M(H), 100 LEDs, warm white, cool white or multicolour, USB powered, remote included",
     "variants": [
@@ -2291,7 +2298,12 @@
       "AU",
       "CA",
       "US"
-    ]
+    ],
+    "variantImages": {
+      "Warm White": "https://ae-pic-a1.aliexpress-media.com/kf/Sc7481e043c18490197b7a7ef02e85509u.jpg",
+      "Cool White": "https://ae-pic-a1.aliexpress-media.com/kf/S76ec8dd957d04071ace81f223528edfdJ.jpg",
+      "Multicolour": "https://ae-pic-a1.aliexpress-media.com/kf/S83b723a0697f4bf58e20adb73b61ffd5h.jpg"
+    }
   },
   {
     "id": "heated-period-relief-belt",
