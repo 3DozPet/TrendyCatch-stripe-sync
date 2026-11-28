@@ -14,6 +14,16 @@ interface Env {
 
 const API = "https://api.resend.com/emails/receiving"
 
+// The dashboard inbox is the customer inbox: only mail addressed to
+// orders@trendycatch.us shows here. Anything sent to another address on the
+// domain (e.g. robbie@trendycatch.us, the private admin address) is never
+// listed or opened on the dashboard.
+const CUSTOMER_ADDRESS = "orders@trendycatch.us"
+function isCustomerMail(e: any): boolean {
+  const to = Array.isArray(e?.to) ? e.to : [e?.to]
+  return to.some((a: unknown) => String(a || "").toLowerCase().includes(CUSTOMER_ADDRESS))
+}
+
 export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
   if (!env.ORDERS_KV || !(await hasValidSession(request, env.ORDERS_KV))) {
     return json({ error: "unauthorized" }, 401)
@@ -30,12 +40,13 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
       const res = await fetch(`${API}/${id}`, { headers })
       if (!res.ok) return json({ error: providerError(res.status) })
       const e: any = await res.json()
+      if (!isCustomerMail(e)) return json({ error: "Not found" }, 404)
       return json({ email: { ...summary(e), text: bodyText(e) } })
     }
-    const res = await fetch(`${API}?limit=25`, { headers })
+    const res = await fetch(`${API}?limit=50`, { headers })
     if (!res.ok) return json({ emails: [], error: providerError(res.status) })
     const data: any = await res.json()
-    const emails = (Array.isArray(data?.data) ? data.data : []).map(summary)
+    const emails = (Array.isArray(data?.data) ? data.data : []).filter(isCustomerMail).slice(0, 25).map(summary)
     return json({ emails, count: emails.length })
   } catch {
     return json({ emails: [], error: "Couldn't reach the email provider — try again shortly." })
