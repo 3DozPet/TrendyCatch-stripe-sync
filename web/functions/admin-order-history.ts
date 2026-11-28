@@ -13,7 +13,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
   // that every other query/webhook/email already keys off of.
   const result = await env.ORDERS_DB.prepare(
     `WITH numbered AS (SELECT id, ROW_NUMBER() OVER (ORDER BY created_at ASC, id ASC) AS order_number FROM orders)
-     SELECT o.id, o.created_at, o.customer_name, o.customer_email, o.customer_phone, o.shipping_name, o.shipping_address_json, o.billing_address_json, o.currency, o.total_minor, o.payment_status, o.fulfillment_status, o.tracking_number, o.tracking_carrier, o.tracking_url, o.updated_at, n.order_number
+     SELECT o.id, o.created_at, o.customer_name, o.customer_email, o.customer_phone, o.shipping_name, o.shipping_address_json, o.billing_address_json, o.currency, o.total_minor, o.payment_status, o.fulfillment_status, o.tracking_number, o.tracking_carrier, o.tracking_url, o.delivered_at, o.return_status, o.return_updated_at, o.updated_at, n.order_number
      FROM orders o JOIN numbered n ON n.id = o.id
      ORDER BY o.created_at DESC, o.id DESC LIMIT 100`
   ).all()

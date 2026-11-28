@@ -295,6 +295,33 @@ main#orderList { display:flex; flex-direction:column; gap:12px; }
 .modal-body { flex:1; overflow:auto; background:var(--surface-2); }
 .modal-body iframe { width:100%; min-height:380px; height:55vh; border:0; background:#fff; display:block; }
 
+/* ---- Order detail modal (the "click a customer/order, see everything" view) ---- */
+#orderDetailModal .modal-box { max-width:720px; }
+#orderDetailModal .modal-body { padding:18px 20px 22px; background:var(--surface); }
+.od-badges { display:flex; flex-wrap:wrap; gap:8px; margin:2px 0 16px; }
+.od-badge { font-size:11.5px; font-weight:700; padding:5px 12px; border-radius:999px; white-space:nowrap; border:1px solid var(--border-strong); background:var(--surface-2); color:var(--ink-2); }
+.od-badge.pay-paid { background:var(--success-soft); color:var(--success); border-color:rgba(26,156,99,.25); }
+.od-badge.pay-unpaid { background:#fdeceb; color:#c0392b; border-color:rgba(192,57,43,.25); }
+.od-badge.st-unfulfilled { background:#eef0f5; color:#555a70; border-color:#dfe2ec; }
+.od-badge.st-fulfilled, .od-badge.st-shipped { background:#eaf1ff; color:#2563eb; border-color:rgba(37,99,235,.25); }
+.od-badge.st-delivered { background:var(--success-soft); color:var(--success); border-color:rgba(26,156,99,.25); }
+.od-badge.st-return_requested { background:var(--warn-soft); color:var(--warn); border-color:rgba(180,112,10,.25); }
+.od-badge.st-return_received { background:var(--warn-soft); color:var(--warn); border-color:rgba(180,112,10,.25); }
+.od-badge.st-refunded { background:#f1ecfe; color:#7c3aed; border-color:rgba(124,58,237,.25); }
+.od-badge.st-cancelled { background:#fdeceb; color:#c0392b; border-color:rgba(192,57,43,.25); }
+.od-section { margin-bottom:18px; }
+.od-section h4 { margin:0 0 8px; font-size:12px; font-weight:800; letter-spacing:.03em; text-transform:uppercase; color:var(--muted); }
+.od-coupon-row { display:flex; align-items:center; gap:8px; font-size:13.5px; color:var(--ink-2); flex-wrap:wrap; }
+.od-coupon-row code { background:var(--surface-2); border:1px solid var(--border); border-radius:6px; padding:2px 7px; font-size:12.5px; }
+.od-actions-row { display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
+.od-actions-row select { font:inherit; font-size:13.5px; padding:8px 10px; border:1px solid var(--border-strong); border-radius:8px; background:var(--surface); color:var(--ink); }
+.od-actions-row button { background:var(--surface); border:1px solid var(--border-strong); color:var(--ink); font-weight:700; font-size:13px; padding:8px 14px; border-radius:8px; cursor:pointer; }
+.od-actions-row button:hover { background:var(--surface-2); }
+.od-actions-row button.on { background:var(--success-soft); color:var(--success); border-color:rgba(26,156,99,.25); }
+.od-open-link { background:none; border:none; padding:0; margin-left:auto; color:var(--accent); font-weight:700; font-size:12.5px; cursor:pointer; text-decoration:underline; }
+.history-order summary { gap:10px; }
+.history-order summary .summary-text { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
 @media (max-width:760px) {
   .shell { display:block; }
   .side { display:flex; gap:4px; overflow:auto; padding:8px; position:sticky; top:60px; z-index:10; }
@@ -465,6 +492,16 @@ main#orderList { display:flex; flex-direction:column; gap:12px; }
       <button class="modal-close" type="button" id="emailModalClose" aria-label="Close preview">×</button>
     </div>
     <div class="modal-body"><iframe id="emailModalFrame" sandbox="" title="Email preview"></iframe></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="orderDetailModal" hidden>
+  <div class="modal-box">
+    <div class="modal-head">
+      <div><h3 id="odTitle">Order</h3><p id="odSubtitle"></p></div>
+      <button class="modal-close" type="button" id="odClose" aria-label="Close order details">×</button>
+    </div>
+    <div class="modal-body" id="odBody"></div>
   </div>
 </div>
 
@@ -940,6 +977,36 @@ function formInput(form, label, name, value, type='text') {
 }
 function trackLink17(number) { const n=(number || '').trim(); return n ? `https://t.17track.net/en#nums=${encodeURIComponent(n)}` : ''; }
 
+// Payment status comes straight from Stripe (paid / unpaid / no_payment_required)
+// and never changes after checkout. Lifecycle status is TrendyCatch's own —
+// derived from fulfillment_status plus the three delivery/return columns
+// (migration 0004), priced most-advanced-state-wins so a refunded-and-returned
+// order shows "Refunded" rather than reverting to "Shipped".
+function paymentBadgeInfo(order) {
+  const s = (order.payment_status || '').toLowerCase();
+  if (s === 'paid') return { label: 'Paid', cls: 'pay-paid' };
+  if (s === 'unpaid') return { label: 'Unpaid', cls: 'pay-unpaid' };
+  return { label: order.payment_status || 'Payment unknown', cls: '' };
+}
+function lifecycleBadgeInfo(order) {
+  if (order.return_status === 'refunded') return { label: 'Refunded', cls: 'st-refunded' };
+  if (order.return_status === 'received') return { label: 'Return received', cls: 'st-return_received' };
+  if (order.return_status === 'requested') return { label: 'Return requested', cls: 'st-return_requested' };
+  if (order.fulfillment_status === 'cancelled') return { label: 'Cancelled', cls: 'st-cancelled' };
+  if (order.delivered_at) return { label: 'Delivered', cls: 'st-delivered' };
+  if (order.fulfillment_status === 'fulfilled') return { label: 'Shipped', cls: 'st-shipped' };
+  return { label: 'Unfulfilled', cls: 'st-unfulfilled' };
+}
+function statusBadgeEl(info) { const b = orderElement('span', info.label, 'od-badge'); if (info.cls) b.classList.add(info.cls); return b; }
+// Updates the lifecycle badge on every inline card showing this order
+// (Order history list, and the same order nested inside Customers) after a
+// status change made from the order detail modal — without refetching or
+// losing whatever else is expanded on the page.
+function syncInlineBadges(order) {
+  if (!order.id) return;
+  document.querySelectorAll(`.history-order[data-order-id="${CSS.escape(order.id)}"] > summary .od-badge`).forEach((b) => b.replaceWith(statusBadgeEl(lifecycleBadgeInfo(order))));
+}
+
 // Renders one order's line items as a small list, each with a tiny product
 // thumbnail (when Stripe has an image for that product) beside the
 // quantity/title/variant text. Replaces the old plain-text "Items: ..." line.
@@ -974,9 +1041,16 @@ function buildItemsRow(items) {
 function buildOrderEntry(order, items, opts) {
   opts = opts || {};
   const entry=orderElement('details',null,'history-order');
+  entry.dataset.orderId = order.id || '';
   if (opts.nested) { entry.style.marginTop='10px'; entry.style.paddingLeft='14px'; entry.style.borderLeft='2px solid #e0e0e0'; }
   const total=Number(order.total_minor || 0)/100;
-  entry.append(orderElement('summary',`${order.customer_name || 'Customer'} · ${order.currency} ${total.toFixed(2)} · ${order.fulfillment_status}`));
+  const summary = orderElement('summary');
+  const summaryText = orderElement('span', `${order.customer_name || 'Customer'} · ${order.currency} ${total.toFixed(2)}`, 'summary-text');
+  summary.append(summaryText, statusBadgeEl(lifecycleBadgeInfo(order)));
+  const viewDetailsBtn = orderElement('button','View details ↗'); viewDetailsBtn.type='button'; viewDetailsBtn.className='header-btn'; viewDetailsBtn.style.flex='none';
+  viewDetailsBtn.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); openOrderDetailModal(order, items); });
+  summary.append(viewDetailsBtn);
+  entry.append(summary);
   const fields=orderElement('div',null,'history-fields');
   orderIdField(fields,order); orderField(fields,'Date',order.created_at); orderField(fields,'Email',order.customer_email); orderField(fields,'Phone',order.customer_phone);
   orderField(fields,'Shipping name',order.shipping_name); orderField(fields,'Shipping address',printableAddress(order.shipping_address_json)); orderField(fields,'Billing address',printableAddress(order.billing_address_json));
@@ -1014,11 +1088,202 @@ function buildOrderEntry(order, items, opts) {
       if (select.value==='fulfilled' && number.value.trim() && !url.value.trim()) url.value = trackLink17(number.value);
       const r=await fetch('/admin-order-history',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:order.id,status:select.value,trackingNumber:number.value,carrier:carrier.value,trackingUrl:url.value})}); const d=await r.json(); if(!r.ok) throw Error(d.error || 'Unable to save');
       result.textContent = d.email && d.email.sent ? 'Saved · shipping email sent' : (d.email && d.email.error ? `Saved (email not sent: ${d.email.error})` : 'Saved');
-      order.fulfillment_status=select.value; order.tracking_number=number.value; order.tracking_carrier=carrier.value; order.tracking_url=url.value; entry.querySelector('summary').textContent=`${order.customer_name || 'Customer'} · ${order.currency} ${total.toFixed(2)} · ${select.value}`;
+      order.fulfillment_status=select.value; order.tracking_number=number.value; order.tracking_carrier=carrier.value; order.tracking_url=url.value;
+      const freshBadge = statusBadgeEl(lifecycleBadgeInfo(order)); summary.querySelector('.od-badge')?.replaceWith(freshBadge);
     } catch(err) { result.textContent=err.message || 'Unable to save'; } finally {button.disabled=false;} });
   entry.append(form);
   return entry;
 }
+
+// ---- Order detail modal: the "click an order/customer, see everything,
+// update it right here" view. Pulls together what's otherwise spread across
+// the inline order card (buildOrderEntry), the Customers panel's lifetime
+// totals, and the welcome-coupon records — one place instead of four.
+let latestCustomers = [];
+
+function odSection(parent, title) {
+  const section = orderElement('div', null, 'od-section');
+  section.append(orderElement('h4', title));
+  parent.append(section);
+  return section;
+}
+
+function openOrderDetailModal(order, items) {
+  const modal = document.getElementById('orderDetailModal');
+  const total = Number(order.total_minor || 0) / 100;
+  document.getElementById('odTitle').textContent = `${orderNumberLabel(order.order_number) || 'Order'} · ${order.customer_name || 'Customer'}`;
+  document.getElementById('odSubtitle').textContent = `${order.currency} ${total.toFixed(2)} · ${timeAgo(order.created_at)}`;
+
+  const body = document.getElementById('odBody');
+  body.replaceChildren();
+
+  // Badges
+  const badges = orderElement('div', null, 'od-badges');
+  badges.append(statusBadgeEl(paymentBadgeInfo(order)), statusBadgeEl(lifecycleBadgeInfo(order)));
+  body.append(badges);
+
+  // Customer & shipping
+  const custSection = odSection(body, 'Customer & shipping');
+  orderIdField(custSection, order);
+  orderField(custSection, 'Email', order.customer_email);
+  orderField(custSection, 'Phone', order.customer_phone);
+  orderField(custSection, 'Shipping name', order.shipping_name);
+  orderField(custSection, 'Shipping address', printableAddress(order.shipping_address_json));
+  orderField(custSection, 'Billing address', printableAddress(order.billing_address_json));
+  if (order.tracking_number) orderField(custSection, 'Tracking number', order.tracking_number + (order.tracking_carrier ? ` (${order.tracking_carrier})` : ''));
+  if (order.delivered_at) orderField(custSection, 'Delivered', timeAgo(order.delivered_at));
+  if (order.return_status) orderField(custSection, 'Return', `${order.return_status.replace('_',' ')} · ${timeAgo(order.return_updated_at)}`);
+
+  // Items
+  const itemsSection = odSection(body, 'Items');
+  itemsSection.append(buildItemsRow(items));
+
+  // Welcome coupon — loaded on demand (see admin-customer-coupon.ts for why
+  // this isn't baked into the polled subscriber list).
+  const couponSection = odSection(body, 'Welcome coupon');
+  const couponRow = orderElement('div', 'Loading…', 'od-coupon-row');
+  couponSection.append(couponRow);
+  if (order.customer_email) {
+    fetch(`/admin-customer-coupon?email=${encodeURIComponent(order.customer_email)}`, { cache: 'no-store' })
+      .then((r) => { if (reloadIfUnauthorized(r.status)) return null; return r.json(); })
+      .then((d) => {
+        if (!d) return;
+        couponRow.replaceChildren();
+        if (!d.subscribed) { couponRow.textContent = 'Never signed up for the welcome code.'; return; }
+        const codeEl = document.createElement('code'); codeEl.textContent = d.couponCode || '—';
+        couponRow.append(document.createTextNode('Code '), codeEl);
+        if (!d.couponEmailedAt) couponRow.append(document.createTextNode(' · not yet sent'));
+        else couponRow.append(document.createTextNode(` · sent ${timeAgo(d.couponEmailedAt)}`));
+        if (d.couponStatus === 'used') couponRow.append(document.createTextNode(` · used ${d.couponUsedAt ? timeAgo(d.couponUsedAt) : ''}`));
+        else couponRow.append(document.createTextNode(' · not used yet'));
+        if (d.unsubscribed) couponRow.append(document.createTextNode(' · unsubscribed from emails'));
+      })
+      .catch(() => { couponRow.textContent = 'Could not load coupon status.'; });
+  } else {
+    couponRow.textContent = 'No email on file.';
+  }
+
+  // Customer history — lifetime total paid + every order on file for this
+  // email, so switching to the Customers panel to see "have they ordered
+  // before, how much have they spent" is never necessary.
+  const historySection = odSection(body, 'Customer history');
+  const email = (order.customer_email || '').trim().toLowerCase();
+  const customerSummary = latestCustomers.find((c) => (c.email || '').trim().toLowerCase() === email);
+  const histIntro = orderElement('p');
+  histIntro.innerHTML = customerSummary
+    ? `<strong>${customerSummary.orderCount}</strong> order${customerSummary.orderCount === 1 ? '' : 's'} total · <strong>${customerSummary.currency} ${(Number(customerSummary.totalSpentMinor || 0) / 100).toFixed(2)}</strong> paid lifetime`
+    : 'No lifetime total on file yet for this email.';
+  historySection.append(histIntro);
+  const otherOrders = latestOrders.filter((o) => (o.customer_email || '').trim().toLowerCase() === email && o.id !== order.id);
+  if (otherOrders.length) {
+    const list = orderElement('div', null, 'history-items');
+    for (const o of otherOrders) {
+      const row = orderElement('div');
+      row.style.display = 'flex'; row.style.alignItems = 'center'; row.style.gap = '8px'; row.style.padding = '4px 0';
+      const link = orderElement('button', `${orderNumberLabel(o.order_number) || 'Order'} · ${o.currency} ${(Number(o.total_minor || 0) / 100).toFixed(2)} · ${timeAgo(o.created_at)}`);
+      link.type = 'button'; link.className = 'header-btn';
+      link.addEventListener('click', () => openOrderDetailModal(o, latestItems.filter((i) => i.order_id === o.id)));
+      row.append(link, statusBadgeEl(lifecycleBadgeInfo(o)));
+      list.append(row);
+    }
+    historySection.append(list);
+  } else if (customerSummary) {
+    historySection.append(orderElement('p', 'This is their only order so far.', 'meta'));
+  }
+
+  // Send confirmation
+  const confirmRow = odSection(body, 'Actions');
+  const confirmBtn = orderElement('button', 'Send order confirmation'); confirmBtn.type = 'button'; confirmBtn.className = 'header-btn';
+  const confirmStatus = orderElement('span'); confirmStatus.setAttribute('role', 'status'); confirmStatus.style.marginLeft = '10px'; confirmStatus.style.fontSize = '13px'; confirmStatus.style.color = 'var(--muted)';
+  confirmBtn.addEventListener('click', async () => {
+    confirmBtn.disabled = true; confirmStatus.textContent = 'Sending from orders@trendycatch.us…';
+    try {
+      const r = await fetch('/admin-send-confirmation', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: order.id }) });
+      const d = await r.json().catch(() => ({}));
+      if (reloadIfUnauthorized(r.status)) return;
+      if (!r.ok) throw new Error(d.error || 'Unable to send confirmation email');
+      confirmStatus.textContent = 'Sent from orders@trendycatch.us';
+    } catch (err) { confirmStatus.textContent = err.message || 'Unable to send confirmation email'; }
+    finally { confirmBtn.disabled = false; }
+  });
+  confirmRow.append(confirmBtn, confirmStatus);
+
+  // Fulfilment form — same fields/endpoint as the inline card, so saving
+  // here and saving from the Order history list both land on the same data.
+  const fulfilSection = odSection(body, 'Fulfilment');
+  const form = orderElement('form', null, 'history-form');
+  const fLabel = orderElement('label', 'Fulfilment'); const select = document.createElement('select'); select.name = 'status';
+  for (const value of ['unfulfilled', 'fulfilled']) { const opt = orderElement('option', value === 'fulfilled' ? 'Fulfilled' : 'Unfulfilled'); opt.value = value; opt.selected = value === order.fulfillment_status; select.append(opt); }
+  fLabel.append(select); form.append(fLabel);
+  const number = formInput(form, 'Tracking number', 'number', order.tracking_number);
+  const carrier = formInput(form, 'Carrier', 'carrier', order.tracking_carrier);
+  const url = formInput(form, 'Tracking link (auto-filled from 17TRACK)', 'url', order.tracking_url, 'url');
+  let urlEdited = Boolean(order.tracking_url);
+  url.addEventListener('input', () => { urlEdited = true; });
+  number.addEventListener('input', () => { if (!urlEdited) url.value = trackLink17(number.value); });
+  const track17Btn = orderElement('button', 'Use 17TRACK link'); track17Btn.type = 'button'; track17Btn.className = 'header-btn'; track17Btn.style.marginLeft = '8px';
+  track17Btn.addEventListener('click', () => { url.value = trackLink17(number.value); urlEdited = true; });
+  form.append(track17Btn);
+  const saveBtn = orderElement('button', 'Save fulfilment'); saveBtn.type = 'submit'; form.append(saveBtn);
+  const fulfilResult = orderElement('span'); fulfilResult.setAttribute('role', 'status'); form.append(fulfilResult);
+  const badgesRefresh = () => { badges.replaceChildren(statusBadgeEl(paymentBadgeInfo(order)), statusBadgeEl(lifecycleBadgeInfo(order))); };
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault(); saveBtn.disabled = true; fulfilResult.textContent = 'Saving…';
+    try {
+      if (select.value === 'fulfilled' && number.value.trim() && !url.value.trim()) url.value = trackLink17(number.value);
+      const r = await fetch('/admin-order-history', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: order.id, status: select.value, trackingNumber: number.value, carrier: carrier.value, trackingUrl: url.value }) });
+      const d = await r.json(); if (!r.ok) throw Error(d.error || 'Unable to save');
+      fulfilResult.textContent = d.email && d.email.sent ? 'Saved · shipping email sent' : (d.email && d.email.error ? `Saved (email not sent: ${d.email.error})` : 'Saved');
+      order.fulfillment_status = select.value; order.tracking_number = number.value; order.tracking_carrier = carrier.value; order.tracking_url = url.value;
+      badgesRefresh();
+    } catch (err) { fulfilResult.textContent = err.message || 'Unable to save'; } finally { saveBtn.disabled = false; }
+  });
+  fulfilSection.append(form);
+
+  // Delivered toggle + return status — both hit /admin-order-status, the
+  // additive-columns endpoint from migration 0004.
+  const lifecycleSection = odSection(body, 'Delivery & returns');
+  const actionsRow = orderElement('div', null, 'od-actions-row');
+  const deliveredBtn = orderElement('button', order.delivered_at ? 'Delivered ✓' : 'Mark delivered');
+  deliveredBtn.type = 'button'; if (order.delivered_at) deliveredBtn.classList.add('on');
+  deliveredBtn.addEventListener('click', async () => {
+    const next = !order.delivered_at;
+    deliveredBtn.disabled = true;
+    try {
+      const r = await fetch('/admin-order-status', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: order.id, delivered: next }) });
+      const d = await r.json(); if (!r.ok) throw Error(d.error || 'Unable to save');
+      order.delivered_at = next ? new Date().toISOString() : null;
+      deliveredBtn.textContent = order.delivered_at ? 'Delivered ✓' : 'Mark delivered';
+      deliveredBtn.classList.toggle('on', Boolean(order.delivered_at));
+      badgesRefresh(); syncInlineBadges(order);
+    } catch (err) { alert(err.message || 'Unable to save'); } finally { deliveredBtn.disabled = false; }
+  });
+  actionsRow.append(deliveredBtn);
+
+  const returnSelect = document.createElement('select');
+  for (const [value, label] of [['', 'No return'], ['requested', 'Return requested'], ['received', 'Return received'], ['refunded', 'Refunded']]) {
+    const opt = orderElement('option', label); opt.value = value; opt.selected = (order.return_status || '') === value; returnSelect.append(opt);
+  }
+  const returnSaveBtn = orderElement('button', 'Save return status'); returnSaveBtn.type = 'button';
+  returnSaveBtn.addEventListener('click', async () => {
+    returnSaveBtn.disabled = true;
+    try {
+      const value = returnSelect.value || null;
+      const r = await fetch('/admin-order-status', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: order.id, returnStatus: value }) });
+      const d = await r.json(); if (!r.ok) throw Error(d.error || 'Unable to save');
+      order.return_status = value; order.return_updated_at = value ? new Date().toISOString() : null;
+      badgesRefresh(); syncInlineBadges(order);
+    } catch (err) { alert(err.message || 'Unable to save'); } finally { returnSaveBtn.disabled = false; }
+  });
+  actionsRow.append(returnSelect, returnSaveBtn);
+  lifecycleSection.append(actionsRow);
+
+  modal.hidden = false;
+}
+function closeOrderDetailModal() { document.getElementById('orderDetailModal').hidden = true; }
+document.getElementById('odClose').addEventListener('click', closeOrderDetailModal);
+document.getElementById('orderDetailModal').addEventListener('click', (e) => { if (e.target.id === 'orderDetailModal') closeOrderDetailModal(); });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !document.getElementById('orderDetailModal').hidden) closeOrderDetailModal(); });
 
 let latestOrders = [], latestItems = [];
 async function refreshHistory() {
@@ -1067,6 +1332,7 @@ async function refreshCustomers() {
     if (!res.ok) throw new Error('Customers are not connected yet.');
     const data = await res.json();
     const customers = data.customers || [];
+    latestCustomers = customers;
     if (!customers.length) { list.innerHTML = '<div class="breakdown-item"><span class="tag">No customers yet</span></div>'; return; }
     list.replaceChildren();
     for (const c of customers) {
@@ -1075,9 +1341,20 @@ async function refreshCustomers() {
       const entry = orderElement('details', null, 'history-order');
       entry.dataset.email = email;
       if (openEmails.has(email)) entry.open = true;
-      entry.append(orderElement('summary', `${c.name || c.email || 'Customer'} · ${c.email || ''} · ${c.orderCount} order${c.orderCount===1?'':'s'} · ${c.currency || ''} ${spent.toFixed(2)}`));
-      const body = orderElement('div', null, 'history-fields');
       const matched = latestOrders.filter(o => (o.customer_email || '').trim().toLowerCase() === email);
+      const custSummary = orderElement('summary');
+      custSummary.append(orderElement('span', `${c.name || c.email || 'Customer'} · ${c.email || ''} · ${c.orderCount} order${c.orderCount===1?'':'s'} · ${c.currency || ''} ${spent.toFixed(2)}`, 'summary-text'));
+      if (matched.length) {
+        const custViewBtn = orderElement('button', 'View details ↗'); custViewBtn.type = 'button'; custViewBtn.className = 'header-btn'; custViewBtn.style.flex = 'none';
+        custViewBtn.addEventListener('click', (e) => {
+          e.preventDefault(); e.stopPropagation();
+          const mostRecent = matched.slice().sort((a, b) => (a.created_at < b.created_at ? 1 : -1))[0];
+          openOrderDetailModal(mostRecent, latestItems.filter(i => i.order_id === mostRecent.id));
+        });
+        custSummary.append(custViewBtn);
+      }
+      entry.append(custSummary);
+      const body = orderElement('div', null, 'history-fields');
       const addressSource = matched.find(o => o.shipping_address_json) || matched[0];
       orderField(body, 'Phone', c.phone);
       orderField(body, 'Last order', timeAgo(c.lastOrderAt));
