@@ -143,13 +143,37 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
           await fetch(`https://api.stripe.com/v1/checkout/sessions/${couponRecord.sessionId}/expire`, { method: "POST", headers: stripeHeaders })
         }
       }
-      const discountMinor = Math.round(Math.min(unitPrice, COUPON_SPEND_CAP) * COUPON_PERCENT)
+      // A record with no discountType is a pre-existing welcome coupon
+      // (issued by /subscribe before admin-created coupons existed) — keep
+      // its math exactly as it always was (that formula's COUPON_SPEND_CAP is
+      // a cap on qualifying SPEND, e.g. "10% off the first $30"). A record
+      // with discountType is one issued by /admin-create-coupon: 'amount' is
+      // a flat dollar amount off (never more than the item's own price);
+      // 'percent' is a percent off with maxDiscount as a cap on the resulting
+      // DISCOUNT dollar amount itself (e.g. "20% off, up to $5"), not on
+      // qualifying spend — those are different caps, so this is deliberately
+      // not reusing the legacy branch's formula shape.
+      let discountMinor: number
+      if (!couponRecord.discountType) {
+        discountMinor = Math.round(Math.min(unitPrice, COUPON_SPEND_CAP) * COUPON_PERCENT)
+      } else if (couponRecord.discountType === "amount") {
+        discountMinor = Math.round(Number(couponRecord.value) * 100)
+      } else {
+        const rawDiscount = unitPrice * (Number(couponRecord.value) / 100)
+        const cappedDiscount = couponRecord.maxDiscount != null ? Math.min(rawDiscount, Number(couponRecord.maxDiscount)) : rawDiscount
+        discountMinor = Math.round(cappedDiscount * 100)
+      }
+      // Never negative, never more than the item itself is worth in cents,
+      // and never NaN (a malformed stored record falls back to no discount
+      // rather than crashing the Stripe call with an invalid amount_off).
+      if (!Number.isFinite(discountMinor)) discountMinor = 0
+      discountMinor = Math.max(0, Math.min(discountMinor, Math.round(unitPrice * 100)))
       const couponParams = new URLSearchParams()
       couponParams.set("amount_off", String(discountMinor))
       couponParams.set("currency", currency)
       couponParams.set("duration", "once")
       couponParams.set("max_redemptions", "1")
-      couponParams.set("name", "Welcome code")
+      couponParams.set("name", couponRecord.discountType ? "Discount code" : "Welcome code")
       couponParams.set("metadata[welcome_code]", couponCode)
       const couponRes = await fetch("https://api.stripe.com/v1/coupons", { method: "POST", headers: stripeHeaders, body: couponParams.toString() })
       const created: any = await couponRes.json()

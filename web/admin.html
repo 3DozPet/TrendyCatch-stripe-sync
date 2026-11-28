@@ -1171,6 +1171,65 @@ function openOrderDetailModal(order, items) {
     couponRow.textContent = 'No email on file.';
   }
 
+  // Issue a coupon — a one-off, admin-created discount for this customer
+  // specifically (separate from the automatic welcome coupon above): either
+  // a percent off with an optional dollar cap, or a flat dollar amount off.
+  // Posts to /admin-create-coupon, which stores it in the same coupon:<code>
+  // KV shape /create-checkout already reads, and emails it via Resend.
+  if (order.customer_email) {
+    const issueSection = odSection(body, 'Issue a coupon');
+    const issueForm = orderElement('form', null, 'history-form od-compose-form');
+    const typeLabel = orderElement('label', 'Discount type');
+    const typeSelect = document.createElement('select');
+    for (const [value, label] of [['percent', 'Percent off'], ['amount', 'Fixed amount off']]) { const opt = orderElement('option', label); opt.value = value; typeSelect.append(opt); }
+    typeLabel.append(typeSelect); issueForm.append(typeLabel);
+
+    const valueRow = orderElement('div', null, 'od-actions-row');
+    const valueLabel = orderElement('label', 'Percent (%)');
+    const valueInput = document.createElement('input'); valueInput.type = 'number'; valueInput.min = '0.01'; valueInput.step = '0.01'; valueInput.required = true; valueInput.placeholder = '20';
+    valueLabel.append(valueInput);
+    const capLabel = orderElement('label', 'Max discount ($, optional)');
+    const capInput = document.createElement('input'); capInput.type = 'number'; capInput.min = '0.01'; capInput.step = '0.01'; capInput.placeholder = 'No cap';
+    capLabel.append(capInput);
+    valueRow.append(valueLabel, capLabel);
+    issueForm.append(valueRow);
+    typeSelect.addEventListener('change', () => {
+      const isPercent = typeSelect.value === 'percent';
+      valueLabel.firstChild.textContent = isPercent ? 'Percent (%)' : 'Amount ($)';
+      valueInput.placeholder = isPercent ? '20' : '10.00';
+      capLabel.style.display = isPercent ? '' : 'none';
+    });
+
+    const noteLabel = orderElement('label', `Note to include in the email (optional)`);
+    const noteText = document.createElement('textarea'); noteText.rows = 2; noteText.maxLength = 300; noteText.placeholder = "Sorry about the delay — here's something for next time.";
+    noteLabel.append(noteText); issueForm.append(noteLabel);
+
+    const issueSendRow = orderElement('div', null, 'od-compose-send-row');
+    const issueBtn = orderElement('button', 'Create & email coupon'); issueBtn.type = 'submit';
+    const issueStatus = orderElement('span'); issueStatus.setAttribute('role', 'status');
+    issueSendRow.append(issueBtn, issueStatus); issueForm.append(issueSendRow);
+
+    issueForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const value = Number(valueInput.value);
+      if (!value || value <= 0) { issueStatus.textContent = 'Enter a value first.'; return; }
+      issueBtn.disabled = true; issueStatus.textContent = 'Creating…';
+      try {
+        const payload = { email: order.customer_email, discountType: typeSelect.value, value, note: noteText.value };
+        if (typeSelect.value === 'percent' && capInput.value.trim()) payload.maxDiscount = Number(capInput.value);
+        const r = await fetch('/admin-create-coupon', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        const d = await r.json().catch(() => ({}));
+        if (reloadIfUnauthorized(r.status)) return;
+        if (!r.ok) throw new Error(d.error || 'Unable to create coupon');
+        const emailNote = d.emailed ? `emailed to ${order.customer_email}` : (d.emailStatus === 'not_configured' ? 'email sending isn\'t set up' : `couldn't email it (${d.emailStatus})`);
+        issueStatus.textContent = `Code ${d.code} created — ${emailNote}`;
+        valueInput.value = ''; capInput.value = ''; noteText.value = '';
+      } catch (err) { issueStatus.textContent = err.message || 'Unable to create coupon'; }
+      finally { issueBtn.disabled = false; }
+    });
+    issueSection.append(issueForm);
+  }
+
   // Customer history — lifetime total paid + every order on file for this
   // email, so switching to the Customers panel to see "have they ordered
   // before, how much have they spent" is never necessary.
