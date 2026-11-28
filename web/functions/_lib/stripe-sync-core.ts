@@ -400,10 +400,22 @@ export async function handleStripeOrderSync(
 
   const tiktokContents = (session.line_items?.data ?? []).map((li: any) => {
     const product = li.price?.product
-    const productId = typeof product === "object" ? product?.metadata?.product_id : undefined
+    const metaProductId = typeof product === "object" ? product?.metadata?.product_id : undefined
+    // TikTok's diagnostics flag a Purchase event whose content_id is empty or
+    // whitespace-only. `metadata.product_id` is sometimes left blank ("") on
+    // a Stripe product, and `?? "unknown"` only catches null/undefined — not
+    // an empty string — so a blank metadata value was slipping straight
+    // through as content_id: "". Trim it, and fall back to Stripe's own
+    // (always-present, never-blank) product id before the generic
+    // placeholder, so content_id is never blank and stays as close to a
+    // real, stable product identifier as possible.
+    const productId =
+      (typeof metaProductId === "string" && metaProductId.trim()) ||
+      (typeof product === "object" ? product?.id : undefined) ||
+      "unknown"
     const productName = typeof product === "object" && product?.name ? product.name : li.description ?? "Item"
     return {
-      content_id: productId ?? "unknown",
+      content_id: productId,
       content_type: "product",
       content_name: productName,
       quantity: li.quantity ?? 1,
