@@ -69,44 +69,105 @@ function recipients(e: any): string[] {
   return (Array.isArray(e?.to) ? e.to : [e?.to]).map((a: unknown) => String(a || "").toLowerCase())
 }
 
-// Everything this mailbox has sent to one address, newest-first, straight
-// from Resend's sent log. Returns [] on any problem (e.g. an API key that
-// can send but can't read the log) so the thread falls back to the KV copy.
-async function sentFromResend(
-  headers: Record<string, string>,
-  mailboxAddress: string,
-  correspondent: string,
-): Promise<any[]> {
+// Everything this mailbox has sent, newest first, from Resend's sent log
+// (no bodies — the list endpoint doesn't carry them). Returns [] on any
+// problem, e.g. an API key that can send but can't read the log, so callers
+// fall back to this dashboard's own KV copy.
+async function listSent(headers: Record<string, string>, mailboxAddress: string): Promise<any[]> {
   const res = await fetch(`${SENT_API}?limit=100`, { headers })
   if (!res.ok) return []
   const data: any = await res.json()
-  const mine = (Array.isArray(data?.data) ? data.data : [])
-    .filter(
-      (m: any) =>
-        extractAddress(m?.from) === mailboxAddress &&
-        recipients(m).some((a) => a.includes(correspondent)),
-    )
-    .sort((a: any, b: any) => Date.parse(b?.created_at || "") - Date.parse(a?.created_at || ""))
-    .slice(0, SENT_BODY_LIMIT)
+  return (Array.isArray(data?.data) ? data.data : [])
+    .filter((m: any) => extractAddress(m?.from) === mailboxAddress)
+    .map((m: any) => ({
+      id: String(m?.id || ""),
+      from: String(m?.from || ""),
+      to: recipients(m),
+      subject: String(m?.subject || ""),
+      createdAt: isoTime(m?.created_at),
+    }))
+    .sort((a: any, b: any) => Date.parse(b.createdAt || "") - Date.parse(a.createdAt || ""))
+}
 
-  const bodies = await Promise.all(
-    mine.map(async (m: any) => {
-      try {
-        const r = await fetch(`${SENT_API}/${encodeURIComponent(String(m?.id || ""))}`, { headers })
-        return r.ok ? await r.json() : null
-      } catch {
-        return null
-      }
-    }),
-  )
-  return mine.map((m: any, i: number) => ({
+async function fetchSentBody(headers: Record<string, string>, id: string): Promise<any> {
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const r = await fetch(`${SENT_API}/${encodeURIComponent(id)}`, { headers })
+      if (r.ok) return await r.json()
+      if (r.status !== 429) return null
+      await new Promise((resolve) => setTimeout(resolve, 600))
+    } catch {
+      return null
+    }
+  }
+  return null
+}
+
+// Thread entries for the newest few sends to one address. Bodies cost a
+// request each, hence SENT_BODY_LIMIT.
+async function sentToAddress(
+  headers: Record<string, string>,
+  sent: any[],
+  correspondent: string,
+): Promise<any[]> {
+  const mine = sent
+    .filter((m) => m.to.some((a: string) => extractAddress(a) === correspondent))
+    .slice(0, SENT_BODY_LIMIT)
+  // Resend rate-limits around 2 requests/second, so these go two at a time
+  // with one retry on a 429 — firing all of them at once gets some rejected
+  // and silently leaves those messages with no text.
+  const bodies: any[] = []
+  for (let i = 0; i < mine.length; i += 2) {
+    const chunk = await Promise.all(mine.slice(i, i + 2).map((m) => fetchSentBody(headers, m.id)))
+    bodies.push(...chunk)
+  }
+  return mine.map((m, i) => ({
     direction: "out",
-    from: String(m?.from || ""),
-    to: recipients(m).join(", "),
-    subject: String(m?.subject || ""),
+    from: m.from,
+    to: m.to.join(", "),
+    subject: m.subject,
     text: bodies[i] ? bodyText(bodies[i]) : "",
-    createdAt: String(m?.created_at || ""),
+    createdAt: m.createdAt,
   }))
+}
+
+// This dashboard's own log of what it sent (admin-inbox-reply.ts). Readable
+// the instant a reply is sent, while Resend's list can lag behind.
+async function sentFromKv(env: Env, mailbox: string, correspondent: string): Promise<any[]> {
+  if (!env.ORDERS_KV) return []
+  try {
+    const raw = await env.ORDERS_KV.get(`sentmail:${mailbox}:${correspondent}`)
+    if (!raw) return []
+    const sent = JSON.parse(raw)
+    if (!Array.isArray(sent)) return []
+    return sent.map((s: any) => ({
+      direction: "out",
+      from: String(s?.from || ""),
+      to: String(s?.to || ""),
+      subject: String(s?.subject || ""),
+      text: String(s?.text || ""),
+      createdAt: isoTime(s?.createdAt),
+    }))
+  } catch {
+    return []
+  }
+}
+
+// Resend's sent log returns timestamps like "2026-11-28 02:41:41.077000+00"
+// — a space instead of T, microseconds, and a bare "+00" offset. V8 parses
+// that leniently, so it looks fine in Chrome, but WebKit (i.e. every
+// browser on iOS) returns NaN for it, which would leave the dashboard
+// showing no usable time on those entries and sorting them unpredictably.
+// Hand the front end canonical ISO 8601 instead.
+function isoTime(value: unknown): string {
+  const raw = String(value || "").trim()
+  if (!raw) return ""
+  const candidate = raw
+    .replace(" ", "T")
+    .replace(/(\.\d{3})\d+/, "$1")
+    .replace(/([+-]\d\d)$/, "$1:00")
+  const ms = Date.parse(candidate)
+  return Number.isFinite(ms) ? new Date(ms).toISOString() : raw
 }
 
 function normalizeText(text: string): string {
@@ -151,6 +212,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
   }
   const headers = { Authorization: `Bearer ${env.RESEND_API_KEY}` }
   const id = url.searchParams.get("id")
+  const threadWith = url.searchParams.get("thread")
   const address = addressFor(mailbox)
 
   try {
@@ -162,50 +224,116 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
       if (!matchesMailbox(e, address)) return json({ error: "Not found" }, 404)
       const inboundText = bodyText(e)
       const thread: any[] = [
-        { direction: "in", from: String(e?.from || ""), to: address, text: inboundText, createdAt: String(e?.created_at || "") },
+        { direction: "in", from: String(e?.from || ""), to: address, text: inboundText, createdAt: isoTime(e?.created_at) },
       ]
       const correspondent = extractAddress(e?.from)
       if (correspondent) {
         let fromResend: any[] = []
         try {
-          fromResend = await sentFromResend(headers, address, correspondent)
+          fromResend = await sentToAddress(headers, await listSent(headers, address), correspondent)
         } catch {
-          // Resend's sent log is unreadable right now — the KV copy below
-          // still covers anything sent from this dashboard.
+          // Resend's sent log is unreadable right now — the KV copy still
+          // covers anything sent from this dashboard.
         }
-        let fromKv: any[] = []
-        if (env.ORDERS_KV) {
-          try {
-            const raw = await env.ORDERS_KV.get(`sentmail:${mailbox}:${correspondent}`)
-            if (raw) {
-              const sent = JSON.parse(raw)
-              if (Array.isArray(sent)) {
-                fromKv = sent.map((s: any) => ({
-                  direction: "out",
-                  from: String(s?.from || ""),
-                  to: String(s?.to || ""),
-                  subject: String(s?.subject || ""),
-                  text: String(s?.text || ""),
-                  createdAt: String(s?.createdAt || ""),
-                }))
-              }
-            }
-          } catch {
-            // Best-effort — fall back to whatever Resend gave us.
-          }
-        }
-        thread.push(...mergeSent(fromResend, fromKv))
+        thread.push(...mergeSent(fromResend, await sentFromKv(env, mailbox, correspondent)))
       }
       thread.sort((a, b) => Date.parse(a.createdAt || "") - Date.parse(b.createdAt || ""))
       return json({ email: { ...summary(e), text: inboundText, thread } })
     }
+
+    // ?thread=<address> — a conversation that exists only outbound: someone
+    // this mailbox wrote to who has never written back, so there's no
+    // inbound email to look up by id.
+    if (threadWith) {
+      const correspondent = extractAddress(threadWith)
+      if (!/^[^\s@<>"']+@[^\s@<>"']+\.[^\s@<>"']+$/.test(correspondent)) {
+        return json({ error: "bad address" }, 400)
+      }
+      let fromResend: any[] = []
+      try {
+        fromResend = await sentToAddress(headers, await listSent(headers, address), correspondent)
+      } catch {
+        // Falls back to the KV copy below.
+      }
+      const thread = mergeSent(fromResend, await sentFromKv(env, mailbox, correspondent))
+        .sort((a, b) => Date.parse(a.createdAt || "") - Date.parse(b.createdAt || ""))
+      if (!thread.length) return json({ error: "Nothing sent to this address yet." })
+      const newest = thread[thread.length - 1]
+      return json({
+        email: {
+          id: `sent:${correspondent}`,
+          outgoing: true,
+          from: correspondent,
+          to: address,
+          subject: newest.subject || "(no subject)",
+          createdAt: newest.createdAt,
+          attachments: 0,
+          messageId: "",
+          text: newest.text || "",
+          thread,
+        },
+      })
+    }
     const res = await fetch(`${API}?limit=50`, { headers })
     if (!res.ok) return json({ emails: [], error: providerError(res.status) })
     const data: any = await res.json()
-    const emails = (Array.isArray(data?.data) ? data.data : [])
+    const inbound = (Array.isArray(data?.data) ? data.data : [])
       .filter((e: any) => matchesMailbox(e, address))
       .slice(0, 25)
       .map(summary)
+
+    // Newest send per correspondent, so a thread can show that it's been
+    // answered without having to be opened.
+    let sent: any[] = []
+    try {
+      sent = await listSent(headers, address)
+    } catch {
+      // Sent log unreadable — the list just loses its "replied" markers.
+    }
+    const perAddress = new Map<string, { at: string; count: number; subject: string }>()
+    for (const m of sent) {
+      for (const a of m.to) {
+        const addr = extractAddress(a)
+        if (!addr) continue
+        const prev = perAddress.get(addr)
+        if (!prev) {
+          perAddress.set(addr, { at: m.createdAt, count: 1, subject: m.subject })
+        } else if (Date.parse(m.createdAt || "") > Date.parse(prev.at || "")) {
+          perAddress.set(addr, { at: m.createdAt, count: prev.count + 1, subject: m.subject })
+        } else {
+          perAddress.set(addr, { ...prev, count: prev.count + 1 })
+        }
+      }
+    }
+    const emails = inbound.map((e: any) => {
+      const info = perAddress.get(extractAddress(e.from))
+      return info ? { ...e, repliedAt: info.at, sentCount: info.count } : e
+    })
+
+    // Conversations that exist only outbound — someone written to who has
+    // never written in — have no inbound email to hang off, so without this
+    // they'd be invisible here even though Resend has them. Admin mailbox
+    // only: orders@ also sends every automated order and shipping email,
+    // which belongs in the Sent emails panel, not in the customer inbox.
+    if (mailbox === "admin") {
+      const known = new Set(inbound.map((e: any) => extractAddress(e.from)))
+      for (const [addr, info] of perAddress) {
+        if (known.has(addr)) continue
+        emails.push({
+          id: `sent:${addr}`,
+          outgoing: true,
+          from: addr,
+          to: address,
+          subject: info.subject || "(no subject)",
+          createdAt: info.at,
+          attachments: 0,
+          messageId: "",
+          repliedAt: info.at,
+          sentCount: info.count,
+        })
+      }
+      emails.sort((a: any, b: any) => Date.parse(b.createdAt || "") - Date.parse(a.createdAt || ""))
+    }
     return json({ emails, count: emails.length })
   } catch {
     return json({ emails: [], error: "Couldn't reach the email provider — try again shortly." })

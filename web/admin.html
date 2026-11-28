@@ -234,6 +234,7 @@ header .status { font-size:13px; color:var(--muted); display:flex; align-items:c
 .mail-cust { font-size:13.5px; line-height:1.6; margin-bottom:10px; }
 .mail-cust strong { font-size:15px; }
 @media (max-width:720px) { .mail-win-body { grid-template-columns:1fr; } .mail-win-col + .mail-win-col { border-left:none; border-top:1px solid var(--surface-2); } }
+.inbox-panel .sub-replied { display:inline-block; margin-right:10px; padding:1px 8px; border-radius:999px; background:var(--accent-soft); color:var(--accent-strong); font-size:11.5px; font-weight:700; }
 .inbox-panel .sub-row:hover .sub-email { text-decoration:underline; }
 .inbox-panel .sub-subject { color:var(--muted); font-weight:400; }
 .inbox-panel .inbox-body { white-space:pre-wrap; word-break:break-word; font-size:13.5px; background:var(--surface-2); border-radius:8px; padding:12px; margin:4px 0 10px; }
@@ -1082,15 +1083,21 @@ function makeInboxController(cfg) {
   function render() {
     const el = document.getElementById(cfg.listId);
     const s = seen();
-    const unread = emails.filter((m) => !s.has(m.id)).length;
+    // Your own outgoing conversations are never "unread".
+    const unread = emails.filter((m) => !m.outgoing && !s.has(m.id)).length;
     const badge = document.getElementById(cfg.badgeId);
     badge.textContent = unread;
     badge.classList.toggle("show", unread > 0);
     el.innerHTML = emails
-      .map(
-        (m) =>
-          `<div class="sub-row${s.has(m.id) ? "" : " unread"}" data-inbox-id="${escapeHtml(m.id)}" data-mailbox="${cfg.mailbox}"><span class="sub-email">${escapeHtml(senderName(m.from) || senderAddress(m.from))} <span class="sub-subject">— ${escapeHtml(m.subject)}</span></span><span class="sub-meta">to ${escapeHtml(m.to)} · ${timeAgo(m.createdAt)}</span></div>`,
-      )
+      .map((m) => {
+        const who = m.outgoing ? "To " + senderAddress(m.from) : senderName(m.from) || senderAddress(m.from);
+        const tag = m.repliedAt
+          ? `<span class="sub-replied">${m.outgoing ? "Sent" : "Replied"} ${escapeHtml(timeAgo(m.repliedAt))}</span>`
+          : "";
+        const party = m.outgoing ? "from " + m.to : "to " + m.to;
+        const unreadClass = !m.outgoing && !s.has(m.id) ? " unread" : "";
+        return `<div class="sub-row${unreadClass}" data-inbox-id="${escapeHtml(m.id)}" data-mailbox="${cfg.mailbox}"><span class="sub-email">${escapeHtml(who)} <span class="sub-subject">— ${escapeHtml(m.subject)}</span></span><span class="sub-meta">${tag}${escapeHtml(party)} · ${escapeHtml(timeAgo(m.createdAt))}</span></div>`;
+      })
       .join("");
   }
   async function poll() {
@@ -1166,7 +1173,9 @@ function makeInboxController(cfg) {
     const address = senderAddress(summary.from);
     document.getElementById("mailWinSubject").style.display = "";
     document.getElementById("mailWinSubject").textContent = summary.subject;
-    document.getElementById("mailWinMeta").textContent = `From ${summary.from} · to ${summary.to} · ${timeAgo(summary.createdAt)}${summary.attachments ? " · " + summary.attachments + " attachment(s) — open in Resend to view" : ""}`;
+    document.getElementById("mailWinMeta").textContent = summary.outgoing
+      ? `To ${senderAddress(summary.from)} · from ${summary.to} · ${timeAgo(summary.createdAt)}`
+      : `From ${summary.from} · to ${summary.to} · ${timeAgo(summary.createdAt)}${summary.attachments ? " · " + summary.attachments + " attachment(s) — open in Resend to view" : ""}`;
     document.getElementById("mailWinComposeFields").style.display = "none";
     document.getElementById("mailWinMessageLabel").textContent = "Message";
     const text = document.getElementById("mailWinText"); text.style.display = ""; text.textContent = "Loading…";
@@ -1180,7 +1189,12 @@ function makeInboxController(cfg) {
     document.getElementById("mailWin").classList.add("open");
     markSeen(id); render();
 
-    fetch(`/admin-inbox?mailbox=${cfg.mailbox}&id=${encodeURIComponent(id)}`, { cache: "no-store", headers: authHeaders() })
+    // Outbound-only conversations have no inbound email to look up, so
+    // they're fetched by address instead of by id.
+    const query = id.startsWith("sent:")
+      ? `thread=${encodeURIComponent(id.slice(5))}`
+      : `id=${encodeURIComponent(id)}`;
+    fetch(`/admin-inbox?mailbox=${cfg.mailbox}&${query}`, { cache: "no-store", headers: authHeaders() })
       .then((r) => r.json())
       .then((d) => {
         if (!mailWinCurrent || mailWinCurrent.id !== id) return;
