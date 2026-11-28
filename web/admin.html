@@ -223,7 +223,11 @@ header .status { font-size:13px; color:var(--muted); display:flex; align-items:c
 .mail-win-col { padding:16px 18px; min-width:0; }
 .mail-win-col + .mail-win-col { border-left:1px solid var(--surface-2); }
 .mail-win-col h4 { margin:0 0 8px; font-size:12px; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); }
-.mail-win-text { white-space:pre-wrap; word-break:break-word; font-size:14px; line-height:1.55; background:var(--surface-2); border-radius:10px; padding:12px; max-height:260px; overflow:auto; }
+.mail-win-text { max-height:320px; overflow:auto; }
+.mail-win-text .mail-msg { white-space:pre-wrap; word-break:break-word; font-size:14px; line-height:1.55; background:var(--surface-2); border-radius:10px; padding:10px 12px; margin-bottom:8px; }
+.mail-win-text .mail-msg:last-child { margin-bottom:0; }
+.mail-win-text .mail-msg.out { background:var(--surface); border:1px solid var(--border-strong); }
+.mail-win-text .mail-msg-meta { display:block; font-size:11.5px; color:var(--muted); margin-bottom:4px; }
 .mail-win textarea { width:100%; min-height:110px; margin-top:12px; padding:10px; border:1px solid var(--surface-2); border-radius:10px; font:inherit; font-size:14px; resize:vertical; box-sizing:border-box; }
 .mail-win-actions { display:flex; align-items:center; gap:10px; margin-top:8px; }
 .mail-win-actions span { font-size:13px; color:var(--muted); }
@@ -1012,6 +1016,24 @@ function senderName(from) {
   return String(from || "").replace(/<[^<>]+>/, "").replace(/"/g, "").trim();
 }
 
+// Renders the full back-and-forth for one thread (the original inbound
+// email plus any replies sent from this dashboard) inside #mailWinText.
+// Items are { direction: "in"|"out", from, to, text, createdAt }, oldest
+// first — "out" ones are either loaded from the server (admin-inbox.ts
+// merges in what admin-inbox-reply.ts persisted) or appended locally right
+// after a successful send, so a reply shows up in its thread immediately
+// instead of only existing as a status line that then vanishes on reopen.
+function renderThread(items) {
+  const text = document.getElementById("mailWinText");
+  text.innerHTML = (items && items.length
+    ? items.map((m) => {
+        const who = m.direction === "out" ? "You" : senderName(m.from) || senderAddress(m.from);
+        return `<div class="mail-msg ${m.direction === "out" ? "out" : "in"}"><span class="mail-msg-meta">${escapeHtml(who)} · ${timeAgo(m.createdAt)}</span>${escapeHtml(m.text || "(no text)")}</div>`;
+      }).join("")
+    : `<div class="mail-msg in">(no text in this email)</div>`);
+  text.scrollTop = text.scrollHeight;
+}
+
 let mailWinCurrent = null;
 function closeMailWin() { document.getElementById("mailWin").classList.remove("open"); mailWinCurrent = null; }
 document.getElementById("mailWinClose").addEventListener("click", closeMailWin);
@@ -1161,8 +1183,12 @@ function makeInboxController(cfg) {
       .then((r) => r.json())
       .then((d) => {
         if (!mailWinCurrent || mailWinCurrent.id !== id) return;
-        text.textContent = d.email ? d.email.text || "(no text in this email)" : d.error || "Couldn't load this email.";
-        if (d.email && d.email.messageId) mailWinCurrent.messageId = d.email.messageId;
+        if (!d.email) { text.textContent = d.error || "Couldn't load this email."; return; }
+        mailWinCurrent.thread = Array.isArray(d.email.thread) && d.email.thread.length
+          ? d.email.thread
+          : [{ direction: "in", from: d.email.from, to: d.email.to, text: d.email.text, createdAt: d.email.createdAt }];
+        renderThread(mailWinCurrent.thread);
+        if (d.email.messageId) mailWinCurrent.messageId = d.email.messageId;
       })
       .catch(() => { text.textContent = "Couldn't load this email."; });
 
@@ -1228,12 +1254,13 @@ document.getElementById("mailWinSend").addEventListener("click", async () => {
     subject = /^re:/i.test(mailWinCurrent.subject) ? mailWinCurrent.subject : "Re: " + mailWinCurrent.subject;
     messageId = mailWinCurrent.messageId || "";
   }
+  const sentText = box.value;
   btn.disabled = true; status.textContent = "Sending…";
   try {
     const res = await fetch("/admin-inbox-reply", {
       method: "POST",
       headers: { "Content-Type": "application/json", ...(mailWinCurrent.authHeaders || {}) },
-      body: JSON.stringify({ to, subject, text: box.value, messageId, from }),
+      body: JSON.stringify({ to, subject, text: sentText, messageId, from }),
     });
     const data = await res.json();
     if (res.status === 403 && data.error === "wrong_password") {
@@ -1245,7 +1272,16 @@ document.getElementById("mailWinSend").addEventListener("click", async () => {
     }
     if (!res.ok) throw Error(data.error || "Unable to send");
     status.textContent = `Sent to ${to} from ${from}`; box.value = "";
-    if (mailWinCurrent.compose) { document.getElementById("mailWinTo").value = ""; document.getElementById("mailWinSubjectInput").value = ""; }
+    if (mailWinCurrent.compose) {
+      document.getElementById("mailWinTo").value = ""; document.getElementById("mailWinSubjectInput").value = "";
+    } else {
+      // The server has now persisted this reply (see admin-inbox-reply.ts)
+      // so it'll be there on reopen too — but append it here right away so
+      // it doesn't look like it vanished into the status line.
+      mailWinCurrent.thread = mailWinCurrent.thread || [];
+      mailWinCurrent.thread.push({ direction: "out", from, to, text: sentText, createdAt: new Date().toISOString() });
+      renderThread(mailWinCurrent.thread);
+    }
   } catch (e) {
     status.textContent = e.message || "Unable to send";
   } finally {

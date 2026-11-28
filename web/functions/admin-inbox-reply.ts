@@ -7,6 +7,14 @@
 // Cloudflare secret) once the store owner sets that secret — the same
 // second password that gates reading robbie@'s mail in /admin-inbox. Until
 // it's set, sending as robbie@ needs no second password either.
+//
+// After a successful send, the reply is also logged to ORDERS_KV under
+// `sentmail:<mailbox>:<recipient>` (a small rolling array, newest last, same
+// shape as the "orders:feed"/"subscribers:all" single-key pattern — never
+// KV.list(), which admin-orders.ts explains is capped at 1,000 calls/day).
+// /admin-inbox.ts reads that key back when a thread is opened, so a reply
+// shows up in its own thread instead of only ever existing as Resend's
+// fire-and-forget send and a status line that disappears on reopen.
 import { hasValidSession } from "./_lib/auth"
 
 interface Env {
@@ -57,6 +65,25 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   } catch {
     return json({ error: "Could not reach the email provider. Try again shortly." }, 502)
   }
+
+  if (env.ORDERS_KV) {
+    try {
+      const mailbox = fromAddress === "robbie@trendycatch.us" ? "admin" : "customer"
+      const key = `sentmail:${mailbox}:${to.toLowerCase()}`
+      const raw = await env.ORDERS_KV.get(key)
+      let sent: any[] = []
+      if (raw) {
+        try { const parsed = JSON.parse(raw); if (Array.isArray(parsed)) sent = parsed } catch { sent = [] }
+      }
+      sent.push({ from: fromAddress, to, subject: body.subject, text, createdAt: new Date().toISOString() })
+      if (sent.length > 20) sent = sent.slice(-20)
+      await env.ORDERS_KV.put(key, JSON.stringify(sent))
+    } catch {
+      // Best-effort — the reply already sent; losing the thread copy isn't
+      // worth failing the request over.
+    }
+  }
+
   return json({ ok: true })
 }
 
