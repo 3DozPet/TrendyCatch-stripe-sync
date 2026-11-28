@@ -1,7 +1,9 @@
 // GET /live-visitors
 // Polled by /admin.html to show a Shopify-Live-View-style "N live on the
-// page right now" count, broken down by country. Counts the still-valid
-// (not yet expired) visitor:* heartbeat entries written by visitor-ping.ts.
+// page right now" count, broken down by country, plus a per-visitor list
+// (id/lat/lon/country/city) that the Home tab's live world map plots as
+// pins. Counts the still-valid (not yet expired) visitor:* heartbeat
+// entries written by visitor-ping.ts.
 //
 // Unlike admin-orders/admin-subscribers, this one genuinely needs list() —
 // visitor heartbeats come from many independent page loads, with no single
@@ -40,7 +42,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
     try {
       const cached = JSON.parse(cachedRaw)
       if (Date.now() - Number(cached.computedAt ?? 0) < CACHE_TTL_MS) {
-        return json({ count: cached.count, byCountry: cached.byCountry, points: cached.points || [] })
+        return json({ count: cached.count, byCountry: cached.byCountry, visitors: cached.visitors ?? [] })
       }
     } catch {
       // fall through and recompute
@@ -49,9 +51,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
 
   const list = await env.ORDERS_KV.list({ prefix: "visitor:", limit: 500 })
   const byCountry: Record<string, number> = {}
-  // One dot per city, not per visitor — several heartbeats from the same
-  // city collapse into a single point with a count, for the home-page map.
-  const pointsByKey = new Map<string, { city: string; country: string; lat: number; lon: number; count: number }>()
+  const visitors: Array<{ id: string; country: string; city?: string; lat?: number; lon?: number; ts: number }> = []
   let count = 0
 
   for (const k of list.keys) {
@@ -62,29 +62,32 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
       const country = entry.country ?? "UNKNOWN"
       byCountry[country] = (byCountry[country] ?? 0) + 1
       count += 1
+      // The map only needs a stable per-heartbeat id and a point to plot —
+      // drop entries Cloudflare couldn't geolocate rather than guessing.
       if (typeof entry.lat === "number" && typeof entry.lon === "number") {
-        const city = String(entry.city || "")
-        const key = `${city}|${country}`
-        const existing = pointsByKey.get(key)
-        if (existing) existing.count += 1
-        else pointsByKey.set(key, { city, country, lat: entry.lat, lon: entry.lon, count: 1 })
+        visitors.push({
+          id: k.name.slice("visitor:".length),
+          country,
+          city: entry.city,
+          lat: entry.lat,
+          lon: entry.lon,
+          ts: entry.ts ?? Date.now(),
+        })
       }
     } catch {
       // skip malformed entry
     }
   }
 
-  const points = Array.from(pointsByKey.values())
-
   try {
-    await env.ORDERS_KV.put(SNAPSHOT_KEY, JSON.stringify({ count, byCountry, points, computedAt: Date.now() }), {
+    await env.ORDERS_KV.put(SNAPSHOT_KEY, JSON.stringify({ count, byCountry, visitors, computedAt: Date.now() }), {
       expirationTtl: 120,
     })
   } catch (err) {
     console.error("visitors:snapshot cache write failed (count still returned this request):", (err as Error).message)
   }
 
-  return json({ count, byCountry, points })
+  return json({ count, byCountry, visitors })
 }
 
 function json(data: unknown, status = 200): Response {
