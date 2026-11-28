@@ -235,6 +235,46 @@ main#orderList { display:flex; flex-direction:column; gap:12px; }
 
 .anchor { scroll-margin-top:80px; }
 
+/* ---- Sidebar-driven panels ----
+   Each top-level dashboard section is a .panel; only .panel.active is
+   shown, so clicking a nav item swaps the content area instead of scrolling
+   one long page. */
+.panel { display:none; }
+.panel.active { display:block; animation:panelin .15s ease; }
+@keyframes panelin { from { opacity:0; transform:translateY(4px); } to { opacity:1; transform:none; } }
+
+/* ---- Sent emails ---- */
+.email-row {
+  background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-md);
+  padding:14px 18px; display:flex; align-items:center; justify-content:space-between; gap:14px;
+  flex-wrap:wrap; box-shadow:var(--shadow-sm);
+}
+.email-row .email-main { min-width:0; }
+.email-row .email-subject { font-weight:700; font-size:14px; color:var(--ink); }
+.email-row .email-meta { font-size:12.5px; color:var(--muted); margin-top:4px; }
+.email-row .email-actions { display:flex; align-items:center; gap:10px; flex:none; }
+.email-kind { font-size:11px; font-weight:700; padding:4px 10px; border-radius:999px; white-space:nowrap; }
+.email-kind.shipped { background:var(--success-soft); color:var(--success); }
+.email-kind.confirmation { background:#eaf1ff; color:#2563eb; }
+
+/* ---- Email preview modal ---- */
+.modal-overlay {
+  position:fixed; inset:0; background:rgba(10,12,20,.55); display:flex;
+  align-items:center; justify-content:center; z-index:60; padding:20px;
+}
+.modal-overlay[hidden] { display:none; }
+.modal-box {
+  background:var(--surface); border-radius:var(--radius-lg); max-width:620px; width:100%;
+  max-height:86vh; display:flex; flex-direction:column; box-shadow:var(--shadow-md); overflow:hidden;
+}
+.modal-head { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; padding:16px 20px; border-bottom:1px solid var(--border); }
+.modal-head h3 { margin:0; font-size:15px; font-weight:800; color:var(--ink); }
+.modal-head p { margin:4px 0 0; font-size:12.5px; color:var(--muted); }
+.modal-close { background:none; border:none; font-size:20px; line-height:1; cursor:pointer; color:var(--muted); padding:4px; }
+.modal-close:hover { color:var(--ink); }
+.modal-body { flex:1; overflow:auto; background:var(--surface-2); }
+.modal-body iframe { width:100%; min-height:380px; height:55vh; border:0; background:#fff; display:block; }
+
 @media (max-width:760px) {
   .shell { display:block; }
   .side { display:flex; gap:4px; overflow:auto; padding:8px; position:sticky; top:60px; z-index:10; }
@@ -267,9 +307,13 @@ main#orderList { display:flex; flex-direction:column; gap:12px; }
 <a href="#analytics"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M12 20V4M20 20v-7"/></svg></span>Analytics</a>
 <a href="#signups"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg></span>Email signups</a>
 <a href="#inbox"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 13l3-8h12l3 8v6H3z"/><path d="M3 13h5l1 3h6l1-3h5"/></svg></span>Inbox</a>
+<a href="#sentemails"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4z"/><path d="M4 6l8 7 8-7"/></svg></span>Sent emails</a>
 <div class="side-title">STORE</div>
 <a href="/" target="_blank" rel="noopener"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6"/><path d="M10 14L20 4"/><path d="M19 13v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg></span>Online store</a>
-</div></nav><div class="content"><header id="home" class="anchor">
+</div></nav><div class="content">
+
+<section class="panel active" id="home">
+<header>
   <div><h1>Home</h1><p class="heading-sub">Your TrendyCatch business at a glance</p></div>
   <div class="status">
     <span class="dot"></span><span id="statusText">Listening…</span>
@@ -277,8 +321,11 @@ main#orderList { display:flex; flex-direction:column; gap:12px; }
     <button id="logoutBtn" class="header-btn">Log out</button>
   </div>
 </header>
+</section>
 
-<section class="summary anchor" id="analytics" aria-label="Business overview">
+<section class="panel" id="analytics" aria-label="Business overview">
+<div class="summary">
+  <div class="section-heading" style="margin:0;"><div><h2>Analytics</h2><p>Revenue, orders and traffic at a glance</p></div></div>
   <div class="stat-row">
     <div class="stat-card">
       <div class="label">Total revenue</div>
@@ -319,32 +366,65 @@ main#orderList { display:flex; flex-direction:column; gap:12px; }
       <div id="liveByCountry"></div>
     </div>
   </div>
-  <div class="breakdown anchor" id="taxpanel">
+  <div class="breakdown" id="taxpanel">
     <h3>GST to lodge — Australia (10%) &amp; New Zealand (15%)</h3>
     <p class="heading-sub" style="margin:0 0 10px;">GST collected on paid orders, not yet marked as filed. Lodge with the ATO (Australia) and NZ Inland Revenue (New Zealand) separately.</p>
     <div id="gstByCountry"></div>
   </div>
-  <div class="breakdown subscribers-panel anchor" id="signups">
-    <h3>Recent email signups — admin only, never shown to customers</h3>
+</div>
+</section>
+
+<section class="panel" id="signups">
+  <div class="section-heading" style="margin-top:0;"><div><h2>Email signups</h2><p>Admin only — never shown to customers</p></div><button id="subscribersRefresh" type="button" class="header-btn">Refresh</button></div>
+  <div class="breakdown subscribers-panel" style="max-width:1160px;margin:0 auto;">
     <div id="subscriberList"></div>
   </div>
-  <div class="breakdown subscribers-panel inbox-panel anchor" id="inbox">
-    <h3>Customer emails — sent to @trendycatch.us (tap one to read it)</h3>
+</section>
+
+<section class="panel" id="inbox">
+  <div class="section-heading" style="margin-top:0;"><div><h2>Inbox</h2><p>Customer emails sent to @trendycatch.us — tap one to read it</p></div></div>
+  <div class="breakdown subscribers-panel inbox-panel" style="max-width:1160px;margin:0 auto;">
     <div id="inboxList"></div>
   </div>
 </section>
 
-<section class="history-panel anchor" id="history"><div class="history-head"><div><h2>Order history</h2><p>View customer details and update fulfilment</p></div><button id="historySyncStripe" type="button" class="header-btn" title="Pull in any Stripe orders missing from this list (e.g. ones placed before this dashboard existed)">Sync from Stripe</button><button id="historyRefresh" type="button">Refresh</button></div><p id="historyStatus" role="status">Loading orders…</p><div id="historyList"></div></section>
-<div class="section-heading anchor" id="custpanel"><div><h2>Customers</h2><p>Order history and lifetime spend per customer</p></div><button id="customersRefresh" type="button" class="header-btn">Refresh</button></div>
-<div class="breakdown" style="max-width:1160px;margin:0 auto 24px;"><div id="customersList"></div></div>
-<div class="section-heading anchor" id="products"><div><h2>Products</h2><p>Catalog currently listed on the store</p></div></div>
-<div class="breakdown" style="max-width:1160px;margin:0 auto 24px;"><div id="productsList"></div></div>
-<div class="section-heading anchor" id="orders"><div><h2>Recent orders</h2><p>Live order notifications from the past 6 hours</p></div></div>
-<main id="orderList">
-  <div class="empty" id="emptyState">Waiting for the first order to come in…</div>
-</main>
+<section class="panel history-panel" id="history"><div class="history-head"><div><h2>Order history</h2><p>View customer details and update fulfilment</p></div><button id="historySyncStripe" type="button" class="header-btn" title="Pull in any Stripe orders missing from this list (e.g. ones placed before this dashboard existed)">Sync from Stripe</button><button id="historyRefresh" type="button">Refresh</button></div><p id="historyStatus" role="status">Loading orders…</p><div id="historyList"></div></section>
+
+<section class="panel" id="custpanel">
+  <div class="section-heading" style="margin-top:0;"><div><h2>Customers</h2><p>Order history and lifetime spend per customer</p></div><button id="customersRefresh" type="button" class="header-btn">Refresh</button></div>
+  <div class="breakdown" style="max-width:1160px;margin:0 auto 24px;"><div id="customersList"></div></div>
+</section>
+
+<section class="panel" id="products">
+  <div class="section-heading" style="margin-top:0;"><div><h2>Products</h2><p>Catalog currently listed on the store</p></div></div>
+  <div class="breakdown" style="max-width:1160px;margin:0 auto 24px;"><div id="productsList"></div></div>
+</section>
+
+<section class="panel" id="orders">
+  <div class="section-heading" style="margin-top:0;"><div><h2>Recent orders</h2><p>Live order notifications from the past 6 hours</p></div></div>
+  <main id="orderList">
+    <div class="empty" id="emptyState">Waiting for the first order to come in…</div>
+  </main>
+</section>
+
+<section class="panel" id="sentemails">
+  <div class="section-heading" style="margin-top:0;"><div><h2>Sent emails</h2><p>Order confirmation &amp; shipping emails sent to customers</p></div><button id="sentEmailsRefresh" type="button" class="header-btn">Refresh</button></div>
+  <p id="sentEmailsStatus" role="status">Loading…</p>
+  <div id="sentEmailsList" style="max-width:1200px;margin:0 auto;display:flex;flex-direction:column;gap:10px;"></div>
+</section>
 
 </div></div>
+
+<div class="modal-overlay" id="emailModal" hidden>
+  <div class="modal-box">
+    <div class="modal-head">
+      <div><h3 id="emailModalSubject">Email preview</h3><p id="emailModalMeta"></p></div>
+      <button class="modal-close" type="button" id="emailModalClose" aria-label="Close preview">×</button>
+    </div>
+    <div class="modal-body"><iframe id="emailModalFrame" sandbox="" title="Email preview"></iframe></div>
+  </div>
+</div>
+
 <button class="enable-sound" id="soundBtn">🔇 Enable order sound</button>
 
 <script>
@@ -642,13 +722,30 @@ async function pollSubscribers() {
       .slice(0, 25)
       .map(
         (s) =>
-          `<div class="sub-row"><span class="sub-email">${escapeHtml(s.email)}</span><span class="sub-meta">${escapeHtml(countryName(s.country || "UNKNOWN"))} · ${timeAgo(s.createdAt)}</span></div>`,
+          `<div class="sub-row"><span class="sub-email">${escapeHtml(s.email)}</span><span class="sub-meta">${escapeHtml(countryName(s.country || "UNKNOWN"))} · ${timeAgo(s.createdAt)} <button type="button" class="header-btn sub-remove" data-email="${escapeHtml(s.email)}" style="margin-left:8px;padding:3px 9px;font-size:11.5px;">Remove</button></span></div>`,
       )
       .join("");
   } catch (e) {
     // transient — leave the last known list showing
   }
 }
+document.getElementById("subscribersRefresh").addEventListener("click", pollSubscribers);
+document.getElementById("subscriberList").addEventListener("click", async (e) => {
+  const btn = e.target.closest(".sub-remove");
+  if (!btn) return;
+  const email = btn.dataset.email;
+  if (!confirm(`Remove ${email} from email signups? This can't be undone.`)) return;
+  btn.disabled = true; btn.textContent = "Removing…";
+  try {
+    const res = await fetch(`/admin-subscribers?email=${encodeURIComponent(email)}`, { method: "DELETE" });
+    if (reloadIfUnauthorized(res.status)) return;
+    if (!res.ok) throw new Error("Failed to remove");
+    await pollSubscribers();
+  } catch (err) {
+    btn.disabled = false; btn.textContent = "Remove";
+    alert("Couldn't remove that signup — try again.");
+  }
+});
 
 document.getElementById("logoutBtn").addEventListener("click", async () => {
   await fetch("/admin-logout", { method: "POST" });
@@ -877,6 +974,97 @@ setInterval(poll, 5000);
 setInterval(pollStats, 10000);
 setInterval(pollLiveVisitors, 5000);
 setInterval(pollSubscribers, 15000);
+
+// ---- Sent emails panel ----
+function emailKindLabel(kind) { return kind === 'shipped' ? 'Shipped' : 'Confirmation'; }
+
+async function refreshSentEmails() {
+  const status = document.getElementById('sentEmailsStatus');
+  const list = document.getElementById('sentEmailsList');
+  try {
+    const res = await fetch('/admin-sent-emails', { cache: 'no-store' });
+    if (reloadIfUnauthorized(res.status)) return;
+    if (!res.ok) throw new Error('Sent emails are not connected yet.');
+    const data = await res.json();
+    const emails = data.emails || [];
+    if (!emails.length) { status.textContent = 'No emails sent yet.'; list.innerHTML = ''; return; }
+    status.textContent = `${emails.length} email${emails.length === 1 ? '' : 's'} sent`;
+    list.innerHTML = emails.map((e) => `
+      <div class="email-row" data-id="${escapeHtml(e.id)}">
+        <div class="email-main">
+          <div class="email-subject">${escapeHtml(e.subject || '(no subject on file)')}</div>
+          <div class="email-meta">To ${escapeHtml(e.to || 'unknown')}${e.customer ? ' · ' + escapeHtml(e.customer) : ''} · Order ${escapeHtml(e.orderId || '')} · ${timeAgo(e.sentAt)}</div>
+        </div>
+        <div class="email-actions">
+          <span class="email-kind ${e.kind}">${emailKindLabel(e.kind)}</span>
+          <button type="button" class="header-btn email-preview-btn" data-id="${escapeHtml(e.id)}" ${e.hasHtml ? '' : 'disabled title="No stored copy of this one (sent before previews were added)"'}>Preview</button>
+        </div>
+      </div>`).join('');
+  } catch (e) {
+    status.textContent = e.message || 'Sent emails unavailable';
+  }
+}
+document.getElementById('sentEmailsRefresh').addEventListener('click', refreshSentEmails);
+document.getElementById('sentEmailsList').addEventListener('click', async (e) => {
+  const btn = e.target.closest('.email-preview-btn');
+  if (!btn || btn.disabled) return;
+  const id = btn.dataset.id;
+  btn.disabled = true; const originalLabel = btn.textContent; btn.textContent = 'Loading…';
+  try {
+    const res = await fetch(`/admin-sent-emails?id=${encodeURIComponent(id)}`, { cache: 'no-store' });
+    if (reloadIfUnauthorized(res.status)) return;
+    const data = await res.json();
+    if (!res.ok || !data.email) throw new Error(data.error || 'Could not load that email');
+    openEmailModal(data.email);
+  } catch (err) {
+    alert(err.message || 'Could not load that email');
+  } finally {
+    btn.disabled = false; btn.textContent = originalLabel;
+  }
+});
+
+function openEmailModal(email) {
+  document.getElementById('emailModalSubject').textContent = email.subject || '(no subject on file)';
+  document.getElementById('emailModalMeta').textContent = `To ${email.to || 'unknown'} · ${emailKindLabel(email.kind)} · Order ${email.orderId || ''} · ${timeAgo(email.sentAt)} — exactly what the customer received`;
+  const frame = document.getElementById('emailModalFrame');
+  frame.srcdoc = email.html || '<p style="font-family:sans-serif;color:#666;padding:20px;">No stored copy of this email.</p>';
+  document.getElementById('emailModal').hidden = false;
+}
+function closeEmailModal() { document.getElementById('emailModal').hidden = true; document.getElementById('emailModalFrame').srcdoc = ''; }
+document.getElementById('emailModalClose').addEventListener('click', closeEmailModal);
+document.getElementById('emailModal').addEventListener('click', (e) => { if (e.target.id === 'emailModal') closeEmailModal(); });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !document.getElementById('emailModal').hidden) closeEmailModal(); });
+
+// ---- Sidebar panel switching ----
+// Each top-level section is a .panel; clicking a nav item shows only the
+// matching one (instead of scrolling one long page) and closes whichever
+// was open before, same content area. Data for a panel is fetched the first
+// time it's opened, not up front, so switching stays instant.
+const panels = Array.from(document.querySelectorAll('.content > .panel'));
+const navLinks = Array.from(document.querySelectorAll('.side a[href^="#"]'));
+const panelLoaders = {
+  sentemails: refreshSentEmails,
+};
+const loadedPanels = new Set();
+
+function showPanel(id) {
+  const target = panels.some((p) => p.id === id) ? id : 'home';
+  for (const p of panels) p.classList.toggle('active', p.id === target);
+  for (const a of navLinks) a.classList.toggle('active', a.getAttribute('href') === '#' + target);
+  document.querySelector('.content').scrollTo({ top: 0 });
+  if (panelLoaders[target] && !loadedPanels.has(target)) {
+    loadedPanels.add(target);
+    panelLoaders[target]();
+  }
+}
+navLinks.forEach((a) => a.addEventListener('click', (e) => {
+  e.preventDefault();
+  const id = a.getAttribute('href').slice(1);
+  if (location.hash !== '#' + id) history.pushState(null, '', '#' + id);
+  showPanel(id);
+}));
+window.addEventListener('popstate', () => showPanel(location.hash.slice(1) || 'home'));
+showPanel(location.hash.slice(1) || 'home');
 </script>
 
 </body>

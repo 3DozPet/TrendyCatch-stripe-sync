@@ -39,6 +39,41 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
   return json({ subscribers, count: subscribers.length })
 }
 
+// DELETE /admin-subscribers?email=<address> — removes one signup, e.g. a
+// stray test record. Deletes both the per-subscriber KV key and its entry in
+// the "subscribers:all" index, so it stops showing up on refresh.
+export const onRequestDelete: PagesFunction<Env> = async ({ request, env }) => {
+  if (!env.ORDERS_KV) return json({ error: "ORDERS_KV not bound" }, 503)
+  if (!(await hasValidSession(request, env.ORDERS_KV))) return json({ error: "unauthorized" }, 401)
+
+  const email = (new URL(request.url).searchParams.get("email") || "").trim().toLowerCase()
+  if (!email) return json({ error: "email is required" }, 400)
+
+  const key = `subscriber:${await sha256Hex(email)}`
+  await env.ORDERS_KV.delete(key)
+
+  const indexRaw = await env.ORDERS_KV.get("subscribers:all")
+  if (indexRaw) {
+    try {
+      const parsed = JSON.parse(indexRaw)
+      if (Array.isArray(parsed)) {
+        const filtered = parsed.filter((s: any) => (s?.email || "").toLowerCase() !== email)
+        await env.ORDERS_KV.put("subscribers:all", JSON.stringify(filtered))
+      }
+    } catch {
+      // index was malformed anyway; nothing more to clean up
+    }
+  }
+
+  return json({ ok: true })
+}
+
+async function sha256Hex(input: string): Promise<string> {
+  const data = new TextEncoder().encode(input)
+  const digest = await crypto.subtle.digest("SHA-256", data)
+  return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("")
+}
+
 function json(data: unknown, status = 200): Response {
   return new Response(JSON.stringify(data), {
     status,

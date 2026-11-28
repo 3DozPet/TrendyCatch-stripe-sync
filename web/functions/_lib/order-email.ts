@@ -108,10 +108,13 @@ export async function sendOrderEmail(env: OrderEmailEnv, orderId: string, kind: 
     return { ok: false, error: `Email provider declined to send (status ${resendResponse.status}): ${detail.slice(0, 300)}` }
   }
 
+  // Store the subject + rendered html alongside the log entry (not just who
+  // it went to) so the admin dashboard's Sent Emails panel can show exactly
+  // what the customer received, not just that something was sent.
   const now = new Date().toISOString()
   await env.ORDERS_DB
     .prepare('INSERT INTO order_events (order_id, event_type, created_at, detail_json) VALUES (?, ?, ?, ?)')
-    .bind(orderId, kind === 'shipped' ? 'shipping_email_sent' : 'confirmation_email_sent', now, JSON.stringify({ to: customerEmail }))
+    .bind(orderId, kind === 'shipped' ? 'shipping_email_sent' : 'confirmation_email_sent', now, JSON.stringify({ to: customerEmail, subject, html }))
     .run()
 
   return { ok: true }
