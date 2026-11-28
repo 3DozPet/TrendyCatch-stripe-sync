@@ -68,6 +68,27 @@
         }
       } catch (e) { /* non-critical */ }
     })();
+
+    // Live-visitor heartbeat, same as index.html and product.html — someone
+    // sitting on the thank-you page is live too, and was previously missing
+    // from the dashboard's map entirely.
+    (function startLiveVisitorHeartbeat() {
+      let visitorId = sessionStorage.getItem("tc_visitor_id");
+      if (!visitorId) {
+        visitorId = (crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`);
+        sessionStorage.setItem("tc_visitor_id", visitorId);
+      }
+      const ping = () => {
+        fetch("/visitor-ping", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ visitorId, page: location.pathname }),
+          keepalive: true,
+        }).catch(() => {});
+      };
+      ping();
+      setInterval(ping, 20000);
+    })();
   </script>
 </body>
 </html>
